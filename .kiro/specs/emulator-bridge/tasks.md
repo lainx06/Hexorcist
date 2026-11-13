@@ -47,7 +47,7 @@ The implementation follows five required tasks, each designed to validate core f
   - **Do NOT proceed to Task 2 until you confirm compilation succeeded and provide the .hex file path.**
   - _Requirements: 1.1, 1.2_
 
-- [ ] 2. Minimal EmulatorBridge + Interactive UI (Spike S1+S2)
+- [-] 2. Minimal EmulatorBridge + Interactive UI (Spike S1+S2)
   - **Part A: EmulatorBridge core**
     - Implement `src/engine/emulator-bridge.ts` with:
       - `EmulatorBridge.create(hex: string, fixture: Fixture, inputEvents?: InputEvent[]): EmulatorBridge | BridgeError` factory

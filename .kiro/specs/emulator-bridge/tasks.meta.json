@@ -24,6 +24,13 @@
         "chatSessionId": "sess_2d7eb0ec-ff77-4667-a626-0878dd82319e",
         "timestamp": 1794534144081
       }
+    ],
+    "2. Minimal EmulatorBridge + Interactive UI (Spike S1+S2)": [
+      {
+        "executionId": "35657684-2bdb-499a-927b-a97d6a424e87",
+        "chatSessionId": "sess_862bb07f-f225-472c-a8b2-50d3a26b27bf",
+        "timestamp": 1794534505868
+      }
     ]
   }
 }
