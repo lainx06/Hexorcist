@@ -1,0 +1,10 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "guard-before-task",
+      "trigger": "PreTaskExec",
+      "action": { "type": "command", "command": "node scripts/guard.mjs", "timeout": 30 }
+    }
+  ]
+}
