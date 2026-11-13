@@ -18,7 +18,6 @@ The EmulatorBridge is the sole module that imports avr8js. It loads a precompile
 - **AppliedInputEvent**: An InputEvent extended with `appliedCycle: number` recording the actual CPU cycle at which the input was applied.
 - **CPU cycle**: An integer count of clock ticks since emulation started. The only time unit used in the bridge and engine.
 - **Instruction boundary**: The moment after `cpu.tick()` completes a full instruction, at which point pin state may be sampled and input may be applied.
-- **PRNG**: A seeded pseudo-random number generator. The EmulatorBridge itself does not use a PRNG; one may be passed in by callers for future use but must not be substituted with `Math.random`.
 - **Typed error**: A TypeScript discriminated-union error value (not a thrown exception) that carries a machine-readable `kind` field.
 
 ## Requirements

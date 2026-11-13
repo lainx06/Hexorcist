@@ -109,7 +109,7 @@ Create `src/ui/index.html` and `src/ui/main.ts`:
     - Test single InputEvent applied at exact target cycle
     - Test InputEvent at cycle 0
     - Test two InputEvents at the same target cycle; verify both have same appliedCycle
-    - Test initial snapshot: minimal HEX leaving all pins at 0 produces cycle-0 events all with value 0
+    - Test initial snapshot: a HEX that never configures a mapped output pin produces a cycle-0 event with value `"input"` for it; blink_button produces a cycle-0 LED event that matches avr8js `pinState` for PB5 before the first instruction.
     - _Requirements: 3.5, 4.1, 4.2, 4.3_
 
 - [ ] 3. Temporary Hard-Coded Monitor + Replay (Spike S3+S4)
@@ -119,6 +119,7 @@ Create `src/engine/__tests__/ledTimeoutMonitor.ts`:
 - Consume the OutputEvent stream from a bridge run.
 - Track the state of the LED signal: on/off/unknown.
 - When LED transitions to ON (value 1), record the cycle count `onCycle`.
+- The violation cycle is `onCycle + 4_800_000` (300 ms at 16 MHz = 4.8M cycles).
 - **Check for violation continuously**: After each OutputEvent, if the LED is currently ON, check if `cpu.cycles >= onCycle + 4_800_000` (where 4.8M cycles = 300 ms at 16 MHz). If true, emit a BROKE verdict with the violation cycle `onCycle + 4_800_000` and the output events up to that point.
 - **If a run ends with no violation detected**, report "no violation in this run" (not HELD; HELD requires multiple gremlin runs and is not applicable here).
 
@@ -131,8 +132,9 @@ In the UI or a new test file, after the first run completes:
 2. Create a new `EmulatorBridge` instance with the compiled HEX and Fixture.
 3. Feed the recorded AppliedInputEvent list to the new bridge. Since AppliedInputEvent has `appliedCycle` set (the actual cycle at which the input was applied), pass these events to `create()` with `cycle = appliedCycle` to ensure they apply at the exact same cycles.
 4. Run the exact same total number of cycles as the first run: `bridge.advance(totalCycles)`.
-5. Re-run the monitor on the second run's OutputEvents.
-6. **Assert:** The monitor reports the same violation cycle (if any). If the first run had no violation, the second run must also have none.
+5. **Critical:** Replay must produce the same violation cycle regardless of how `advance()` calls are chunked. Add a check that runs the replay twice with two different chunk sizes (1,000 cycles and 160,000 cycles per call) and compares the violation cycles — they must match exactly.
+6. Re-run the monitor on the second run's OutputEvents.
+7. **Assert:** The monitor reports the same violation cycle (if any). If the first run had no violation, the second run must also have none.
 
 Display or log: "Violation detected at cycle X. Replay confirmed: same violation at cycle X." or "No violation detected in both runs."
 

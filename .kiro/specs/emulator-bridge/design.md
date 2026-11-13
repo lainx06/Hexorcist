@@ -235,9 +235,8 @@ Offset 0x100+     : general-purpose SRAM (2 KiB on ATmega328P)
 The bridge maintains a parallel array mirroring the last-known `PinValue` of every Fixture-mapped output pin:
 
 ```ts
-const pinShadow: Array<0 | 1 | "input"> = fixture.pins
-  .filter(p => p.direction === "output")
-  .map(() => 0);  // baseline is 0 before first instruction
+const pinShadow: Array<0 | 1 | "input"> = [];
+// Filled by emitInitialSnapshot(); baseline is the actual pin state before first instruction.
 ```
 
 Indexed by Fixture pin-index (position in `fixture.pins`). Used for change-detection: after each `cpu.tick()`, compare `port.pinState(bit)` against `pinShadow[i]`; emit an `OutputEvent` only when they differ.
@@ -387,7 +386,6 @@ All error paths return typed `BridgeError` values. The bridge never throws for e
 | InputEvent signal not in Fixture | `"unmapped-pin"` | `create()` pre-flight, before any CPU steps |
 | Capability string not in `SupportedCapability` | `"unsupported-capability"` | Capability query method |
 | `cpu.cycles` would exceed `Number.MAX_SAFE_INTEGER` | `"cycle-overflow"` | Inside `advance()` run loop |
-| Caller passes a PRNG placeholder but it is null | `"prng-required"` | `create()` if PRNG is declared required by Fixture |
 
 ---
 
@@ -424,7 +422,7 @@ EmulatorBridge.create(hex, fixture, inputEvents?)
 │       portMap: Map<"B"|"C"|"D", AVRIOPort> = { B: portB, C: portC, D: portD }
 │
 ├─ 8. Build pin shadow array
-│       pinShadow[i] = 0 for all fixture output pins
+│       pinShadow is empty; will be populated by emitInitialSnapshot()
 │
 ├─ 9. Pre-sort inputEvents ascending by cycle
 │       sorted = [...inputEvents].sort((a, b) => a.cycle - b.cycle)
@@ -667,7 +665,7 @@ Focus areas:
 - **Fixture validation**: valid ports B/C/D; invalid port names; bit indices 0 and 7 (boundaries); bit index 8 (out of range).
 - **advance() edge cases**: `advance(0)`, `advance(-1)`, very large `requestedCycles` with a no-op program.
 - **InputEvent application**: single event at exact cycle, event at cycle 0, two events at the same cycle.
-- **Initial snapshot**: a minimal HEX that leaves all pins at 0 produces cycle-0 events all with value 0.
+- **Initial snapshot**: a HEX that never configures a mapped output pin produces a cycle-0 event with value `"input"` for it; blink_button produces a cycle-0 LED event that matches avr8js `pinState` for PB5 before the first instruction.
 
 ### Property-Based Tests with fast-check
 
