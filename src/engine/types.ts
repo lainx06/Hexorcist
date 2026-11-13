@@ -18,9 +18,12 @@ export interface OutputEvent {
   cycle: number;
 }
 
+/** External state a caller can apply to an input pin. "release" stops driving it. */
+export type InputValue = 0 | 1 | "release";
+
 export interface InputEvent {
   signal: string;
-  value: 0 | 1;
+  value: InputValue;
   cycle: number;
 }
 
@@ -45,8 +48,25 @@ export type SupportedCapability =
   | "eeprom"
   | "watchdog";
 
+/**
+ * A released input pin with no pull-up was read. Detection is per PIN register,
+ * not per bit, so it may over-report and never under-reports.
+ */
+export interface FloatingInputDiagnostic {
+  kind: "floating-input";
+  signal: string;
+  /** Integer CPU cycle of the earliest covering PIN register read. */
+  cycle: number;
+  /** "PINB", "PINC" or "PIND". */
+  register: string;
+}
+
+export type Diagnostic = FloatingInputDiagnostic;
+
 export interface AdvanceResult {
   cyclesConsumed: number;
   outputEvents: OutputEvent[];
   appliedInputs: AppliedInputEvent[];
+  /** Always present, possibly empty. */
+  diagnostics: Diagnostic[];
 }

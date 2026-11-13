@@ -17,7 +17,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
 
 ## Tasks
 
-- [ ] 1. Write bug condition exploration test
+- [x] 1. Write bug condition exploration test
   - **Property 1: Bug Condition** - Idle blink_button presents BUTTON HIGH under pull-up
   - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
   - **DO NOT attempt to fix the test or the code when it fails**
@@ -34,7 +34,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Mark task complete when the test is written, run, and the failure is documented
   - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.10_
 
-- [ ] 2. Write preservation property tests (BEFORE implementing fix)
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - Driven 0 and driven 1, outputs, errors and snapshot unchanged
   - **IMPORTANT**: Follow observation-first methodology
   - Create `src/engine/__tests__/input-pullup.property.test.ts` (fast-check is already in the repo)
@@ -51,7 +51,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Mark task complete when tests are written, run, and passing on unfixed code
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
 
-- [ ] 3. Write release event test (uses the existing blink_button HEX)
+- [x] 3. Write release event test (uses the existing blink_button HEX)
   - **Property 1: Bug Condition** - A "release" event returns the pin to the level its configuration implies
   - Add to `src/engine/__tests__/input-pullup.test.ts`. Use `blink_button.ino.hex` and the same fixture as task 1. Cast `"release"` events as described in the Overview
   - Assert: events `[{BUTTON, 0, c1}, {BUTTON, "release", c2}]` (cycles after setup has enabled the pull-up) give the held cadence (1,600,000 cycles spacing, within 1%) between c1 and c2 and the released cadence (8,000,000 cycles spacing, within 1%) after c2
@@ -62,7 +62,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Document the counterexample
   - _Requirements: 1.3, 2.3, 2.5, 3.5, 3.6_
 
-- [ ] 4. Write the floating_input sketch, then STOP for the user to compile
+- [x] 4. Write the floating_input sketch, then STOP for the user to compile
   - Create `fixtures/floating_input/floating_input.ino`. Write only this one file. Do not create the `build/` directory or any HEX. Do not run `arduino-cli` or any compiler
   - Sketch per design (see "Floating-Pin Fixture"):
     - D13 is an output (the LED, port B bit 5)
@@ -79,7 +79,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Do not start tasks 5, 6, 7, 8 or 9 until the user confirms the compile. When the user confirms, check that `fixtures/floating_input/build/floating_input.ino.hex` exists. If it does not, stop and ask again. There is no fallback
   - _Requirements: 2.9_
 
-- [ ] 5. Write floating-input diagnostic test (needs the user-compiled HEX)
+- [x] 5. Write floating-input diagnostic test (needs the user-compiled HEX)
   - **Property 1: Bug Condition** - Released plain input presents LOW and records one floating-input diagnostic per signal
   - **Dependency**: runs only after the user confirmed the compile in task 4. Load `fixtures/floating_input/build/floating_input.ino.hex`. If the file is missing, stop and ask the user to compile. Do not skip the test, weaken it, or substitute another HEX
   - Add `src/engine/__tests__/floating-input.test.ts`. Fixture (pin maps are fixture data in the test file): LED = port B bit 5 output, D3_IN = port D bit 3 input, D4_IN = port D bit 4 input. No scheduled input events
@@ -95,7 +95,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Document the counterexample
   - _Requirements: 1.4, 1.6, 2.4, 2.4a, 2.8, 2.9_
 
-- [ ] 6. Write late pull-up test (needs the user-compiled HEX)
+- [x] 6. Write late pull-up test (needs the user-compiled HEX)
   - **Property 1: Bug Condition** - Presented level tracks the firmware's pull-up change after the run starts
   - **Dependency**: runs only after the user confirmed the compile in task 4. Use the same `fixtures/floating_input/build/floating_input.ino.hex` and fixture as task 5. Do not hand-assemble a second HEX. If the file is missing, stop and ask the user to compile
   - Add to `src/engine/__tests__/floating-input.test.ts`
@@ -107,7 +107,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Document the counterexample
   - _Requirements: 1.5, 1.6, 2.5, 2.8_
 
-- [ ] 7. Write hook chaining and no-under-report tests
+- [x] 7. Write hook chaining and no-under-report tests
   - **Property 5: Chaining** - A pre-existing PIN read hook is preserved and its return value is what the firmware sees
   - **Property 4: No under-report** - Every read of a PIN register containing a released, non-pulled-up input is covered by that signal's diagnostic, with at most one per signal
   - Add `src/engine/__tests__/hook-chaining.test.ts`. The avr8js types stay inside the bridge, so the tests use the test-only construction path `EmulatorBridge.createWithTestHooks(hex, fixture, inputEvents, hooks)` (see task 9.4). `hooks.pinReadStubs` installs stub read hooks on PINB, PINC or PIND, and `hooks.portListeners` adds listeners to port B, C or D, both after the ports are built and before the bridge wraps the read hook. Before the fix this method does not exist, so the tests reach it through a narrow cast and fail for that reason
@@ -120,7 +120,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - Document the counterexample
   - _Requirements: 2.4, 2.4a, 3.3, 3.4_
 
-- [ ] 8. Write replay determinism test including diagnostics (needs the user-compiled HEX)
+- [x] 8. Write replay determinism test including diagnostics (needs the user-compiled HEX)
   - **Property 3: Replay Determinism** - Fresh bridge, same HEX, fixture and ordered events give identical outputs and diagnostics
   - **Dependency**: the `floating_input` part runs only after the user confirmed the compile in task 4. If the file is missing, stop and ask. The `blink_button` part needs no new HEX
   - Add to `src/engine/__tests__/input-pullup.property.test.ts`
@@ -132,10 +132,10 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
   - **EXPECTED OUTCOME**: Tests FAIL on unfixed code (`diagnostics` and `"release"` are missing). Cases that avoid both may pass. Record which
   - _Requirements: 2.6_
 
-- [ ] 9. Fix for undriven input pins reading LOW under pull-up
+- [x] 9. Fix for undriven input pins reading LOW under pull-up
   - **Precondition**: tasks 1 to 8 are written and shown failing (task 2 shown passing). No fix code before that
 
-  - [ ] 9.1 Add types in `src/engine/types.ts`
+  - [x] 9.1 Add types in `src/engine/types.ts`
     - Add `export type InputValue = 0 | 1 | "release";` and set `InputEvent.value: InputValue`
     - Add `FloatingInputDiagnostic { kind: "floating-input"; signal: string; cycle: number; register: string }` (`register` is `"PINB"`, `"PINC"` or `"PIND"`) and `export type Diagnostic = FloatingInputDiagnostic;`
     - Add `diagnostics: Diagnostic[]` to `AdvanceResult`. It is always present, possibly empty
@@ -144,7 +144,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - _Preservation: Preservation Requirements from design (existing callers compile unchanged because the type only widens)_
     - _Requirements: 2.3, 2.4, 3.5_
 
-  - [ ] 9.2 Add released-pin model in `src/engine/emulator-bridge.ts`
+  - [x] 9.2 Add released-pin model in `src/engine/emulator-bridge.ts`
     - Add `_extState` (per fixture pin, `"released" | 0 | 1`, all `"released"` at creation), `_floatingReported: Set<string>` and `_pendingDiagnostics: Diagnostic[]`
     - Add `_applyInput(pinIdx, value)`: 0 or 1 stores the state and calls `setPin(bit, value === 1)` as today. `"release"` stores `"released"` and calls `_presentReleased(pinIdx)`
     - Add `_presentReleased(pinIdx)`: read `port.pinState(bit)` and call `port.setPin(bit, state === PinState.InputPullUp)`. Leave `High` and `Low` states alone
@@ -155,7 +155,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - _Preservation: driven 0 and 1 go through the same `setPin` call as today_
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 3.1, 3.2_
 
-  - [ ] 9.3 Add chained read hook, diagnostics and result plumbing
+  - [x] 9.3 Add chained read hook, diagnostics and result plumbing
     - After the `AVRIOPort` constructors (they overwrite DDR, PORT and PIN write hooks, so install nothing earlier), install a chained read hook on `cpu.readHooks[portConfig.PIN]` for each port with fixture input pins, in the order B, C, D. Capture `prev = cpu.readHooks[PIN]`. Inside the wrapper: if `prev` exists call `prev(addr)` first and keep its value, else use `cpu.data[addr]`. Then, for each released input pin on that port with `pinState = Input` and a signal not in `_floatingReported`, in ascending fixture pin index, add the signal to the set and push `{ kind: "floating-input", signal, cycle: cpu.cycles, register }`. Return the original value unchanged
     - Do not add write hooks. Observe DDR/PORT only through `port.addListener`
     - `register` comes from a small constant table keyed by port letter (`PINB`, `PINC`, `PIND`)
@@ -169,7 +169,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - _Preservation: error kinds, output events and the cycle-0 snapshot are unchanged_
     - _Requirements: 2.4, 2.4a, 2.6, 3.3, 3.4, 3.6, 3.7_
 
-  - [ ] 9.4 Add the test-only construction path for chaining tests
+  - [x] 9.4 Add the test-only construction path for chaining tests
     - The shape is fixed. Add to `EmulatorBridge` in `src/engine/emulator-bridge.ts`:
       ```ts
       static createWithTestHooks(
@@ -190,7 +190,7 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - Extend `scripts/guard.mjs` (user-authorized for this spec) with an isolation check: the string `createWithTestHooks` may appear only in `src/engine/emulator-bridge.ts` and in files under `src/engine/__tests__/`. Any other file under `src/` that contains it is a finding, and the script exits 2 as it does for its other findings. Keep the existing checks unchanged. Run `node scripts/guard.mjs` and report the result
     - _Requirements: 2.4, 3.3_
 
-  - [ ] 9.5 Update the UI in `src/ui/main.ts`
+  - [x] 9.5 Update the UI in `src/ui/main.ts`
     - `initBridge()` calls `EmulatorBridge.create(hexData, FIXTURE)` with no cycle-0 BUTTON event
     - Rename `scheduleButtonUp` to `scheduleButtonRelease`. It schedules `{ signal: 'BUTTON', value: 'release', cycle: bridge.cycleCount }`. Bind it to `pointerup`, `pointerleave` and the Space `keyup`. Pointer-down and keydown keep scheduling value 0
     - Replace the SPIKE workaround comment with one saying the bridge now models the pull-up, so the UI never drives BUTTON = 1 to fake a released button
@@ -201,20 +201,20 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - _Preservation: pointer-down and keydown still drive BUTTON = 0_
     - _Requirements: 1.3, 2.3, 2.7_
 
-  - [ ] 9.6 Verify bug condition exploration tests now pass
+  - [x] 9.6 Verify bug condition exploration tests now pass
     - **Property 1: Expected Behavior** - Released inputs present the level their configuration implies
     - **IMPORTANT**: Re-run the SAME tests from tasks 1, 3, 5 and 6 - do NOT write new tests and do NOT edit them to pass
     - The tests encode the expected behavior. When they pass, the expected behavior is satisfied for the cases covered
     - **EXPECTED OUTCOME**: Tests PASS. If a test and the system disagree, stop and report what the test expects, what actually happened, and the evidence, then wait for a decision
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8_
 
-  - [ ] 9.7 Verify chaining and no-under-report tests now pass
+  - [x] 9.7 Verify chaining and no-under-report tests now pass
     - **Property 4: No under-report** and **Property 5: Chaining**
     - **IMPORTANT**: Re-run the SAME tests from task 7 - do NOT write new tests and do NOT edit them to pass
     - **EXPECTED OUTCOME**: Tests PASS. If not, stop and report expected, actual and evidence
     - _Requirements: 2.4, 2.4a, 3.3, 3.4_
 
-  - [ ] 9.8 Verify preservation tests still pass
+  - [x] 9.8 Verify preservation tests still pass
     - **Property 2: Preservation** - Driven pins, outputs and error paths unchanged
     - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
     - The baseline file `src/engine/__tests__/baselines/input-pullup-preservation.json` was written once in task 2 on UNFIXED code. Do NOT regenerate, refresh or edit it here. The re-run compares post-fix output to that same file
@@ -223,20 +223,20 @@ Fix undriven input pins reading LOW under pull-up, using explore, preserve, impl
     - **EXPECTED OUTCOME**: Tests PASS (no regressions seen in the cases covered)
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
 
-  - [ ] 9.9 Verify replay determinism now passes
+  - [x] 9.9 Verify replay determinism now passes
     - **Property 3: Replay Determinism** - Identical outputs and diagnostics on replay
     - **IMPORTANT**: Re-run the SAME tests from task 8 - do NOT write new tests
     - **EXPECTED OUTCOME**: Tests PASS
     - _Requirements: 2.6_
 
-- [ ] 10. Spike monitor idle-run check (new cases only)
+- [x] 10. Spike monitor idle-run check (new cases only)
   - Add a new test file, for example `src/engine/__tests__/input-pullup.spike.test.ts`. Do not edit `spike-monitor.test.ts`
   - Run the LED-timeout monitor on the idle `blink_button` run with no workaround event, 20,000,000 cycles, and compare against the existing "Released" result observed with BUTTON driven to 1
   - Assert LED toggle spacing on the idle run is 8,000,000 cycles within 1%, and not within 1% of 1,600,000 cycles
   - Report the monitor result using only the exact verdict strings from the Overview
   - _Requirements: 2.2, 3.8_
 
-- [ ] 11. Cleanup and checkpoint - Ensure all tests pass
+- [x] 11. Cleanup and checkpoint - Ensure all tests pass
   - Run the type check and the full test suite once with `vitest --run` (single execution, no watch mode)
   - Delete every temporary debug script and scratch file created during the work. Confirm with `git status` that only these changed: `src/engine/`, `src/ui/main.ts`, new test files, the baseline `src/engine/__tests__/baselines/input-pullup-preservation.json`, `scripts/guard.mjs` (user-authorized), `fixtures/floating_input/floating_input.ino` and the user-built `fixtures/floating_input/build/`. Do not commit
   - The agent runs `git diff --stat` on the existing test files (`emulator-bridge.smoke`, `emulator-bridge.property`, `spike-monitor`), expects no changes, and reports the output. No git commands inside any test file

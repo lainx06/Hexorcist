@@ -1,0 +1,1396 @@
+[
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 6
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 17
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 6,
+        "appliedCycle": 6
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 17,
+        "appliedCycle": 18
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3270275
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1026970
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 341447
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1281753
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1605995
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211681
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 341447,
+        "appliedCycle": 341449
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1026970,
+        "appliedCycle": 1026971
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1281753,
+        "appliedCycle": 1281753
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3270275,
+        "appliedCycle": 3270275
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 19
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1696803
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 21
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 14
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 14,
+        "appliedCycle": 14
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 19,
+        "appliedCycle": 20
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 21,
+        "appliedCycle": 21
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1696803,
+        "appliedCycle": 1696803
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3166868
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3499985
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 588224
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1654018
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 3167031
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 588224,
+        "appliedCycle": 588224
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1654018,
+        "appliedCycle": 1654019
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3166868,
+        "appliedCycle": 3166868
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3499985,
+        "appliedCycle": 3499985
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2515472
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 860313
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 860313,
+        "appliedCycle": 860314
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2515472,
+        "appliedCycle": 2515473
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2530532
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2530532,
+        "appliedCycle": 2530532
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2178894
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3499982
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 920804
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 920804,
+        "appliedCycle": 920805
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2178894,
+        "appliedCycle": 2178895
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3499982,
+        "appliedCycle": 3499983
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3374726
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2249161
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 2249279
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3850597
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2249161,
+        "appliedCycle": 2249162
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3374726,
+        "appliedCycle": 3374727
+      }
+    ],
+    "cyclesConsumed": 4000001
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1917196
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3257713
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1917196,
+        "appliedCycle": 1917196
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3257713,
+        "appliedCycle": 3257713
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2703323
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 213610
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2604971
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 2703482
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 213610,
+        "appliedCycle": 213611
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2604971,
+        "appliedCycle": 2604972
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2703323,
+        "appliedCycle": 2703323
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3143603
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1111151
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1111151,
+        "appliedCycle": 1111151
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 3143603,
+        "appliedCycle": 3143604
+      }
+    ],
+    "cyclesConsumed": 4000001
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1476565
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3362599
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1290658
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 936621
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606036
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211644
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 936621,
+        "appliedCycle": 936622
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1290658,
+        "appliedCycle": 1290658
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1476565,
+        "appliedCycle": 1476565
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 3362599,
+        "appliedCycle": 3362599
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1964440
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 1964440,
+        "appliedCycle": 1964440
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1020084
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2977473
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 770880
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1941096
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 770880,
+        "appliedCycle": 770880
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1020084,
+        "appliedCycle": 1020084
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1941096,
+        "appliedCycle": 1941096
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 2977473,
+        "appliedCycle": 2977473
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1706581
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1697501
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 495277
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1697604
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3293540
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 495277,
+        "appliedCycle": 495278
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1697501,
+        "appliedCycle": 1697501
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 1706581,
+        "appliedCycle": 1706581
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 768214
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 403989
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606005
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211613
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 1,
+        "cycle": 403989,
+        "appliedCycle": 403989
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 768214,
+        "appliedCycle": 768214
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2384503
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      },
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 2384503,
+        "appliedCycle": 2384503
+      }
+    ],
+    "cyclesConsumed": 4000000
+  },
+  {
+    "events": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0
+      }
+    ],
+    "outputEvents": [
+      {
+        "signal": "LED",
+        "value": "input",
+        "cycle": 0
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 263
+      },
+      {
+        "signal": "LED",
+        "value": 1,
+        "cycle": 1606023
+      },
+      {
+        "signal": "LED",
+        "value": 0,
+        "cycle": 3211631
+      }
+    ],
+    "appliedInputs": [
+      {
+        "signal": "BUTTON",
+        "value": 0,
+        "cycle": 0,
+        "appliedCycle": 0
+      }
+    ],
+    "cyclesConsumed": 4000000
+  }
+]

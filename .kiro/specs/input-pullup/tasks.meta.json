@@ -1,0 +1,305 @@
+{
+  "pbtResults": {
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1794586485438
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "cd843f90-f081-4aa6-9547-611b66989ae4",
+        "chatSessionId": "sess_586c4427-69a0-4b6a-8bcd-66b234395704",
+        "timestamp": 1794586324391
+      },
+      {
+        "executionId": "cd843f90-f081-4aa6-9547-611b66989ae4",
+        "chatSessionId": "sess_586c4427-69a0-4b6a-8bcd-66b234395704",
+        "timestamp": 1794586362753
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "e8dcbbdd-746d-4266-b31a-789022872f69",
+        "chatSessionId": "sess_5913d4d8-d06d-4a1f-a9a2-cf1878c10afb",
+        "timestamp": 1794586379859
+      },
+      {
+        "executionId": "e8dcbbdd-746d-4266-b31a-789022872f69",
+        "chatSessionId": "sess_5913d4d8-d06d-4a1f-a9a2-cf1878c10afb",
+        "timestamp": 1794586510411
+      }
+    ],
+    "3. Write release event test (uses the existing blink_button HEX)": [
+      {
+        "executionId": "7e97ddd4-ba14-40ed-b107-aa29296a5cf5",
+        "chatSessionId": "sess_596343f5-6e31-4b37-9a10-92d9d61a5218",
+        "timestamp": 1794586530941
+      },
+      {
+        "executionId": "7e97ddd4-ba14-40ed-b107-aa29296a5cf5",
+        "chatSessionId": "sess_596343f5-6e31-4b37-9a10-92d9d61a5218",
+        "timestamp": 1794586587129
+      }
+    ],
+    "4. Write the floating_input sketch, then STOP for the user to compile": [
+      {
+        "executionId": "3a0d393f-44db-4e96-b121-bdc20d607d9a",
+        "chatSessionId": "sess_9ed5253a-171b-4b50-aa80-0bc46497f08f",
+        "timestamp": 1794586622702
+      },
+      {
+        "executionId": "3a0d393f-44db-4e96-b121-bdc20d607d9a",
+        "chatSessionId": "sess_9ed5253a-171b-4b50-aa80-0bc46497f08f",
+        "timestamp": 1794586638860
+      }
+    ],
+    "5. Write floating-input diagnostic test (needs the user-compiled HEX)": [
+      {
+        "executionId": "128a04a3-187c-4661-b2cd-8ec2510557ff",
+        "chatSessionId": "sess_f96b1e8b-5512-4807-9cfd-8e051717e01d",
+        "timestamp": 1794586901050
+      },
+      {
+        "executionId": "89fe9ca3-2fd1-47de-926a-60a03c94e6d9",
+        "chatSessionId": "sess_f96b1e8b-5512-4807-9cfd-8e051717e01d",
+        "timestamp": 1794586919866
+      },
+      {
+        "executionId": "89fe9ca3-2fd1-47de-926a-60a03c94e6d9",
+        "chatSessionId": "sess_f96b1e8b-5512-4807-9cfd-8e051717e01d",
+        "timestamp": 1794586968773
+      }
+    ],
+    "6. Write late pull-up test (needs the user-compiled HEX)": [
+      {
+        "executionId": "368b0b8c-0b6a-410d-b2c9-cb9f7b30bbb3",
+        "chatSessionId": "sess_6f935201-bc49-400f-9ee4-5e028189bafb",
+        "timestamp": 1794587012129
+      },
+      {
+        "executionId": "368b0b8c-0b6a-410d-b2c9-cb9f7b30bbb3",
+        "chatSessionId": "sess_6f935201-bc49-400f-9ee4-5e028189bafb",
+        "timestamp": 1794587058572
+      }
+    ],
+    "7. Write hook chaining and no-under-report tests": [
+      {
+        "executionId": "e53a7252-069e-4539-aa44-2d4afacae131",
+        "chatSessionId": "sess_4c758771-9a02-47fa-ab6c-4d361ee68f13",
+        "timestamp": 1794587089618
+      },
+      {
+        "executionId": "e53a7252-069e-4539-aa44-2d4afacae131",
+        "chatSessionId": "sess_4c758771-9a02-47fa-ab6c-4d361ee68f13",
+        "timestamp": 1794587173295
+      }
+    ],
+    "8. Write replay determinism test including diagnostics (needs the user-compiled HEX)": [
+      {
+        "executionId": "343b2baa-36bb-4619-9c36-fccb7cd0ba8b",
+        "chatSessionId": "sess_5f233e80-132b-42da-acdc-9b9e1b634cf0",
+        "timestamp": 1794587199791
+      },
+      {
+        "executionId": "343b2baa-36bb-4619-9c36-fccb7cd0ba8b",
+        "chatSessionId": "sess_5f233e80-132b-42da-acdc-9b9e1b634cf0",
+        "timestamp": 1794587276402
+      }
+    ],
+    "9.1 Add types in `src/engine/types.ts`": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487420
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587489621
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587519632
+      }
+    ],
+    "9.2 Add released-pin model in `src/engine/emulator-bridge.ts`": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487481
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587520142
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587586562
+      }
+    ],
+    "9.3 Add chained read hook, diagnostics and result plumbing": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487519
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587587079
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587703043
+      }
+    ],
+    "9.4 Add the test-only construction path for chaining tests": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487566
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587703508
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587741410
+      }
+    ],
+    "9.5 Update the UI in `src/ui/main.ts`": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487601
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587741032
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587775670
+      }
+    ],
+    "9.6 Verify bug condition exploration tests now pass": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487634
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587775278
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587829940
+      }
+    ],
+    "9.7 Verify chaining and no-under-report tests now pass": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487669
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587779715
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587830575
+      }
+    ],
+    "9.8 Verify preservation tests still pass": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487704
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587779760
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587831572
+      }
+    ],
+    "9.9 Verify replay determinism now passes": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487741
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587779805
+      },
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587831976
+      }
+    ],
+    "10. Spike monitor idle-run check (new cases only)": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487795
+      },
+      {
+        "executionId": "1d67d736-0ea0-4111-a25b-be3195178451",
+        "chatSessionId": "sess_66b374b6-8ed0-4ac5-ab56-c6528105036f",
+        "timestamp": 1794587988414
+      },
+      {
+        "executionId": "1d67d736-0ea0-4111-a25b-be3195178451",
+        "chatSessionId": "sess_66b374b6-8ed0-4ac5-ab56-c6528105036f",
+        "timestamp": 1794588027240
+      }
+    ],
+    "11. Cleanup and checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587487832
+      },
+      {
+        "executionId": "8ab4d6e1-45d9-4284-a04f-f86cddeed7de",
+        "chatSessionId": "sess_0bccb4c4-83bf-4bcc-a063-a18fb1825ee1",
+        "timestamp": 1794588074056
+      },
+      {
+        "executionId": "8ab4d6e1-45d9-4284-a04f-f86cddeed7de",
+        "chatSessionId": "sess_0bccb4c4-83bf-4bcc-a063-a18fb1825ee1",
+        "timestamp": 1794588141892
+      }
+    ],
+    "9. Fix for undriven input pins reading LOW under pull-up": [
+      {
+        "executionId": "fb69f5bf-feef-41a9-b479-fae625011a92",
+        "chatSessionId": "sess_9bcb6a93-d446-4a34-a83b-c13f34ab46e0",
+        "timestamp": 1794587832015
+      }
+    ]
+  }
+}

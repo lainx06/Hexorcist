@@ -49,10 +49,8 @@ function getElement<T extends Element>(id: string): T {
 // ── Initialize ──────────────────────────────────────────────────────────────
 
 function initBridge() {
-  // Create bridge with BUTTON scheduled to 1 at cycle 0 (SPIKE workaround: simulate released state)
-  bridge = EmulatorBridge.create(hexData, FIXTURE, [
-    { signal: 'BUTTON', value: 1, cycle: 0 },
-  ]);
+  // No BUTTON event at cycle 0: the bridge presents the released level itself.
+  bridge = EmulatorBridge.create(hexData, FIXTURE);
 
   if (isBridgeError(bridge)) {
     alert(`Failed to create bridge: ${bridge.message}`);
@@ -174,16 +172,14 @@ function stopSimulation() {
 // ── Button Input ────────────────────────────────────────────────────────────
 
 /**
- * SPIKE workaround for avr8js not modeling internal pull-up:
- * 
- * Normally, INPUT_PULLUP should keep the pin high when not externally driven.
- * avr8js doesn't model pull-up, so we manually schedule BUTTON events:
- * 
- * - At init: BUTTON = 1 (released, simulating pull-up)
+ * The bridge now models the pull-up, so the UI never drives BUTTON = 1 to
+ * fake a released button.
+ *
  * - On pointerdown: schedule BUTTON = 0 (pressed)
- * - On pointerup/leave: schedule BUTTON = 1 (released)
- * 
- * Same for Space key to allow keyboard control.
+ * - On pointerup/leave: schedule BUTTON = 'release' (the bridge presents the
+ *   level the pin configuration implies)
+ *
+ * Same for the Space key.
  */
 function scheduleButtonDown() {
   if (bridge !== null && !isBridgeError(bridge)) {
@@ -191,9 +187,9 @@ function scheduleButtonDown() {
   }
 }
 
-function scheduleButtonUp() {
+function scheduleButtonRelease() {
   if (bridge !== null && !isBridgeError(bridge)) {
-    bridge.schedule({ signal: 'BUTTON', value: 1, cycle: bridge.cycleCount });
+    bridge.schedule({ signal: 'BUTTON', value: 'release', cycle: bridge.cycleCount });
   }
 }
 
@@ -260,8 +256,8 @@ function attachEventListeners() {
 
   const buttonControl = getElement<HTMLButtonElement>('buttonControl');
   buttonControl.addEventListener('pointerdown', scheduleButtonDown);
-  buttonControl.addEventListener('pointerup', scheduleButtonUp);
-  buttonControl.addEventListener('pointerleave', scheduleButtonUp);
+  buttonControl.addEventListener('pointerup', scheduleButtonRelease);
+  buttonControl.addEventListener('pointerleave', scheduleButtonRelease);
 
   // Space key support
   window.addEventListener('keydown', e => {
@@ -274,7 +270,7 @@ function attachEventListeners() {
   window.addEventListener('keyup', e => {
     if (e.code === 'Space') {
       e.preventDefault();
-      scheduleButtonUp();
+      scheduleButtonRelease();
     }
   });
 }

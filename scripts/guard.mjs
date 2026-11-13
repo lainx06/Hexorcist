@@ -78,6 +78,20 @@ scan(
   ],
 );
 
+// c2. Isolation: the test-only construction path may appear only in the bridge and in tests
+scan(
+  srcFiles.filter((f) => {
+    const r = rel(f);
+    return r !== bridge && !r.startsWith("src/engine/__tests__/");
+  }),
+  [
+    {
+      re: /createWithTestHooks/,
+      msg: () => `"createWithTestHooks" may appear only in ${bridge} and src/engine/__tests__/`,
+    },
+  ],
+);
+
 // d. Brand
 scan([...one(join(root, "index.html")), ...walk(join(root, "src", "ui"))], [
   {
