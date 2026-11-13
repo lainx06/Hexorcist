@@ -1,0 +1,217 @@
+/* Hexorcist UI — Dark terminal aesthetic with green-phosphor text */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0a0e27;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.subtitle {
+  color: #00bb00;
+  font-size: 12px;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.label {
+  font-size: 12px;
+  color: #00dd00;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.controls {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: 2px solid #00ff00;
+  background-color: #0a0e27;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background-color: #00ff00;
+  color: #0a0e27;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  border-color: #00ff00;
+}
+
+.btn-secondary {
+  border-color: #00aa00;
+  color: #00aa00;
+}
+
+.btn-secondary:hover {
+  background-color: #00aa00;
+  color: #0a0e27;
+}
+
+.display-section {
+  margin-bottom: 24px;
+  padding: 12px;
+  border: 1px solid #00333300;
+  background-color: #0f1433;
+}
+
+.time-box {
+  margin-bottom: 16px;
+}
+
+.time-value {
+  font-size: 24px;
+  color: #00ffff;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.led-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.led-svg {
+  display: block;
+  margin: 12px auto;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 0, 0.3));
+}
+
+.led-info {
+  font-size: 11px;
+  color: #007700;
+  opacity: 0.8;
+}
+
+.button-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.button-info {
+  font-size: 11px;
+  color: #007700;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.event-log-section {
+  margin-top: 24px;
+}
+
+.event-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.event-table thead {
+  background-color: #1a1f3a;
+  border-bottom: 2px solid #00ff00;
+}
+
+.event-table th {
+  padding: 8px 12px;
+  text-align: left;
+  color: #00ff00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.event-table tbody tr {
+  border-bottom: 1px solid #00333355;
+  transition: background-color 0.2s ease;
+}
+
+.event-table tbody tr:hover {
+  background-color: #1a1f3a;
+}
+
+.event-table td {
+  padding: 6px 12px;
+  color: #00dd00;
+  font-family: 'Courier New', monospace;
+}
+
+.event-table td:nth-child(2) {
+  /* Value column */
+  color: #00ffff;
+  font-weight: bold;
+}
+
+.event-table td:nth-child(3),
+.event-table td:nth-child(4) {
+  /* Cycle and Time columns */
+  color: #00bb00;
+  text-align: right;
+}
+
+/* Accessibility: focus states */
+button:focus {
+  outline: 2px solid #00ff00;
+  outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .event-table {
+    font-size: 11px;
+  }
+
+  .event-table th,
+  .event-table td {
+    padding: 4px 8px;
+  }
+}
