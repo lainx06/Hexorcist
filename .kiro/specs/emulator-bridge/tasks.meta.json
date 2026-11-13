@@ -36,6 +36,18 @@
         "chatSessionId": "sess_e11552b7-5195-47a2-a15c-f209267da77b",
         "timestamp": 1794535824839
       }
+    ],
+    "3. Temporary Hard-Coded Monitor + Replay (Spike S3+S4)": [
+      {
+        "executionId": "46a2b859-eb8d-44c0-b31d-d5b164e4d106",
+        "chatSessionId": "sess_cc5f5af2-0141-417d-9353-4dfc9c8028eb",
+        "timestamp": 1794583036020
+      },
+      {
+        "executionId": "46a2b859-eb8d-44c0-b31d-d5b164e4d106",
+        "chatSessionId": "sess_cc5f5af2-0141-417d-9353-4dfc9c8028eb",
+        "timestamp": 1794583239780
+      }
     ]
   }
 }

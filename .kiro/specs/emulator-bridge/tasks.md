@@ -112,7 +112,7 @@ Create `src/ui/index.html` and `src/ui/main.ts`:
     - Test initial snapshot: a HEX that never configures a mapped output pin produces a cycle-0 event with value `"input"` for it; blink_button produces a cycle-0 LED event that matches avr8js `pinState` for PB5 before the first instruction.
     - _Requirements: 3.5, 4.1, 4.2, 4.3_
 
-- [ ] 3. Temporary Hard-Coded Monitor + Replay (Spike S3+S4)
+- [x] 3. Temporary Hard-Coded Monitor + Replay (Spike S3+S4)
   - **Part A: Monitor**
 
 Create `src/engine/__tests__/ledTimeoutMonitor.ts`:
