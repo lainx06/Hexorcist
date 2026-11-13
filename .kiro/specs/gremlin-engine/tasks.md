@@ -72,18 +72,18 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - numRuns 200. Two generators agree over 1,000 `nextU32` and 1,000 `nextInt` calls. Invalid range leaves the next outputs and `drawCount` equal to an untouched twin. Non-integer or out-of-range seeds give `invalid-seed`
     - **Validates: Requirements 1.2, 1.5, 1.6, 1.8**
 
-- [ ] 5. Run_Seed derivation
-  - [ ] 5.1 Implement `src/engine/run-seed.ts`
+- [x] 5. Run_Seed derivation
+  - [x] 5.1 Implement `src/engine/run-seed.ts`
     - `fmix32(h)` and `deriveRunSeed(campaignSeed, runIndex)` = `fmix32((fmix32(campaignSeed) + runIndex) >>> 0)`, with `invalid-seed` and `invalid-run-index` errors and no Run_Seed on error
     - A comment states why distinct Run_Index values give distinct Run_Seed values (bijection construction) without naming flagged APIs
     - _Requirements: 1.9, 1.10, 1.11_
 
-  - [ ] 5.2 Write property test for Run_Seed purity in `src/engine/__tests__/run-seed.property.test.ts`
+  - [x] 5.2 Write property test for Run_Seed purity in `src/engine/__tests__/run-seed.property.test.ts`
     - **Property 12: Run_Seed is a pure function**
     - numRuns 200. Same inputs give the same value regardless of call order or earlier calls
     - **Validates: Requirements 1.9, 11.12**
 
-  - [ ] 5.3 Write property test for Run_Seed distinctness and validation in the same file
+  - [x] 5.3 Write property test for Run_Seed distinctness and validation in the same file
     - **Property 15: Run_Seed distinctness and validation**
     - numRuns 200 for the generated parts. Run_Index 0 to 9,999 gives 10,000 distinct Run_Seed values for each of the Campaign_Seed values 0, 1, 42 and 4294967295 plus generated ones. Invalid Campaign_Seed or Run_Index gives the matching typed error. `fmix32` composed with the test-side inverse (multipliers `0x7ed1b41d` and `0xa5cb9243`) is the identity over 100,000 sampled values. State in a comment that the assurance comes from the construction and the test is evidence
     - **Validates: Requirements 1.10, 1.11**
