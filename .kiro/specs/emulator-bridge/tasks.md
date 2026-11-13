@@ -31,7 +31,7 @@ The implementation follows five required tasks, each designed to validate core f
     3. Search `node_modules/avr8js` for the banned calls `Date.now`, `performance.now`, `setTimeout`, `setInterval`, and `Math.random`. Report all findings (expected: no matches on the paths used by the bridge). Note: the design audit used the GitHub master branch; verify the installed package version matches.
   - _Requirements: 1.1, 1.2_
 
-- [ ] 1. Write blink_button.ino
+- [x] 1. Write blink_button.ino
   - Create `fixtures/blink_button/blink_button.ino` with the following behavior:
     - GPIO setup: D2 (PD2) as INPUT_PULLUP (external button, active-low); D13 (PB5) as OUTPUT (LED)
     - When button is held (D2 reads LOW): LED toggles every 100 ms (1.6M cycles at 16 MHz)
