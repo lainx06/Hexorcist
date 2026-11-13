@@ -145,7 +145,7 @@ Display or log: "Violation detected at cycle X. Replay confirmed: same violation
     - Create a test fixture with LED on for > 300 ms; verify monitor emits BROKE verdict with correct cycle range
     - _Requirements: 5.1_
 
-- [ ] 4. Property-Based Tests (Property 13 + Property 12)
+- [x] 4. Property-Based Tests (Property 13 + Property 12)
   - Write property-based tests using `fast-check` in `src/engine/__tests__/emulator-bridge.test.ts`:
     - Implement fast-check generators using a **small fixed set of real compiled HEX fixtures** (e.g., blink_button.ino and one or two minimal GPIO-toggle programs). Randomize the Fixture, InputEvent list, and cycle count:
       - `arbitraryFixture()`: generates valid Fixtures by selecting 1–4 real pins from ports B, C, D and randomizing direction (input or output).
