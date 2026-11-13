@@ -169,7 +169,7 @@ Display or log: "Violation detected at cycle X. Replay confirmed: same violation
     - Run with 100+ iterations
     - _Requirements: 4.4, 6.4_
 
-- [ ] 5. Benchmark Script (Spike S5)
+- [x] 5. Benchmark Script (Spike S5)
   - **Status:** required spike  
   - **Dependency:** Task 2 complete  
   - **Description:**

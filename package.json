@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "verify:avr8js": "npx tsx scripts/verify-avr8js.ts"
+    "verify:avr8js": "npx tsx scripts/verify-avr8js.ts",
+    "bench": "npx tsx bench/benchmark.ts"
   },
   "dependencies": {
     "avr8js": "0.21.1"
