@@ -40,13 +40,13 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
 - [x] 3. Checkpoint - guard and disclosure
   - Run `npm run guard` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. PRNG (PCG32)
-  - [ ] 4.1 Create `src/engine/errors.ts`
+- [x] 4. PRNG (PCG32)
+  - [x] 4.1 Create `src/engine/errors.ts`
     - Define the `EngineError` union, `CampaignError` and `isEngineError` exactly as in the design "errors.ts" section. `PrngError` is defined in `prng.ts` and imported here, and `BridgeError` comes from the existing `types.ts`
     - Type-only content plus the guard function. No other code
     - _Requirements: 1.5, 1.8, 1.10, 4.7, 4.8, 8.6, 8.19, 8.20_
 
-  - [ ] 4.2 Implement `src/engine/prng.ts`
+  - [x] 4.2 Implement `src/engine/prng.ts`
     - PCG32 XSH-RR, 64-bit state in `BigInt`, `createPrng(seed)` as `srandom(initstate = seed, initseq = 54)`, `inc = 109`, multiplier `6364136223846793005`
     - `nextU32()` increments `drawCount`; `nextInt(min, max)` uses rejection sampling with `threshold = (2^32 - bound) mod bound`, width 2^32 returns the raw output, a width of 1 still consumes one output
     - `invalid-range` (min above max, non-integer bound, width above 2^32) and `invalid-seed` return typed errors and leave state and `drawCount` unchanged
@@ -55,19 +55,19 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - Comments must not name the flagged APIs
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.8, 1.12_
 
-  - [ ] 4.3 Write `src/engine/__tests__/prng.test.ts`
+  - [x] 4.3 Write `src/engine/__tests__/prng.test.ts`
     - Reference vectors for seed 42 (stream 54): round 1 raw outputs, coins and rolls, and round 2 and 3 raw outputs, copied literally from the design. The test replays the 52-card shuffle draws of earlier rounds to stay aligned. These vectors are acceptance tests: never change them to pass
     - Distribution check: width 6, fixed seed, 60,000 draws, chi-square below the 0.001 critical value 20.515 for 5 degrees of freedom
     - Scripted-source rejection example: bound 6 has threshold 4, scripted outputs 0 and 3 are rejected and 4 returns 4
     - Examples: `invalid-range` and `invalid-seed` cases, state and `drawCount` unchanged after `invalid-range`, a width-1 draw consumes one output, `[0, 4294967295]` takes the raw path
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.7, 1.8, 11.11_
 
-  - [ ] 4.4 Write property test for range draw bounds in `src/engine/__tests__/prng.property.test.ts`
+  - [x] 4.4 Write property test for range draw bounds in `src/engine/__tests__/prng.property.test.ts`
     - **Property 13: Range draw bounds**
     - numRuns 200. Seeds from `arbSeed`-style inline generators (the shared helper file arrives in task 9.1), bounds with width up to 2^32 including `min = max` and `[0, 4294967295]`
     - **Validates: Requirements 1.3, 11.13**
 
-  - [ ] 4.5 Write property test for PRNG determinism and error handling in the same file
+  - [x] 4.5 Write property test for PRNG determinism and error handling in the same file
     - **Property 14: PRNG determinism and error handling**
     - numRuns 200. Two generators agree over 1,000 `nextU32` and 1,000 `nextInt` calls. Invalid range leaves the next outputs and `drawCount` equal to an untouched twin. Non-integer or out-of-range seeds give `invalid-seed`
     - **Validates: Requirements 1.2, 1.5, 1.6, 1.8**
