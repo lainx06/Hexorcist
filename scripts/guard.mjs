@@ -65,6 +65,20 @@ scan(engineFiles, [
   },
 ]);
 
+// b2. No network or entropy sources in engine code (tests excluded, same files as b)
+scan(engineFiles, [
+  { re: /\bfetch\s*\(/, msg: () => `network API "fetch(" in engine code` },
+  { re: /\bXMLHttpRequest\b/, msg: (w) => `network API "${w}" in engine code` },
+  { re: /\bWebSocket\b/, msg: (w) => `network API "${w}" in engine code` },
+  {
+    re: /\b(?:from\s*|import\s*\(?\s*|require\s*\(\s*)["'](?:node:)?(?:https|http|net)["']/,
+    msg: (w) => `network module import ${w.replace(/^.*?(["'])/, "$1")} in engine code`,
+  },
+  { re: /\bcrypto\.getRandomValues\b/, msg: (w) => `entropy API "${w}" in engine code` },
+  { re: /\brandomUUID\b/, msg: (w) => `entropy API "${w}" in engine code` },
+  { re: /\brandomBytes\b/, msg: (w) => `entropy API "${w}" in engine code` },
+]);
+
 // c. Isolation: only emulator-bridge.ts may import avr8js
 const bridge = "src/engine/emulator-bridge.ts";
 const srcFiles = walk(join(root, "src")).filter((f) => /\.[cm]?[jt]sx?$/.test(f));
