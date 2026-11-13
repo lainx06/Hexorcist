@@ -10,7 +10,7 @@ The implementation follows five required tasks, each designed to validate core f
 
 ## Tasks
 
-- [ ] 0. Project Scaffold + Verify avr8js Installation
+- [x] 0. Project Scaffold + Verify avr8js Installation
   - Set up a new Vite + TypeScript project at the workspace root
   - Install exact pinned versions:
     - `avr8js@0.21.1` (pinned exactly, no `^` or `~` range)

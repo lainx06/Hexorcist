@@ -1,0 +1,22 @@
+{
+  "name": "hexorcist",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "verify:avr8js": "npx tsx scripts/verify-avr8js.ts"
+  },
+  "dependencies": {
+    "avr8js": "0.21.1"
+  },
+  "devDependencies": {
+    "fast-check": "4.10.2",
+    "typescript": "^5.3.3",
+    "vite": "5.4.21",
+    "vitest": "1.6.0"
+  }
+}
