@@ -160,7 +160,7 @@ Process constraints carried into design and tasks (Requirement 17 states them as
 #### Acceptance Criteria
 
 1. THE Rule_Compiler SHALL compute Window_Cycles as Duration_Ms × Clock_Rate / 1000 using exact integer arithmetic on the decimal value of Duration_Ms (as defined in Requirement 1, criterion 6) and on Clock_Rate, by a method that `design.md` names. The result SHALL be exact for every Duration_Ms that Requirement 1 accepts and every Clock_Rate that is a positive integer, including results above 2^53 − 1, with no floating-point rounding.
-2. WHEN `fixture.clockHz` is `undefined` or `null`, THE Rule_Compiler SHALL use the Clock_Rate 16,000,000, the same default that `EmulatorBridge.create` applies with `fixture.clockHz ?? 16_000_000`. Otherwise THE Rule_Compiler SHALL use the `fixture.clockHz` value as given.
+2. WHEN `fixture.clockHz` is `undefined` or `null`, THE Rule_Compiler SHALL use the Clock_Rate 16,000,000, the same default that `EmulatorBridge.create` applies with `fixture.clockHz ?? 16_000_000`. Otherwise THE Rule_Compiler SHALL use the `fixture.clockHz` value as given. Because `validateFixture` rejects `clockHz: null`, the `null` case is reached only by functions that take a Fixture without calling `validateFixture` (decision OQ1).
 3. IF a Rule's Window_Cycles is not an integer, THEN THE Rule_Compiler SHALL mark the Rule with the `CannotCheck` reason `window not a whole number of cycles`. This covers every Window_Cycles greater than 0 and less than 1, because Duration_Ms > 0 and Clock_Rate > 0 make every integer Window_Cycles at least 1.
 4. IF Clock_Rate is not a number that is an integer greater than 0 (for example 0, a negative value, 16,000,000.5, `NaN`, `Infinity`, or a non-number value), THEN THE Rule_Compiler SHALL mark every Rule that has a Duration_Ms with the `CannotCheck` reason `clock rate is not a whole number of hertz`, SHALL NOT also mark that Rule under criterion 3, and SHALL return without throwing.
 5. WHEN Clock_Rate is 16,000,000, THE Rule_Compiler SHALL give 4,800,000 Window_Cycles for 300 ms, 1,600 for 0.1 ms, and 1 for 0.0000625 ms.
@@ -348,7 +348,11 @@ Process constraints carried into design and tasks (Requirement 17 states them as
    - `signal` is not a valid Signal_Name;
    - `maxOnCycles` is not an integer from 1 to 159,999,999,999 (the range in which maxOnCycles / 16,000 is a valid Duration_Ms);
    - `runEndCycle` is not a non-negative integer;
-   - an element of `events` for `signal` has a `cycle` that is not an integer, is above `runEndCycle`, or is below the `cycle` of the previous element for `signal`.
+   - an element of `events` for `signal` has a `cycle` that is not an integer, is above `runEndCycle`, or is below the `cycle` of the previous element for `signal`;
+   - `runEndCycle` is an integer above `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991). The Reason SHALL be exactly `runEndCycle must be at most 9007199254740991`;
+   - an element of `events` for `signal` has a `cycle` that is an integer above `Number.MAX_SAFE_INTEGER`. The Reason SHALL be exactly `events[<i>].cycle must be at most 9007199254740991`, where <i> is the zero-based index of that element in `events`, and this Reason SHALL replace the `cycle` above `runEndCycle` Reason for that element.
+
+   The two `Number.MAX_SAFE_INTEGER` cases are thrown as an Error in the same way as the other cases of this criterion, so that `checkLedTimeout` never passes such a value to the Rule_Checker and never surfaces the Rule_Checker's own error message.
 
 ### Requirement 15: Determinism, No AI and Plain Copy
 
@@ -432,3 +436,7 @@ Process constraints carried into design and tasks (Requirement 17 states them as
 - A. A Trigger counts only when its window fits in the Run (Requirement 12, criterion 1).
 - C. A parser Reason names P and at least one Allowed_Character at P, checked by Property 9.
 - D. This spec now has its own spec ID in `.config.kiro`.
+- OQ1. The `null` default of Requirement 5, criterion 2 applies only to direct calls that take a Fixture without `validateFixture`, such as the Window_Cycles function and the Trigger_Evaluator (`windowCycles` and `triggerOccurred` in `design.md`). Compiling against a Fixture with `clockHz: null` returns the Fixture Reason of Requirement 6, criterion 11, because `validateFixture` rejects `null`. This matches the EmulatorBridge, which also rejects such a Fixture.
+- OQ2. Accepted as written in `design.md`.
+- OQ3. Accepted as written in `design.md`.
+- OQ4. The Rule_Checker keeps throwing on late changes and on out-of-range cycles. `checkLedTimeout` rejects a `runEndCycle` or an event `cycle` above `Number.MAX_SAFE_INTEGER` with its own Reason (Requirement 14, criterion 7), so the Rule_Checker's message never reaches its caller. A test double that delivers a diagnostic late can get a Violation that the Requirement 11, criterion 6 cut-off would have removed; this is a documented limit.
