@@ -5,6 +5,9 @@ import * as fc from "fast-check";
 import { BANNED_WORDS } from "../copy-rules";
 import { render } from "../rules/render";
 import type { Condition, Edge, Rule, RuleSet } from "../rules/ir";
+import type { CheckerObservation } from "../checker";
+import type { AppliedInput, Diagnostic, Fixture, FixturePin, OutputEvent, PinValue } from "../types";
+import type { ReferenceInput } from "./rules-reference";
 
 // ---------------------------------------------------------------------------
 // Signal names
@@ -251,3 +254,311 @@ export const arbMutatedPair: fc.Arbitrary<MutatedSentence> = fc
 
 /** Mutated Canonical_Sentences of generated valid Rules (Property 3, source (a)). */
 export const arbMutatedSentence: fc.Arbitrary<string> = arbMutatedPair.map((p) => p.s);
+
+// ---------------------------------------------------------------------------
+// Checker cases (Property 4): a Fixture, a Rule_Set, a whole trace and its Step split.
+
+export interface CheckerCase extends ReferenceInput {
+  /** Strictly ascending Step boundaries X0 < X1 < ... < Xm = endCycle. */
+  readonly boundaries: readonly number[];
+  /** One observation per boundary, then the end-of-run call. */
+  readonly observations: readonly CheckerObservation[];
+}
+
+type GenFn = <T>(arb: fc.Arbitrary<T>) => T;
+type Leaf = Extract<Condition, { op: "eq" | "above" | "below" }>;
+
+const CASE_POOL = ["LED", "OUT2", "BTN", "BEAM", "POT", "KNOB"] as const;
+const ANALOG_POINTS = [0, 1, 100, 300, 511, 512, 513, 700, 1021, 1022, 1023];
+
+const int = (min: number, max: number): fc.Arbitrary<number> => fc.integer({ min, max });
+
+function genEndCycle(g: GenFn): number {
+  return g(
+    fc.oneof(
+      { weight: 2, arbitrary: int(1, 30) },
+      { weight: 2, arbitrary: int(1, 1000) },
+      { weight: 3, arbitrary: int(1, 20_000) },
+    ),
+  );
+}
+
+function genFixture(g: GenFn): Fixture {
+  const signals = g(fc.shuffledSubarray([...CASE_POOL], { minLength: 1, maxLength: 5 }));
+  const pins: FixturePin[] = [];
+  let digitalCount = 0;
+  let analogCount = 0;
+  const addPin = (signal: string, kind: "output" | "input" | "analog"): void => {
+    if (kind === "analog") {
+      const restLevel = g(fc.option(int(0, 1023), { nil: undefined }));
+      const pin: FixturePin = { signal, kind: "analog", channel: analogCount++ };
+      if (restLevel !== undefined) pin.restLevel = restLevel;
+      pins.push(pin);
+      return;
+    }
+    const pin: FixturePin = {
+      signal,
+      port: "D",
+      bit: digitalCount++ as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7,
+      direction: kind,
+    };
+    if (kind === "input") {
+      const level = g(fc.constantFrom<"low" | "high" | undefined>(undefined, "low", "high"));
+      const rest = g(fc.constantFrom<"active" | undefined>(undefined, undefined, "active"));
+      if (level !== undefined) pin.activeLevel = level;
+      if (rest !== undefined) pin.restState = rest;
+    }
+    pins.push(pin);
+  };
+  const kindOf = new Map<string, "output" | "input" | "analog">();
+  for (const s of signals) {
+    const natural = s === "LED" || s === "OUT2" ? "output" : s === "BTN" || s === "BEAM" ? "input" : "analog";
+    const roll = g(int(0, 4));
+    const kind = roll === 0 ? g(fc.constantFrom<"output" | "input" | "analog">("output", "input", "analog")) : natural;
+    kindOf.set(s, kind);
+    addPin(s, kind);
+  }
+  // One case in ten: a second pin with an existing signal (same kind), so the signal is mapped twice.
+  if (g(int(0, 9)) === 0) {
+    const s = signals[g(int(0, signals.length - 1))];
+    addPin(s, kindOf.get(s) as "output" | "input" | "analog");
+  }
+  return { pins };
+}
+
+function genLeaf(g: GenFn, pins: readonly FixturePin[]): Leaf {
+  const pin = pins[g(int(0, pins.length - 1))];
+  if (pin.kind === "analog") {
+    const v = g(fc.constantFrom(...ANALOG_POINTS));
+    return g(fc.boolean())
+      ? { op: "above", signal: pin.signal, value: Math.min(v, 1022) }
+      : { op: "below", signal: pin.signal, value: Math.max(v, 1) };
+  }
+  return { op: "eq", signal: pin.signal, value: g(fc.constantFrom(0 as const, 1 as const)) };
+}
+
+function genCondition(g: GenFn, pins: readonly FixturePin[], depth: number): Condition {
+  if (depth <= 1) return genLeaf(g, pins);
+  const n = g(int(2, 3));
+  const forced = g(int(0, n - 1));
+  const of: Condition[] = [];
+  for (let i = 0; i < n; i++) of.push(genCondition(g, pins, i === forced ? depth - 1 : g(int(1, depth - 1))));
+  return { op: g(arbListOp), of };
+}
+
+const genCond = (g: GenFn, pins: readonly FixturePin[]): Condition => genCondition(g, pins, g(int(1, 3)));
+const genEdge = (g: GenFn, pins: readonly FixturePin[]): Edge => ({
+  op: g(fc.constantFrom("rise" as const, "fall" as const)),
+  of: genCond(g, pins),
+});
+
+function genWindow(g: GenFn, endCycle: number): number {
+  return g(
+    fc.oneof(
+      { weight: 2, arbitrary: int(1, 30) },
+      { weight: 3, arbitrary: int(1, Math.min(endCycle, 20_000)) },
+      { weight: 1, arbitrary: int(1, 20_000) },
+    ),
+  );
+}
+
+/** Duration_Ms = W / 16,000: exact in decimal with at most 7 fraction digits. */
+const msOf = (w: number): number => w / 16_000;
+
+function genRule(g: GenFn, pins: readonly FixturePin[], endCycle: number): { rule: Rule; window: number | null } {
+  const form = g(fc.constantFrom("never", "respond", "count", "hold", "notLongerThan"));
+  if (form === "never") return { rule: { form, condition: genCond(g, pins) }, window: null };
+  const w = genWindow(g, endCycle);
+  switch (form) {
+    case "respond":
+      return {
+        rule: { form, trigger: genEdge(g, pins), withinMs: msOf(w), expect: genCond(g, pins) },
+        window: w,
+      };
+    case "count":
+      return {
+        rule: {
+          form,
+          edge: genEdge(g, pins),
+          windowMs: msOf(w),
+          max: g(fc.oneof({ weight: 3, arbitrary: int(0, 2) }, { weight: 1, arbitrary: int(0, 6) })),
+        },
+        window: w,
+      };
+    case "hold":
+      return {
+        rule: { form, after: genEdge(g, pins), durationMs: msOf(w), expect: genCond(g, pins) },
+        window: w,
+      };
+    default:
+      return { rule: { form: "notLongerThan", condition: genCond(g, pins), ms: msOf(w) }, window: w };
+  }
+}
+
+function leavesOfCondition(c: Condition): Leaf[] {
+  return c.op === "all" || c.op === "any" ? c.of.flatMap(leavesOfCondition) : [c];
+}
+
+function leavesOfRule(rule: Rule): Leaf[] {
+  switch (rule.form) {
+    case "never":
+    case "notLongerThan":
+      return leavesOfCondition(rule.condition);
+    case "respond":
+      return [...leavesOfCondition(rule.trigger.of), ...leavesOfCondition(rule.expect)];
+    case "count":
+      return leavesOfCondition(rule.edge.of);
+    case "hold":
+      return [...leavesOfCondition(rule.after.of), ...leavesOfCondition(rule.expect)];
+  }
+}
+
+/**
+ * Differential-check cases: Fixture, 1 to 4 Rules, a whole trace of E cycles and a Step split.
+ * Written from design Property 4, generator steps 1 to 4.
+ */
+export const arbCheckerCase: fc.Arbitrary<CheckerCase> = fc.gen().map((gen): CheckerCase => {
+  const g: GenFn = (arb) => gen(() => arb);
+  const E = genEndCycle(g);
+
+  // Step 1: Fixture.
+  const fixture = genFixture(g);
+  const pins = fixture.pins;
+
+  // Step 2: Rules, with distinct Canonical_Sentences.
+  const ruleCount = g(int(1, 4));
+  const ruleSet: Rule[] = [];
+  const windows: (number | null)[] = [];
+  const seenSentences = new Set<string>();
+  const wrongKindCase = g(int(0, 9)) === 0;
+  const wrongKindRule = g(int(0, ruleCount - 1));
+  for (let i = 0; i < ruleCount; i++) {
+    const { rule, window } = genRule(g, pins, E);
+    if (wrongKindCase && i === wrongKindRule) {
+      const leaves = leavesOfRule(rule);
+      const leaf = leaves[g(int(0, leaves.length - 1))];
+      const analog = pins.some((p) => p.signal === leaf.signal && p.kind === "analog");
+      const mutable = leaf as { op: string; value: number };
+      mutable.op = analog ? "eq" : "above";
+      mutable.value = analog ? 0 : 5;
+    }
+    const out = render(rule);
+    const sentence = out.ok ? out.sentence : `invalid:${i}`;
+    if (seenSentences.has(sentence)) continue;
+    seenSentences.add(sentence);
+    ruleSet.push(rule);
+    windows.push(window);
+  }
+
+  // Step 3: Trace.
+  const outputPins = pins.filter((p) => p.kind !== "analog" && p.direction === "output");
+  const digitalInputs = pins.filter((p) => p.kind !== "analog" && p.direction === "input");
+  const inputPins = pins.filter((p) => p.kind === "analog" || p.direction === "input");
+
+  const snapshot: OutputEvent[] = outputPins.map((p) => ({
+    signal: p.signal,
+    value: g(fc.constantFrom<PinValue>(0, 0, 1, 1, "input")),
+    cycle: 0,
+  }));
+  const changeCount = outputPins.length === 0 ? 0 : g(fc.oneof(int(0, 6), int(0, 40)));
+  const changes: OutputEvent[] = [];
+  for (let i = 0; i < changeCount; i++) {
+    changes.push({
+      signal: outputPins[g(int(0, outputPins.length - 1))].signal,
+      value: g(fc.constantFrom<PinValue>(0, 0, 1, 1, "input")),
+      cycle: g(int(1, E)),
+    });
+  }
+  const sortedChanges = changes
+    .map((e, i) => ({ e, i }))
+    .sort((a, b) => a.e.cycle - b.e.cycle || a.i - b.i)
+    .map((x) => x.e);
+  const outputEvents: OutputEvent[] = [...snapshot, ...sortedChanges];
+
+  // Rest_Events first (cycle 0), then applied inputs ascending by appliedCycle; ties keep draw order.
+  const applied: AppliedInput[] = [];
+  for (const p of digitalInputs) {
+    if (p.kind !== "analog" && p.restState === "active") {
+      applied.push({
+        signal: p.signal,
+        value: p.activeLevel === "high" ? 1 : 0,
+        cycle: 0,
+        gremlinId: "rest",
+        appliedCycle: 0,
+      });
+    }
+  }
+  const hot = Array.from({ length: g(int(1, 4)) }, () => g(int(0, E - 1)));
+  const inputCount = inputPins.length === 0 ? 0 : g(fc.oneof(int(0, 5), int(0, 30)));
+  const drawn: { ev: AppliedInput; i: number }[] = [];
+  for (let i = 0; i < inputCount; i++) {
+    const p = inputPins[g(int(0, inputPins.length - 1))];
+    const appliedCycle = g(fc.boolean()) ? hot[g(int(0, hot.length - 1))] : g(int(0, E - 1));
+    const cycle = Math.max(0, appliedCycle - g(fc.oneof(int(0, 0), int(0, 50))));
+    const gremlinId = `g${g(int(0, 3))}`;
+    if (p.kind === "analog") {
+      drawn.push({
+        ev: { signal: p.signal, analog: g(fc.oneof(fc.constantFrom(...ANALOG_POINTS), int(0, 1023))), cycle, gremlinId, appliedCycle },
+        i,
+      });
+    } else {
+      drawn.push({
+        ev: { signal: p.signal, value: g(fc.constantFrom(0 as const, 1 as const, "release" as const)), cycle, gremlinId, appliedCycle },
+        i,
+      });
+    }
+  }
+  drawn.sort((a, b) => a.ev.appliedCycle - b.ev.appliedCycle || a.i - b.i);
+  for (const d of drawn) applied.push(d.ev);
+
+  // Floating_Diagnostics: referenced and unreferenced Digital_Inputs, two signals, non-Fixture signals.
+  const diagCount = g(fc.oneof({ weight: 3, arbitrary: int(0, 0) }, { weight: 2, arbitrary: int(1, 3) }));
+  const diagSignals = [...digitalInputs.map((p) => p.signal), ...(digitalInputs.length === 0 ? ["GHOST"] : [])];
+  const diagDrawn: { dg: Diagnostic; i: number }[] = [];
+  for (let i = 0; i < diagCount; i++) {
+    const ghost = g(int(0, 4)) === 0;
+    const signal = ghost ? "GHOST" : diagSignals[g(int(0, diagSignals.length - 1))];
+    diagDrawn.push({
+      dg: { kind: "floating-input", signal, cycle: g(fc.oneof(int(0, E - 1), int(0, Math.min(E - 1, 20)))), register: "PIND" },
+      i,
+    });
+  }
+  diagDrawn.sort((a, b) => a.dg.cycle - b.dg.cycle || a.i - b.i);
+  const diagnostics = diagDrawn.map((d) => d.dg);
+
+  // Step 4: Split. Boundaries mix random cycles and appliedCycle values; [E] alone in a fifth of cases.
+  const pool = new Set<number>();
+  for (let i = 0; i < 6; i++) if (E > 1) pool.add(g(int(1, E - 1)));
+  for (const a of applied) if (a.appliedCycle >= 1 && a.appliedCycle <= E - 1) pool.add(a.appliedCycle);
+  const poolList = [...pool].sort((a, b) => a - b);
+  const oneStep = g(int(0, 4)) === 0;
+  const chosen = oneStep || poolList.length === 0 ? [] : g(fc.shuffledSubarray(poolList, { minLength: 0, maxLength: Math.min(8, poolList.length) }));
+  const boundaries = [...new Set(chosen)].sort((a, b) => a - b);
+  boundaries.push(E);
+
+  const observations: CheckerObservation[] = [];
+  let prev = 0;
+  boundaries.forEach((X, j) => {
+    observations.push({
+      runIndex: 0,
+      stepIndex: j,
+      endOfRun: false,
+      cycle: X,
+      outputEvents: outputEvents.filter((e) => (j === 0 && e.cycle === 0) || (e.cycle > prev && e.cycle <= X)),
+      appliedInputs: applied.filter((a) => a.appliedCycle >= prev && a.appliedCycle <= X - 1),
+      diagnostics: diagnostics.filter((d) => d.cycle >= prev && d.cycle <= X - 1),
+    });
+    prev = X;
+  });
+  observations.push({
+    runIndex: 0,
+    stepIndex: boundaries.length,
+    endOfRun: true,
+    cycle: E,
+    outputEvents: [],
+    appliedInputs: [],
+    diagnostics: [],
+  });
+
+  return { fixture, ruleSet, windows, endCycle: E, outputEvents, appliedInputs: applied, diagnostics, boundaries, observations };
+});

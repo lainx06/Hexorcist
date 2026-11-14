@@ -10,9 +10,9 @@
 // When the text runs out, the rest of the sentence is filled with fixed valid values, which
 // gives a witness Rule. The caller checks `render(witness).sentence.startsWith(prefix)`.
 //
-// Signal_Name note: Requirement 1, criterion 7 rejects the names `all` and `any` exactly,
-// and BANNED_WORDS entries ignoring case. This file follows that text, so a name such as
-// `All` is accepted here.
+// Signal_Name note: Requirement 1, criterion 7 rejects the names `all` and `any` in any
+// letter case, and BANNED_WORDS entries ignoring case. This file follows that text, so a
+// name such as `All` is rejected here.
 
 import { BANNED_WORDS } from "../copy-rules";
 import { render } from "../rules/render";
@@ -37,8 +37,9 @@ const BANNED_LOWER = BANNED_WORDS.map((w) => w.toLowerCase());
 
 function validSignal(name: string): boolean {
   if (!/^[A-Za-z][A-Za-z0-9_]{0,31}$/.test(name)) return false;
-  if (name === "all" || name === "any") return false;
-  return !BANNED_LOWER.includes(name.toLowerCase());
+  const lower = name.toLowerCase();
+  if (lower === "all" || lower === "any") return false;
+  return !BANNED_LOWER.includes(lower);
 }
 
 const FILL_SIGNAL = "q";

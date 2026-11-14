@@ -3,6 +3,10 @@
     "2.5 Write property test for the sentence round trip in `src/engine/__tests__/rules-sentence.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794633313767
+    },
+    "4.9 Write property test for the differential check in `src/engine/__tests__/rules-checker.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794669369615
     }
   },
   "executionHistory": {
@@ -246,6 +250,133 @@
         "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
         "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
         "timestamp": 1794633884630
+      }
+    ],
+    "4.1 Implement `src/engine/rules/bind.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668105977
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668189032
+      }
+    ],
+    "4.2 Implement `src/engine/rules/trace.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668189185
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668267125
+      }
+    ],
+    "4.3 Implement `src/engine/rules/monitors.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668267746
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668359598
+      }
+    ],
+    "4.4 Implement `src/engine/rules/rule-checker.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668360295
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668487345
+      }
+    ],
+    "4.5 Implement `compileRuleSet` in `src/engine/rules/compile.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668488012
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668558053
+      }
+    ],
+    "4.6 Write `src/engine/__tests__/rules-compile.test.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668558755
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668749829
+      }
+    ],
+    "4.7 Write `src/engine/__tests__/rules-monitor.test.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668750548
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668972569
+      }
+    ],
+    "4.8 Create the Reference_Evaluator and `arbCheckerCase`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794668973217
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669278492
+      }
+    ],
+    "4.9 Write property test for the differential check in `src/engine/__tests__/rules-checker.property.test.ts`": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669278571
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669383154
+      }
+    ],
+    "4. Binding, settled state, monitors, Rule_Checker and compile": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669383208
+      }
+    ],
+    "5. Checkpoint - Rule_Checker": [
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669383352
+      },
+      {
+        "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669498328
       }
     ]
   }

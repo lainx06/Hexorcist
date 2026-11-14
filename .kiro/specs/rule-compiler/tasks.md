@@ -156,26 +156,26 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 
-- [ ] 4. Binding, settled state, monitors, Rule_Checker and compile
-  - [ ] 4.1 Implement `src/engine/rules/bind.ts`
+- [x] 4. Binding, settled state, monitors, Rule_Checker and compile
+  - [x] 4.1 Implement `src/engine/rules/bind.ts`
     - `SignalKind`, `RulePlan`, `RuleSetPlan`, `analyzeRuleSet(ruleSet, fixture)` and `analyzeRule(rule, fixture)` as in the design section "Signal binding and compile-time marks"
     - Per Rule in Rule_Set order: `signals` in Canonical_Sentence order (Edge before `expect`), once each; pin count per signal by exact case-sensitive comparison giving `signal <S> is not mapped to a pin`, `signal <S> is mapped to more than one pin` (no kind check then), `<S> is an analog input; use above or below`, `<S> is not an analog input`; then the Req 5 mark from `windowCycles(ms, clockRate(fixture))` as the last mark; no Req 5 mark for `never`; `limit = cycleLimit(windowCycles)`
     - `checkerSignals` concatenated across Rules at earliest appearance, marked Rules included; `kinds` only for signals mapped to exactly one pin (`inactiveLevel` 1 for `activeLevel` `"low"` or absent, 0 for `"high"`; `restLevel ?? DEFAULT_REST_LEVEL`); `digitalInputSignals` from every Fixture Digital_Input
     - _Requirements: 5.3, 5.4, 5.8, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [ ] 4.2 Implement `src/engine/rules/trace.ts`
+  - [x] 4.2 Implement `src/engine/rules/trace.ts`
     - `SignalValue`, `Change`, `SignalTable`, `CompiledCondition`, `makeSignalTable`, `compileCondition`, `evalCondition`, `initialState`, `toChanges` as in the design section "Settled-state machinery"
     - Initial_State per the design table "What the monitor sees": earliest cycle-0 `OutputEvent` per referenced output, `"input"` when absent; Inactive_Level then Rest_Events (`gremlinId === "rest"`) for Digital_Inputs; `restLevel ?? 512` for Analog_Inputs; `restState` never read
     - `toChanges` leaves out snapshot entries and Rest_Events, uses `appliedCycle` for inputs, maps `"release"` to the Inactive_Level, and numbers changes with a growing `seq`; `evalCondition` treats `"input"` as making both `eq` values false, `above` as `>` and `below` as `<`, and evaluates every `all`/`any` member on the same values
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 8.1, 8.2, 8.3, 8.4, 8.7, 8.8, 8.9_
 
-  - [ ] 4.3 Implement `src/engine/rules/monitors.ts`
+  - [x] 4.3 Implement `src/engine/rules/monitors.ts`
     - `Monitor` and `makeMonitor(plan, table, initialTruth)` with the `before`, `at` and `flush` behaviour of the design table for `never`, `respond`, `count`, `hold` and `notLongerThan`
     - Occurrences from the previous change-point truth value (Initial_State before cycle 0), at most one per cycle; `found(v)` stops the monitor and sets `dead` when `v >= cutoff`
     - Work per change point only, never per cycle (D4); comparisons with `limit`, which may be `Infinity` (D1)
     - _Requirements: 8.5, 8.6, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 11.6_
 
-  - [ ] 4.4 Implement `src/engine/rules/rule-checker.ts`
+  - [x] 4.4 Implement `src/engine/rules/rule-checker.ts`
     - `makeRuleChecker(plan: RuleSetPlan): Checker` with state held in the closure of one call, following the eight steps of the design section "Rule_Checker"
     - Call-order and cycle-range checks throw `Error("rule checker: ...")` naming the mismatch (D7); fresh per-Run state at every `stepIndex` 0 call, with every compile-time mark returned only there, in Rule_Set order
     - Floating_Diagnostics read before changes are settled: per-signal cut-off d for Rules that reference the signal, and once per Run one entry per Active_Rule with `input <S> was read while floating` or `an input was read while floating`; other diagnostics ignored
@@ -183,12 +183,12 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Choose the lowest (cycle, Rule_Set index) Violation not yet reported; at end of run add `run shorter than the rule window` for each timed Active_Rule with `limit > cycle`, except the Rule whose Violation that call returns; `cannotCheck` omitted when empty, entries in the order compile-time marks, floating entries, run-shorter entries
     - _Requirements: 5.6, 6.7, 6.8, 6.10, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 10.11, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 15.6_
 
-  - [ ] 4.5 Implement `compileRuleSet` in `src/engine/rules/compile.ts`
+  - [x] 4.5 Implement `compileRuleSet` in `src/engine/rules/compile.ts`
     - `CompiledRuleSet` with `checker` and `checkerSignals`, and `CompileResult`. Task 6.2 adds the third field, `findUntriggeredRules`, once the Trigger_Evaluator exists
     - Steps: `validateRuleSet` plus the repeated-sentence check from task 1.5, Reasons prefixed `Rule set: `; `validateFixture` inside `try`, an error giving the one Reason `Fixture: rejected with kind <kind>.` with no `message` or `signal` text; then `analyzeRuleSet` and `makeRuleChecker` over a private deep copy of the Rule_Set and Fixture taken at compile time. Never throws
     - _Requirements: 6.1, 6.9, 6.11, 13.7, 15.3, 15.6_
 
-  - [ ] 4.6 Write `src/engine/__tests__/rules-compile.test.ts`
+  - [x] 4.6 Write `src/engine/__tests__/rules-compile.test.ts`
     - `checkerSignals` order across and within Rules (Edge signals before `expect`, earliest appearance, marked Rules included)
     - Each compile-time reason of Req 6.2 to 6.5 and Req 5.3 and 5.4 returned at the `stepIndex` 0 call in the order of Req 6.7 and never at `stepIndex` above 0; mapped-twice replaces the kind checks; a `never` Rule gets no Req 5 mark; at most one Req 5 entry per Rule; `eq` on a digital pin adds no mark
     - An all-marked Rule_Set compiles without throwing and returns `violation: null` at every call; a Rule_Set with marked and Active Rules returns the same `violation` at every call as a compile of only the Active_Rules
@@ -196,26 +196,26 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Two compiles of the same input give the same `checkerSignals`; changing the caller's Rule_Set or Fixture after compile does not change the checker's outcomes
     - _Requirements: 5.6, 5.8, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 13.7, 15.6, 16.12_
 
-  - [ ] 4.7 Write `src/engine/__tests__/rules-monitor.test.ts`
+  - [x] 4.7 Write `src/engine/__tests__/rules-monitor.test.ts`
     - Boundary examples per form: `notLongerThan` span of L (Violation at s + L) and L − 1 (none), and a fall at exactly s + L still a Violation; `respond` met at t + W and at t; `count` with k = 0 fails at the earliest Occurrence; `hold` false at t gives a Violation at t, and a later Occurrence does not shorten an earlier range; `never` true in Settled_State(0)
     - Initial_State: missing snapshot gives `"input"`; Digital_Input Inactive_Level for each `activeLevel`; Rest_Event sets the value and `restState` is ignored; the firmware-read level is not modelled; `above`/`below` at value 512 with n 511, 512 and 513; `"input"` makes both `eq` values false
     - Incremental contract: a Violation at cycle X waits for the next call; end of run with X above Run_Cycles reports `respond` at t + W = X and `notLongerThan` at s + L = X; open windows give nothing; ties broken by Rule_Set order; each call-order break of Req 10.11 and an out-of-range `cycle` throws a `rule checker: ...` Error; reset after a Run cut at a Violation
     - Run-level reasons: run-shorter entries, and none for the Rule whose Violation the end-of-run call returns; the floating entry for every Active_Rule once per Run, with the fallback text for a signal that is not a valid Signal_Name; a non-Fixture `floating-input` diagnostic leaves every outcome unchanged; the cut-off d removes Violations at or above d for referencing Rules only
     - _Requirements: 7.2, 7.4, 7.5, 7.10, 8.3, 8.8, 9.1, 9.2, 9.3, 9.4, 9.5, 9.7, 9.8, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.11, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 16.12_
 
-  - [ ] 4.8 Create the Reference_Evaluator and `arbCheckerCase`
+  - [x] 4.8 Create the Reference_Evaluator and `arbCheckerCase`
     - `src/engine/__tests__/rules-reference.ts` (helper, not a test file): imports types and `render` only, nothing from `rules/bind.ts`, `rules/trace.ts`, `rules/monitors.ts`, `rules/rule-checker.ts` or `rules/trigger.ts`. Reads the whole trace at once, decides Active_Rules by its own pin lookup, builds Initial_State from Req 7 text, stores `state[c]` for every cycle 0 to E, computes truth arrays and Occurrences, and evaluates each form by direct loops over cycles; models Req 11.2, 11.3 and 11.6; returns the Run's lowest (cycle, Rule_Set index) Violation, the per-Rule results after the cut-off, and the floating entries
     - `arbCheckerCase` in `rules-arbitraries.ts`, exactly the four generator steps of the design Property 4: Fixture of 1 to 5 pins from the pool `LED`, `OUT2`, `BTN`, `BEAM`, `POT`, `KNOB` (one case in ten with a doubled signal, one in ten with a wrong-kind signal); 1 to 4 Rules with W from 1 to 20,000 and Duration_Ms = W / 16,000; trace with E from 1 to 20,000, snapshot, output changes, Rest_Events, shared-cycle and same-signal inputs, and the four kinds of floating diagnostics; strictly ascending Step boundaries mixing random cycles and `appliedCycle` values, with the one-Step split `[E]` forced in a fifth of cases, and observations shaped as `runOne` builds them
     - _Requirements: 16.6_
 
-  - [ ] 4.9 Write property test for the differential check in `src/engine/__tests__/rules-checker.property.test.ts`
+  - [x] 4.9 Write property test for the differential check in `src/engine/__tests__/rules-checker.property.test.ts`
     - **Property 4: Differential check against the Reference_Evaluator**
     - Drive the compiled Rule_Checker over the generated stream and stop at the call that returns a Violation, as `runOne` does. Assert agreement with the Reference_Evaluator on Violation or none, `Violation.cycle` and `Violation.rule`, and for a Run with no Violation on the floating-input `CannotCheck` list (de-duplicated by `(rule, reason)` in order of appearance); every outcome passes the `callChecker` checks of fact F7; every `CannotCheck` reason has 1 to 200 characters and a Canonical_Sentence as `rule`; a second compiled checker fed the same stream with interleaved calls returns deep-equal outcomes
     - Generator `arbCheckerCase`. Seed: one literal recorded in the file, never changed. numRuns 100 (no emulator; the Reference_Evaluator replays every cycle)
     - Counters asserted > 0 after `fc.assert`, counted from the Reference_Evaluator's per-Rule result after the cut-off: `neverViolating`, `neverClean`, `respondViolating`, `respondClean`, `countViolating`, `countClean`, `holdViolating`, `holdClean`, `notLongerThanViolating`, `notLongerThanClean`, `floatingEntry`
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 11.2, 11.3, 11.4, 11.5, 11.6, 5.6, 6.8, 15.6**
 
-- [ ] 5. Checkpoint - Rule_Checker
+- [x] 5. Checkpoint - Rule_Checker
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 
