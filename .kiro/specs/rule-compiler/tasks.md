@@ -28,53 +28,53 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
 
 ## Tasks
 
-- [ ] 1. Reasons, Window_Cycles, IR and Renderer
-  - [ ] 1.1 Implement `src/engine/rules/reason.ts`
+- [x] 1. Reasons, Window_Cycles, IR and Renderer
+  - [x] 1.1 Implement `src/engine/rules/reason.ts`
     - `cutReason(text)`: cut at 200 UTF-16 code units without leaving half of a surrogate pair (same rule as `truncateReason` in `verdict.ts`)
     - `jsonTypeName(v)`: `a string`, `a boolean`, `null`, `an array`, `an object`, or `the number <String(v)>`; copies no string value
     - JSON path text built only from the field names listed in Req 1.1 to 1.5 and zero-based array indexes (`rules[2].trigger.of.value`); the Rule root is `the rule`
     - _Requirements: 1.8, 1.9, 1.17, 2.7, 15.5, 15.9_
 
-  - [ ] 1.2 Implement `src/engine/rules/duration.ts`
+  - [x] 1.2 Implement `src/engine/rules/duration.ts`
     - `durationDigits`, `isDurationMs`, `formatDuration`, `clockRate`, `windowCycles`, `cycleLimit` with the signatures of the design section "Window_Cycles arithmetic"
     - Method D1, decimal-digit BigInt scaling: Number-to-String digits with the exponent expanded, M and k, `N = M × BigInt(clock)`, `Q = 1000n × 10n ** BigInt(k)`, remainder check gives `window not a whole number of cycles`; the clock check (`typeof clock === "number"`, integer, above 0) runs before it and gives `clock rate is not a whole number of hertz`
     - `clockRate(fixture)` returns `fixture.clockHz` when neither `undefined` nor `null`, else `DEFAULT_CLOCK_HZ` from `../gremlins/pins`; the raw value is returned unchecked
     - `cycleLimit(cycles)` is `Number(cycles)` up to 2^53 − 1 and `Infinity` above
     - _Requirements: 1.6, 2.4, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7_
 
-  - [ ] 1.3 Implement the IR types and validation in `src/engine/rules/ir.ts`
+  - [x] 1.3 Implement the IR types and validation in `src/engine/rules/ir.ts`
     - `Condition`, `Edge`, `Rule`, `RuleForm`, `RuleSet`, `IrDocument`, `ReadResult`, `WriteResult`, and the constants `IR_VERSION`, `MAX_RULES`, `MAX_NESTING_DEPTH`, `MIN_MEMBERS`, `MAX_MEMBERS`, `MAX_COUNT`, exactly as in the design section "IR"
     - `isSignalName` (pattern `^[A-Za-z][A-Za-z0-9_]{0,31}$`, not `all` or `any`, not a `BANNED_WORDS` entry ignoring case, list imported from `../copy-rules`)
     - `validateRule` (paths from the Rule root) and `validateRuleSet` (paths from the document root): document-order walk, at most one Reason per offending value, one `has a field that is not allowed.` Reason per holding object with the field name never written, integer fields by `Number.isInteger(v) && !Object.is(v, -0)`, Duration_Ms fields by `isDurationMs` on the parsed number, unknown `form` or `op` reported once and not checked further, depth above 4, 2 to 8 members, 1 to 32 Rules, own-property tests with `Object.prototype.hasOwnProperty.call` (a `__proto__` key is a field that is not allowed). Reason wording from the design "Error Handling" table, cut with `cutReason`
     - The repeated-sentence check is added in 1.5, after the Renderer exists
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.9, 1.17, 15.5_
 
-  - [ ] 1.4 Implement `src/engine/rules/render.ts`
+  - [x] 1.4 Implement `src/engine/rules/render.ts`
     - `render(rule: unknown): RenderResult`; calls `validateRule` and returns `{ ok: false, reason: "Not a valid rule: " + reasons[0] }` cut to 200 on any Reason, else fills the templates of the design table
     - Integers with `String(n)`; Duration_Ms with `formatDuration`; `time` for k 1, `times` otherwise; reads fields by name so key order and earlier calls do not matter; never writes to its argument; never throws for any JavaScript value
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 15.5, 15.7_
 
-  - [ ] 1.5 Implement `readIr` and `writeIr` in `src/engine/rules/ir.ts`
+  - [x] 1.5 Implement `readIr` and `writeIr` in `src/engine/rules/ir.ts`
     - `readIr(text)`: the five steps of the design in the order of Req 1.14 (not valid JSON; `version` missing or wrong with `jsonTypeName`; structure by `validateRuleSet`; repeated sentences as `rules <i>, <j>, ... repeat the sentence "<sentence>"` with indexes ascending and the sentence cut so the Reason fits 200; otherwise a fresh copy holding only listed fields in IR order). Only the Reasons of the earliest failing step are returned. Never throws
     - `writeIr(ruleSet)`: `validateRuleSet` plus the repeated-sentence check, earliest Reason as `{ ok: false, reason }`; otherwise rebuild with the key order table of the design and write `JSON.stringify(doc, null, 2) + "\n"`. Never throws
     - The repeated-sentence check is exported from `ir.ts` for reuse by `compileRuleSet` (task 4.5)
     - _Requirements: 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 15.7_
 
-  - [ ] 1.6 Write `src/engine/__tests__/rules-duration.test.ts`
+  - [x] 1.6 Write `src/engine/__tests__/rules-duration.test.ts`
     - At 16,000,000 Hz: 300 gives `4_800_000n`, 0.1 gives `1_600n`, 0.0000625 gives `1n` (Req 5.5 values, acceptance literals); 0.0001, 0.0000001 and 9,999,999.9999999 give `window not a whole number of cycles`; 9,999,999 gives `159_999_984_000n` (Req 5.7 values, acceptance literals)
     - A result above 2^53 − 1 with a large integer clock is exact as a BigInt, and `cycleLimit` of it is `Infinity`
     - `clockRate` with `clockHz` undefined and null gives 16,000,000; `windowCycles` with clock 0, −1, 16,000,000.5, `NaN`, `Infinity` and a string gives `clock rate is not a whole number of hertz` and only that one reason (Req 5.4, 5.8)
     - `isDurationMs`: 300, `300.0`, `3e2`, 0.0000625, 0.0000001 accepted; 0.00000001, 10000000, 0.30000000000000004, 0, negative, `NaN`, `Infinity` rejected. `formatDuration`: 300 to `300`, 0.1 to `0.1`, 5e-7 to `0.0000005`, 2.5 to `2.5`
     - _Requirements: 1.6, 2.4, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 5.8, 16.12_
 
-  - [ ] 1.7 Write the Renderer examples in `src/engine/__tests__/rules-templates.test.ts`
+  - [x] 1.7 Write the Renderer examples in `src/engine/__tests__/rules-templates.test.ts`
     - The sentences of Req 2.8, 2.9, 2.10 (both) and 2.11 (both), copied literally; these are acceptance tests
     - One example per Rule_Form template; `time` and `times` for k 0, 1 and 2; Duration formats 300, 0.1, 0.0000005 and 2.5; `ms` after a Duration of 1
     - Invalid values give `{ ok: false }` with a Reason of 1 to 200 characters naming the path from the Rule root: `null`, `undefined`, an array, a missing field, an extra field (whose name is a marker string that must not appear in the Reason), a string value marker that must not appear, Duration_Ms 0, negative, `NaN`, `Infinity` and 0.30000000000000004, a Condition at depth 5
     - Parser examples are added to this file in task 2.3
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 2.9, 2.10, 2.11, 16.12_
 
-  - [ ] 1.8 Write `src/engine/__tests__/rules-ir.test.ts`
+  - [x] 1.8 Write `src/engine/__tests__/rules-ir.test.ts`
     - Integer fields: `1.0` and `1e0` read as 1; `-0` and `-0.0` rejected with their JSON path
     - The Duration examples of Req 1.6 read through `readIr`
     - One `version` example per JSON type (number with its Number-to-String text, string, boolean, null, array, object) and `version` missing; each gives exactly one Reason and copies no string value
@@ -84,45 +84,45 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - `writeIr` on invalid values gives a Reason and does not throw; `writeIr` output key order; same text on two calls
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.14, 1.15, 1.16, 1.17_
 
-  - [ ] 1.9 Create `src/engine/__tests__/rules-arbitraries.ts` with `arbRule` (helper, not a test file)
+  - [x] 1.9 Create `src/engine/__tests__/rules-arbitraries.ts` with `arbRule` (helper, not a test file)
     - `arbRule` exactly as the design Property 1 generator: `fc.letrec` Conditions with the depth budget passed down and a forced deep branch in a quarter of cases so depth 4 appears; `all`/`any` with 2 to 8 members; `eq` 0 or 1; `above` 0 to 1022; `below` 1 to 1023; `max` 0 to 65,535 with extra weight on 0, 1 and 2; Duration_Ms from an integer part 0 to 9,999,999 and 0 to 7 fraction digits (last digit non-zero, value above 0) converted with `Number(text)`; signal names from the Signal_Name pattern filtered by test code equivalent to `isSignalName`, with extra weight on the template words of Req 3.8
     - `arbRuleSet`: 1 to 32 Rules with distinct Canonical_Sentences (selector `render(r).sentence`), half the cases at length 1
     - Imports types, `render`, `BANNED_WORDS` and, if useful, the committed `arbitraries.ts` (never edited)
     - _Requirements: 16.3, 16.4_
 
-  - [ ] 1.10 Write property test for the IR round trip in `src/engine/__tests__/rules-ir.property.test.ts`
+  - [x] 1.10 Write property test for the IR round trip in `src/engine/__tests__/rules-ir.property.test.ts`
     - **Property 2: IR round trip**
     - `readIr(writeIr(set).text)` gives `{ ok: true, ruleSet }` deep-equal to the generated set; `writeIr` twice gives the same text
     - Generator `arbRuleSet`. Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
     - Counters asserted > 0 after `fc.assert`: `never`, `respond`, `count`, `hold`, `notLongerThan`, `setOfOne`, `setOfMany`
     - **Validates: Requirements 1.13, 1.12, 1.15**
 
-- [ ] 2. Sentence_Parser and Rules_File_Reader
-  - [ ] 2.1 Implement `src/engine/rules/parse.ts`
+- [x] 2. Sentence_Parser and Rules_File_Reader
+  - [x] 2.1 Implement `src/engine/rules/parse.ts`
     - `parse(sentence)` and `allowedAt(prefix)` with the types `AllowedItem` and `ParseResult` of the design
     - Live-state matcher of D2 over the fixed grammar: each state can still be completed into a Canonical_Sentence of a valid Rule (signal rules, integer ranges, `time`/`times`, Duration digits, list member counts, depth budget 4); P is the number of characters read while a state is live; allowed set is the union of the next printable ASCII characters plus the end of the text when a state is complete
     - D3: a Rule is returned only when `render(rule).sentence === input`; otherwise a Reason at position `input.length`
     - No case folding, trimming or normalization. Reason text `No rule template matches at position <P> (counting from 0); allowed there: <items>.` with items merged into code-point ranges, end of the text last, at most 6 items, `a space` for U+0020; the `allowed` field holds exactly the named items; no input text copied; 1 to 200 characters. Never throws
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 15.7, 15.9_
 
-  - [ ] 2.2 Implement `src/engine/rules/rules-file.ts`
+  - [x] 2.2 Implement `src/engine/rules/rules-file.ts`
     - `MAX_RULES_FILE_UNITS = 65_536` and `readRulesFile(text): ReadResult` with the six steps of the design in order: drop one leading U+FEFF; length check (`The text is longer than 65536 UTF-16 code units.`); `{` as the leading non-whitespace character passes the whole remaining text to `readIr` unchanged; else split at LF, remove one trailing CR, skip blank and `#`-at-index-0 lines, parse every other line exactly as written; `Line <n>: <parser reason>` per failing line with the line number kept when cut; `Found <n> rules; a rules file needs 1 to 32.` and `Lines <a>, <b>, ... repeat the sentence "<sentence>"` returned together when both apply
     - No file input or output. Never throws
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 15.7_
 
-  - [ ] 2.3 Add the parser examples to `src/engine/__tests__/rules-templates.test.ts` (new file from task 1.7)
+  - [x] 2.3 Add the parser examples to `src/engine/__tests__/rules-templates.test.ts` (new file from task 1.7)
     - Rejected with a Reason and no Rule: each number form of Req 3.7 (`0300`, `+5`, `-1`, `3e2`, `300.0`, `.5`, `5.`, `4,800`, `4_800`); `1 times` and `2 time`; a tab, CR, LF, non-breaking space, curly quote and non-ASCII digit; the empty string; out-of-range `eq`, `above`, `below`, count and Duration values; a 33-character signal; `all` and `any` as signals; a `BANNED_WORDS` entry as a signal in several letter cases (list read from the constant); 1 and 9 members; depth 5
     - Accepted: template words as signal names (`is`, `above`, `below`, `of`, `becomes`, `true`, `false`, `must`, `never`, `last`, `or`, `longer`, `Within`, `After`); no Fixture is consulted
     - For several rejections: the Reason text names the same P and items as the `position` and `allowed` fields, P equals the input length for a truncated sentence, and a marker substring of the input never appears in the Reason
     - _Requirements: 3.2, 3.3, 3.4, 3.7, 3.8, 3.9_
 
-  - [ ] 2.4 Write `src/engine/__tests__/rules-file.test.ts`
+  - [x] 2.4 Write `src/engine/__tests__/rules-file.test.ts`
     - `{` after leading spaces, tabs, CR and LF goes to `readIr` with the same result; comments and blank lines skipped; `#` after a space is parsed (and fails); CR removed at line end; two failing lines in ascending order with one-based numbers counted over skipped lines; a long parser Reason cut with the line number kept
     - 0 Rules (empty and whitespace-only text) and 33 Rules give the count Reason; repeated sentences with line numbers; count and repeat Reasons together
     - One leading U+FEFF removed and its line is line 1; a second U+FEFF kept (and the line fails); 65,536 and 65,537 units with and without a leading U+FEFF
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 16.12_
 
-  - [ ] 2.5 Write property test for the sentence round trip in `src/engine/__tests__/rules-sentence.property.test.ts`
+  - [x] 2.5 Write property test for the sentence round trip in `src/engine/__tests__/rules-sentence.property.test.ts`
     - **Property 1: Sentence round trip**
     - `parse(render(r).sentence)` gives `{ ok: true, rule }` deep-equal to r. In the same case: the sentence is printable ASCII with single spaces, one final period and no other period outside Duration_Ms values; `render` of a copy with every object's keys reversed gives the same sentence; r is deep-equal to a clone taken before the calls; `render` and `parse` twice give deep-equal results; `JSON.parse(JSON.stringify(rule))` deep-equals `rule`
     - Generator `arbRule`. Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
@@ -130,7 +130,7 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Placed here and not in phase 1 because it calls `parse`, which task 2.1 builds
     - **Validates: Requirements 3.5, 3.1, 2.5, 2.6, 15.5, 15.7**
 
-  - [ ] 2.6 Write property test for no silent change in `src/engine/__tests__/rules-sentence.property.test.ts`
+  - [x] 2.6 Write property test for no silent change in `src/engine/__tests__/rules-sentence.property.test.ts`
     - **Property 3: No silent change**
     - Add `arbMutatedSentence` to `rules-arbitraries.ts`: one or more inserts, deletes, replaces, case changes, whitespace changes (tab, CR, LF, NBSP, doubled space, leading or trailing space) and number changes (leading zero, sign, exponent, `.0`, `,` and `_` separators, out-of-range values, and moves to another valid value)
     - Second `it` in the file: for s from `fc.oneof(arbMutatedSentence, fc.string({ unit: "binary", maxLength: 300 }))`, `parse(s)` does not throw and returns either `{ ok: false }` with a `reason` of 1 to 200 characters and no `rule`, or `{ ok: true, rule }` with `render(rule).sentence === s`
@@ -138,13 +138,13 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Counters asserted > 0 after `fc.assert`: `rejected`, `accepted` (a Rule returned for a mutated s that differs from its source sentence)
     - **Validates: Requirements 3.2, 3.6, 3.3, 3.7**
 
-  - [ ] 2.7 Create the Prefix_Oracle in `src/engine/__tests__/rules-prefix-oracle.ts` (helper, not a test file)
+  - [x] 2.7 Create the Prefix_Oracle in `src/engine/__tests__/rules-prefix-oracle.ts` (helper, not a test file)
     - Written from Req 1 and 2 only; imports only `render` and `BANNED_WORDS`, never `parse.ts`
     - Tokenizes the prefix at spaces, matches complete tokens against the five templates with a small backtracking matcher, and checks whether some valid token starts with the last partial token (signal, integer in range, count, duration, keyword, punctuation)
     - When it answers viable, it builds a witness Rule by filling every remaining hole with a fixed valid value, so the test can check `render(witness).sentence.startsWith(prefix)`, and equality when the end of the text is allowed
     - _Requirements: 3.4, 3.9, 16.11_
 
-  - [ ] 2.8 Write property test for the rejection position in `src/engine/__tests__/rules-prefix.property.test.ts`
+  - [x] 2.8 Write property test for the rejection position in `src/engine/__tests__/rules-prefix.property.test.ts`
     - **Property 9: Rejection position**
     - Generator: `arbRule`, then `fc.nat()` reduced modulo the valid index range, then the change kind (insert of a printable ASCII character at 0 ≤ i ≤ length, delete, or replace with a different printable ASCII character at 0 ≤ i < length) and the character
     - On a Reason: `position` P ≥ i; every character of every named range is allowed at P of s by the Prefix_Oracle, with its witness checked by `startsWith`; a named end of the text is allowed at P by the Prefix_Oracle; the Reason text names the same P and items as the data fields. On a Rule: `render` of it equals s
@@ -152,7 +152,7 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Counters asserted > 0 after `fc.assert`: `rejected`, `accepted`
     - **Validates: Requirements 3.4, 3.9**
 
-- [ ] 3. Checkpoint - IR, Renderer, Sentence_Parser and Rules_File_Reader
+- [x] 3. Checkpoint - IR, Renderer, Sentence_Parser and Rules_File_Reader
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 

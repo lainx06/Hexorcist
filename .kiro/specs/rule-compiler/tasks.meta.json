@@ -1,0 +1,252 @@
+{
+  "pbtResults": {
+    "2.5 Write property test for the sentence round trip in `src/engine/__tests__/rules-sentence.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794633313767
+    }
+  },
+  "executionHistory": {
+    "1.1 Implement `src/engine/rules/reason.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794631791765
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794631854729
+      }
+    ],
+    "1.2 Implement `src/engine/rules/duration.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794631858290
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794631935650
+      }
+    ],
+    "1.3 Implement the IR types and validation in `src/engine/rules/ir.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794631937747
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632094395
+      }
+    ],
+    "1.4 Implement `src/engine/rules/render.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632096292
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632172386
+      }
+    ],
+    "1.5 Implement `readIr` and `writeIr` in `src/engine/rules/ir.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632174252
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632266332
+      }
+    ],
+    "1.6 Write `src/engine/__tests__/rules-duration.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632268588
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632339269
+      }
+    ],
+    "1.7 Write the Renderer examples in `src/engine/__tests__/rules-templates.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632341556
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632427185
+      }
+    ],
+    "1.8 Write `src/engine/__tests__/rules-ir.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632430355
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632541739
+      }
+    ],
+    "1.9 Create `src/engine/__tests__/rules-arbitraries.ts` with `arbRule` (helper, not a test file)": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632544651
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632662537
+      }
+    ],
+    "1.10 Write property test for the IR round trip in `src/engine/__tests__/rules-ir.property.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632664458
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632740198
+      }
+    ],
+    "1. Reasons, Window_Cycles, IR and Renderer": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632740247
+      }
+    ],
+    "2.1 Implement `src/engine/rules/parse.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632742478
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632986111
+      }
+    ],
+    "2.2 Implement `src/engine/rules/rules-file.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794632988423
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633069234
+      }
+    ],
+    "2.3 Add the parser examples to `src/engine/__tests__/rules-templates.test.ts` (new file from task 1.7)": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633074564
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633172424
+      }
+    ],
+    "2.4 Write `src/engine/__tests__/rules-file.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633174709
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633277779
+      }
+    ],
+    "2.5 Write property test for the sentence round trip in `src/engine/__tests__/rules-sentence.property.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633279769
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633366116
+      }
+    ],
+    "2.6 Write property test for no silent change in `src/engine/__tests__/rules-sentence.property.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633368571
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633455154
+      }
+    ],
+    "2.7 Create the Prefix_Oracle in `src/engine/__tests__/rules-prefix-oracle.ts` (helper, not a test file)": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633457660
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633690660
+      }
+    ],
+    "2.8 Write property test for the rejection position in `src/engine/__tests__/rules-prefix.property.test.ts`": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633692785
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633771596
+      }
+    ],
+    "2. Sentence_Parser and Rules_File_Reader": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633771660
+      }
+    ],
+    "3. Checkpoint - IR, Renderer, Sentence_Parser and Rules_File_Reader": [
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633776592
+      },
+      {
+        "executionId": "db92faca-33a3-432d-a3d0-360c0a983a08",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794633884630
+      }
+    ]
+  }
+}
