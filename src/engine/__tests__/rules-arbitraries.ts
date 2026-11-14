@@ -8,6 +8,7 @@ import type { Condition, Edge, Rule, RuleSet } from "../rules/ir";
 import type { CheckerObservation } from "../checker";
 import type { AppliedInput, Diagnostic, Fixture, FixturePin, OutputEvent, PinValue } from "../types";
 import type { ReferenceInput } from "./rules-reference";
+import type { RunResult } from "../types";
 
 // ---------------------------------------------------------------------------
 // Signal names
@@ -561,4 +562,292 @@ export const arbCheckerCase: fc.Arbitrary<CheckerCase> = fc.gen().map((gen): Che
   });
 
   return { fixture, ruleSet, windows, endCycle: E, outputEvents, appliedInputs: applied, diagnostics, boundaries, observations };
+});
+
+// ---------------------------------------------------------------------------
+// Trigger cases (Properties 7 and 8): a fixed test Fixture, Rules whose Trigger signal is one
+// leaf, and synthetic Runs whose Occurrences sit near endCycle - W so window-cut cases appear.
+
+/** The fixed Fixture of the trigger generators: one output, one digital input, one analog input. */
+export const TRIGGER_FIXTURE: Fixture = {
+  pins: [
+    { signal: "LED", port: "B", bit: 5, direction: "output" },
+    { signal: "BTN", port: "D", bit: 2, direction: "input" },
+    { signal: "POT", kind: "analog", channel: 0 },
+  ],
+};
+
+export interface TriggerCase {
+  readonly fixture: Fixture;
+  readonly rule: Rule;
+  /** W, D or L of the rule. */
+  readonly window: number;
+  readonly run: RunResult;
+}
+
+export interface TriggerSetCase {
+  readonly fixture: Fixture;
+  readonly ruleSet: readonly Rule[];
+  /** Window_Cycles per Rule; null for `never`. */
+  readonly windows: readonly (number | null)[];
+  readonly runs: readonly RunResult[];
+}
+
+const TRIGGER_SIGNALS = ["LED", "BTN", "POT"] as const;
+type TriggerSignal = (typeof TRIGGER_SIGNALS)[number];
+type TriggerMode = "fit" | "cut" | "none" | "mixed";
+type SpanMode = "fit" | "spanEnd" | "cut" | "none" | "raw";
+
+function genTriggerLeaf(g: GenFn): Leaf {
+  const signal = g(fc.constantFrom<TriggerSignal>(...TRIGGER_SIGNALS));
+  if (signal === "POT") {
+    return g(fc.boolean())
+      ? { op: "above", signal, value: g(fc.oneof(int(0, 1022), int(100, 900))) }
+      : { op: "below", signal, value: g(fc.oneof(int(1, 1023), int(100, 900))) };
+  }
+  return { op: "eq", signal, value: g(fc.constantFrom(0 as const, 1 as const)) };
+}
+
+function genTriggerExpect(g: GenFn): Condition {
+  if (g(int(0, 2)) > 0) return genTriggerLeaf(g);
+  return { op: g(arbListOp), of: [genTriggerLeaf(g), genTriggerLeaf(g)] };
+}
+
+/** A value of the leaf's signal that makes the leaf true (wantTrue) or false. */
+function valueFor(leaf: Leaf, wantTrue: boolean): number {
+  switch (leaf.op) {
+    case "eq":
+      return wantTrue ? leaf.value : 1 - leaf.value;
+    case "above":
+      return wantTrue ? leaf.value + 1 : leaf.value;
+    case "below":
+      return wantTrue ? leaf.value - 1 : leaf.value;
+  }
+}
+
+function leafTrueFor(leaf: Leaf, value: number): boolean {
+  switch (leaf.op) {
+    case "eq":
+      return value === leaf.value;
+    case "above":
+      return value > leaf.value;
+    case "below":
+      return value < leaf.value;
+  }
+}
+
+/** Sorted distinct times with gaps of at least 2. */
+function spaced(times: readonly number[]): number[] {
+  const sorted = [...new Set(times)].sort((a, b) => a - b);
+  const out: number[] = [];
+  for (const t of sorted) if (out.length === 0 || t - out[out.length - 1] >= 2) out.push(t);
+  return out;
+}
+
+interface RunDraft {
+  ledInitial: number;
+  outputs: OutputEvent[];
+  inputs: AppliedInput[];
+  /** Signals that carry a rule's Trigger events in this Run. */
+  used: Set<string>;
+}
+
+function emit(draft: RunDraft, signal: string, cycle: number, value: number): void {
+  if (signal === "LED") {
+    draft.outputs.push({ signal, value: value as 0 | 1, cycle });
+  } else if (signal === "BTN") {
+    draft.inputs.push({ signal, value: value as 0 | 1, cycle, gremlinId: "g0", appliedCycle: cycle });
+  } else {
+    draft.inputs.push({ signal, analog: value, cycle, gremlinId: "g0", appliedCycle: cycle });
+  }
+}
+
+function initialValue(draft: RunDraft, signal: string): number {
+  return signal === "LED" ? draft.ledInitial : signal === "BTN" ? 1 : 512;
+}
+
+/** Make the leaf false from cycle 0 on, without an event when the start value already does. */
+function baselineFalse(draft: RunDraft, leaf: Leaf): void {
+  const off = valueFor(leaf, false);
+  if (leaf.signal === "LED") {
+    draft.ledInitial = off;
+  } else if (leafTrueFor(leaf, initialValue(draft, leaf.signal))) {
+    emit(draft, leaf.signal, 0, off);
+  }
+}
+
+function edgeTimes(g: GenFn, mode: TriggerMode, E: number, bound: number): number[] {
+  const fit = bound >= 2 ? [2, Math.min(bound, E)] : null;
+  const cut = Math.max(2, bound + 1) <= E ? [Math.max(2, bound + 1), E] : null;
+  const pick = (range: number[] | null): number[] =>
+    range === null ? [] : g(fc.array(int(range[0], range[1]), { minLength: 1, maxLength: 3 }));
+  const near = (): number[] =>
+    E >= 2 ? [Math.min(E, Math.max(2, bound + g(int(-2, 2))))] : [];
+  switch (mode) {
+    case "none":
+      return [];
+    case "fit":
+      return spaced([...pick(fit), ...(g(int(0, 2)) === 0 ? near() : [])]);
+    case "cut":
+      return spaced([...pick(cut), ...(g(int(0, 2)) === 0 ? near() : [])]);
+    case "mixed":
+      return spaced([...(E >= 2 ? g(fc.array(int(2, E), { minLength: 1, maxLength: 3 })) : []), ...near()]);
+  }
+}
+
+function addEdgeEvents(g: GenFn, draft: RunDraft, edge: Edge, mode: TriggerMode, E: number, bound: number): void {
+  const leaf = edge.of as Leaf;
+  draft.used.add(leaf.signal);
+  for (const t of edgeTimes(g, mode, E, bound)) {
+    const rise = edge.op === "rise";
+    emit(draft, leaf.signal, t - 1, valueFor(leaf, !rise));
+    emit(draft, leaf.signal, t, valueFor(leaf, rise));
+  }
+}
+
+function addSpanEvents(g: GenFn, draft: RunDraft, leaf: Leaf, mode: SpanMode, E: number, L: number): void {
+  draft.used.add(leaf.signal);
+  if (mode === "raw") {
+    const n = g(int(0, 4));
+    const cycles = g(fc.array(int(0, E), { minLength: n, maxLength: n })).sort((a, b) => a - b);
+    cycles.forEach((c, i) => emit(draft, leaf.signal, c, valueFor(leaf, i % 2 === 0)));
+    return;
+  }
+  baselineFalse(draft, leaf);
+  const startAt = (s: number): void => {
+    emit(draft, leaf.signal, s - 1, valueFor(leaf, false));
+    emit(draft, leaf.signal, s, valueFor(leaf, true));
+  };
+  if (mode === "fit" && E - L >= 2) {
+    startAt(g(int(2, E - L)));
+  } else if (mode === "spanEnd" && E >= 3) {
+    const s = g(int(2, E - 1));
+    startAt(s);
+    emit(draft, leaf.signal, g(int(s + 1, E)), valueFor(leaf, false));
+  } else if (mode === "cut" && Math.max(2, E - L + 1) <= E) {
+    startAt(g(int(Math.max(2, E - L + 1), E)));
+  }
+}
+
+function buildRun(
+  g: GenFn,
+  ruleSet: readonly Rule[],
+  windows: readonly (number | null)[],
+  E: number,
+  runIndex: number,
+): RunResult {
+  const draft: RunDraft = { ledInitial: g(int(0, 1)), outputs: [], inputs: [], used: new Set() };
+  ruleSet.forEach((rule, i) => {
+    const w = windows[i] ?? 0;
+    switch (rule.form) {
+      case "never":
+        return;
+      case "respond":
+        return addEdgeEvents(g, draft, rule.trigger, g(fc.constantFrom<TriggerMode>("fit", "cut", "none", "mixed")), E, E - w);
+      case "hold":
+        return addEdgeEvents(g, draft, rule.after, g(fc.constantFrom<TriggerMode>("fit", "cut", "none", "mixed")), E, E - w + 1);
+      case "count":
+        return addEdgeEvents(g, draft, rule.edge, g(fc.constantFrom<TriggerMode>("fit", "none", "mixed")), E, E);
+      case "notLongerThan":
+        return addSpanEvents(
+          g,
+          draft,
+          rule.condition as Leaf,
+          g(fc.constantFrom<SpanMode>("fit", "spanEnd", "cut", "none", "raw")),
+          E,
+          w,
+        );
+    }
+  });
+  // Noise on signals that carry no Trigger events in this Run.
+  for (const signal of TRIGGER_SIGNALS) {
+    if (draft.used.has(signal)) continue;
+    const n = g(int(0, 3));
+    for (let k = 0; k < n; k++) {
+      const cycle = g(int(1, E));
+      emit(draft, signal, cycle, signal === "POT" ? g(int(0, 1023)) : g(int(0, 1)));
+    }
+  }
+  const byCycle = <T>(items: T[], cycleOf: (t: T) => number): T[] =>
+    items
+      .map((item, i) => ({ item, i }))
+      .sort((a, b) => cycleOf(a.item) - cycleOf(b.item) || a.i - b.i)
+      .map((x) => x.item);
+  const outputEvents: OutputEvent[] = [
+    { signal: "LED", value: draft.ledInitial as 0 | 1, cycle: 0 },
+    ...byCycle(draft.outputs, (e) => e.cycle).filter((e) => e.cycle >= 0 && e.cycle <= E),
+  ];
+  const appliedInputs = byCycle(draft.inputs, (e) => e.appliedCycle).filter((e) => e.appliedCycle >= 0 && e.appliedCycle <= E);
+  const violating = g(int(0, 3)) === 0 && ruleSet.length > 0;
+  return {
+    runIndex,
+    runSeed: runIndex,
+    eventList: [],
+    skipped: [],
+    appliedInputs,
+    outputEvents,
+    diagnostics: [],
+    cannotCheck: [],
+    violation: violating ? { rule: sentenceOf(ruleSet[g(int(0, ruleSet.length - 1))]), cycle: g(int(0, E)) } : null,
+    endCycle: E,
+  };
+}
+
+function genTriggerRule(g: GenFn, withNever: boolean, w: number): Rule {
+  const forms = withNever
+    ? (["respond", "count", "hold", "notLongerThan", "never"] as const)
+    : (["respond", "count", "hold", "notLongerThan"] as const);
+  const form = g(fc.constantFrom(...forms));
+  const edge = (): Edge => ({ op: g(fc.constantFrom("rise" as const, "fall" as const)), of: genTriggerLeaf(g) });
+  switch (form) {
+    case "respond":
+      return { form, trigger: edge(), withinMs: msOf(w), expect: genTriggerExpect(g) };
+    case "count":
+      return { form, edge: edge(), windowMs: msOf(w), max: g(int(0, 2)) };
+    case "hold":
+      return { form, after: edge(), durationMs: msOf(w), expect: genTriggerExpect(g) };
+    case "notLongerThan":
+      return { form, condition: genTriggerLeaf(g), ms: msOf(w) };
+    case "never":
+      return { form, condition: genTriggerExpect(g) };
+  }
+}
+
+/** One Rule and one Run for Property 8: endCycle 1 to 20,000 and W 1 to 20,000. */
+export const arbTriggerCase: fc.Arbitrary<TriggerCase> = fc.gen().map((gen): TriggerCase => {
+  const g: GenFn = (arb) => gen(() => arb);
+  const E = g(fc.oneof(int(1, 40), int(1, 2000), int(1, 20_000)));
+  const W = g(fc.oneof(int(1, 20_000), int(1, Math.min(20_000, E)), int(1, 40)));
+  const rule = genTriggerRule(g, false, W);
+  return { fixture: TRIGGER_FIXTURE, rule, window: W, run: buildRun(g, [rule], [W], E, 0) };
+});
+
+/** A Rule_Set and 1 to 8 Runs for Property 7: endCycle 1 to 5,000 and W 1 to 2,000. */
+export const arbTriggerSetCase: fc.Arbitrary<TriggerSetCase> = fc.gen().map((gen): TriggerSetCase => {
+  const g: GenFn = (arb) => gen(() => arb);
+  const wanted = g(int(1, 4));
+  const ruleSet: Rule[] = [];
+  const windows: (number | null)[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < wanted; i++) {
+    const w = g(fc.oneof(int(1, 2000), int(1, 60), int(1, 600)));
+    const rule = genTriggerRule(g, true, w);
+    const sentence = sentenceOf(rule);
+    if (sentence === "" || seen.has(sentence)) continue;
+    seen.add(sentence);
+    ruleSet.push(rule);
+    windows.push(rule.form === "never" ? null : w);
+  }
+  if (ruleSet.length === 0) {
+    const w = g(int(1, 2000));
+    ruleSet.push(genTriggerRule(g, false, w));
+    windows.push(w);
+  }
+  const runCount = g(int(1, 8));
+  const runs: RunResult[] = [];
+  for (let r = 0; r < runCount; r++) {
+    const E = g(fc.oneof(int(1, 40), int(1, 1000), int(1, 5000)));
+    runs.push(buildRun(g, ruleSet, windows, E, r));
+  }
+  return { fixture: TRIGGER_FIXTURE, ruleSet, windows, runs };
 });

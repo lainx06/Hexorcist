@@ -215,79 +215,89 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Counters asserted > 0 after `fc.assert`, counted from the Reference_Evaluator's per-Rule result after the cut-off: `neverViolating`, `neverClean`, `respondViolating`, `respondClean`, `countViolating`, `countClean`, `holdViolating`, `holdClean`, `notLongerThanViolating`, `notLongerThanClean`, `floatingEntry`
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 11.2, 11.3, 11.4, 11.5, 11.6, 5.6, 6.8, 15.6**
 
+  - [x] 4.10 Write property test for the biased differential check in `src/engine/__tests__/rules-checker-bias.property.test.ts`
+    - **Execution order:** by the user's ruling of this session, this task is executed before everything else in the next batch, ahead of task 6.1, although it is numbered 4.10. Tasks 4.1 to 4.9 are already completed and committed.
+    - **Property 4b: Biased differential check against the Reference_Evaluator**
+    - Same comparison as Property 4 (task 4.9): drive the compiled Rule_Checker over a generated stream, stop at the call that returns a Violation as `runOne` does, and assert agreement with the Reference_Evaluator on Violation or none, `Violation.cycle` and `Violation.rule`; also the same per-outcome checks as Property 4 (`callChecker` checks of fact F7, `CannotCheck` reasons of 1 to 200 characters with a Canonical_Sentence as `rule`, a second compiled checker with interleaved calls returning deep-equal outcomes), with random Step splits as in `arbCheckerCase` (including the one-Step split `[E]` in a fifth of cases)
+    - New generator `arbBiasedCheckerCase`, in a new helper file `src/engine/__tests__/rules-arbitraries-bias.ts` or appended to `rules-arbitraries.ts` (append only; existing generators are never edited): builds only `respond` and `count` Rules, biased toward violations: short windows (W from 1 to about 200 cycles, Duration_Ms = W / 16,000), `expect` Conditions that are rarely true (for example `all` of several leaves that need a specific input combination, or a leaf on an output that rarely changes), and for `count` bursts of edge Occurrences (several rises within one window, small `max` including 0 and 1). Reuse the trace and Step-split machinery of `arbCheckerCase` where possible instead of copying it
+    - Seed: one literal recorded in the file, never changed. numRuns 100 (no emulator)
+    - Counters declared with `let` before `fc.assert`, incremented from the Reference_Evaluator's per-Rule result after the cut-off: `respondViolating`, `respondClean`, `countViolating`, `countClean`. After `fc.assert`: assert every counter is greater than 0 AND `respondViolating >= 25` AND `countViolating >= 25`, with a message that names the outcome that fell short and lists every counter. The test prints one console line with seed, numRuns and the counters
+    - On any disagreement between the checker and the Reference_Evaluator, stop and report the seed and the shrunk case; do not change the test, the property, the Reference_Evaluator or the implementation. A counter below its bound is repaired in the generator only; `numRuns` and the bounds are never lowered, the seed is never changed and no counter is removed; if the repair cannot reach the bound, stop and report
+    - **Validates: Requirements 9.2, 9.3, 9.5, 9.8, 10.3, 10.4, 10.5, 10.6, 10.9, 16.6**
+
 - [x] 5. Checkpoint - Rule_Checker
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 
-- [ ] 6. Trigger check, verdict extension, Campaign wiring and Campaign_Config_Builder
-  - [ ] 6.1 Implement `src/engine/rules/trigger.ts`
+- [x] 6. Trigger check, verdict extension, Campaign wiring and Campaign_Config_Builder
+  - [x] 6.1 Implement `src/engine/rules/trigger.ts`
     - `TriggerRun`, `triggerOccurred(rule, fixture, run)` and `untriggeredRules(ruleSet, fixture, runs)` as in the design section "Trigger_Evaluator and Untriggered_Rule function"
     - `triggerOccurred`: `analyzeRule`; false for a non-Active Rule, a `never` Rule, an invalid Rule or a Fixture that `validateFixture` rejects; `initialState` and `toChanges` from `trace.ts` over the whole `outputEvents` and `appliedInputs`; change points 0 to `endCycle`; `diagnostics` ignored; the window-fit table of the design per form. Pure, never throws, leaves its arguments unchanged
     - `untriggeredRules`: sentences in Rule_Set order, once each, Active_Rules other than `never` whose Trigger occurred in no Run (all of them for an empty list)
     - _Requirements: 12.1, 12.2, 12.3, 12.7, 15.7_
 
-  - [ ] 6.2 Add `findUntriggeredRules` to `compileRuleSet` in `src/engine/rules/compile.ts`
+  - [x] 6.2 Add `findUntriggeredRules` to `compileRuleSet` in `src/engine/rules/compile.ts`
     - `CompiledRuleSet` gains `findUntriggeredRules: (runs: readonly RunResult[]) => string[]`, bound as `(runs) => untriggeredRules(ruleSet, fixture, runs)` over the private deep copies taken at compile time; `RunResult` imported with `import type`
     - The existing `rules-compile.test.ts` cases keep passing
     - _Requirements: 12.3, 13.1_
 
-  - [ ] 6.3 Add the Reference_Evaluator's trigger check and the trigger generator
+  - [x] 6.3 Add the Reference_Evaluator's trigger check and the trigger generator
     - In `rules-reference.ts`: a trigger check written from Req 12.1 by direct loops over cycles, independent of `trigger.ts` and `trace.ts`
     - In `rules-arbitraries.ts`: synthetic `RunResult` generators with `endCycle` 1 to 20,000 (Property 8) and 1 to 5,000 (Property 7), Rules of forms `respond`, `count`, `hold`, `notLongerThan` (plus `never` for Property 7) over a fixed test Fixture, Occurrences placed near `endCycle − W` so window-cut cases appear, and per Rule some Runs with a fitting Trigger, some with an Occurrence whose window does not fit, and some with none; `violation` set on some Runs
     - _Requirements: 16.9, 16.10_
 
-  - [ ] 6.4 Write property test for the Trigger_Evaluator in `src/engine/__tests__/rules-trigger.property.test.ts`
+  - [x] 6.4 Write property test for the Trigger_Evaluator in `src/engine/__tests__/rules-trigger.property.test.ts`
     - **Property 8: Trigger_Evaluator against the reference**
     - `triggerOccurred(rule, fixture, run)` equals the Reference_Evaluator's trigger check; called twice it returns the same value; `run` is deep-equal to a clone taken before the call
     - W from 1 to 20,000. Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
     - Counters asserted > 0 after `fc.assert`: `occurred`, `notOccurred`, `windowCut`
     - **Validates: Requirements 12.1, 12.2, 15.7**
 
-  - [ ] 6.5 Extend `src/engine/verdict.ts` (additive)
+  - [x] 6.5 Extend `src/engine/verdict.ts` (additive)
     - `VerdictInput` gains `untriggeredRules?: readonly string[]` (D8); export `runCountPhrase(n)` and `triggerReason(n)` exactly as in the design
     - `computeVerdict`: `finished` false still returns `null` before anything else; BROKE branch appends `{ rule: s, reason: triggerReason(N) }` per sentence in field order after the existing loop, skipping keys already in `seen`, with `trace` built as today; COULDN'T TELL branch pushes `Rule "${s}" could not be checked: ${triggerReason(N)}` once per distinct s after the Run `CannotCheck` parts and before the unmapped-signal part; N is `runs.length`; `buildReason` and `truncateReason` unchanged; no new verdict string; no new import
     - An absent or empty field leaves every branch exactly as today
     - Committed tests that must pass unchanged: `src/engine/__tests__/verdict.property.test.ts`, `copy-rules.test.ts`, `campaign.test.ts`, `campaign.handle.test.ts`, `campaign.overshoot.test.ts`, `campaign.property.test.ts` and `spike-monitor.test.ts`. If one fails, stop and report per Req 17.6
     - _Requirements: 12.4, 12.5, 12.6, 12.8, 12.9, 12.10, 12.11_
 
-  - [ ] 6.6 Write `src/engine/__tests__/rules-verdict.test.ts`
+  - [x] 6.6 Write `src/engine/__tests__/rules-verdict.test.ts`
     - `trigger never happened in 1 run` and `trigger never happened in 2 runs` in both the COULDN'T TELL reason and the BROKE `unchecked` list, with N taken from `runs.length` and not `requestedRuns`; `0 runs` for an empty `runs` list
     - Part order: Run `CannotCheck` parts, then trigger parts, then unmapped-signal, unsupported-peripheral, short-run and no-gremlin-event parts; the 200-unit cut
     - De-duplication of repeated sentences in the field and of an `unchecked` entry already present; BROKE `trace` deep-equal to the one without the field
     - `finished` false gives `null` whatever the field holds; absent and empty field give a value deep-equal to today's for the same input
     - _Requirements: 12.5, 12.6, 12.9, 12.10, 12.11, 16.12_
 
-  - [ ] 6.7 Write property test for verdict honesty in `src/engine/__tests__/rules-verdict.property.test.ts`
+  - [x] 6.7 Write property test for verdict honesty in `src/engine/__tests__/rules-verdict.property.test.ts`
     - **Property 6: Verdict honesty**
     - With `finished` true, 0 to 8 completed Runs and `requestedRuns` 1 to 8: BROKE only when some Run has a non-null `violation`, with the trace of the lowest violating Run_Index; HELD only when n ≥ 1 and n equals `requestedRuns`, with `text` equal to `heldText(n)` and `runs` equal to n; an empty `untriggeredRules` gives a value deep-equal to the one without the field
     - Generator from the design (synthetic `RunResult`s, `cannotCheck` from a small pool, `eventList` with and without non-rest events, `unmappedSignals` and `unsupportedPeripherals` empty in half the cases, `untriggeredRules` from `fc.option(fc.array(sentencePool, { maxLength: 4 }))` with an explicit empty-array branch). Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
     - Counters asserted > 0 after `fc.assert`: `broke`, `held`, `couldntTell`
     - **Validates: Requirements 12.4, 12.5, 12.6, 12.8, 12.9**
 
-  - [ ] 6.8 Write property test for the trigger check through the verdict in `src/engine/__tests__/rules-verdict.property.test.ts`
+  - [x] 6.8 Write property test for the trigger check through the verdict in `src/engine/__tests__/rules-verdict.property.test.ts`
     - **Property 7: Trigger check through the verdict**
     - Second `it` in the file. Rules of Active_Rules over the fixed test Fixture and 1 to 8 synthetic `RunResult`s, passed through `untriggeredRules` then `computeVerdict` (with `requestedRuns` equal to the list length or larger); each Rule's Trigger per Run decided by the Reference_Evaluator's trigger check. (a) A Rule seen in no Run: Verdict not HELD; COULDN'T TELL when no Run has a Violation; BROKE with `unchecked` containing `{ rule: <sentence>, reason: "trigger never happened in <R>" }` otherwise, R the Run_Count_Phrase for the list length. (b) A Rule seen in at least one Run: no trigger text for it in the COULDN'T TELL `reason` or any `unchecked` entry. `never` Rules never appear in the list
     - W from 1 to 2,000. Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
     - Counters asserted > 0 after `fc.assert`: `neverSeenClean`, `neverSeenBroke`, `seenInAll`, `seenInSome`, `oneRun`, `manyRuns`
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.5, 12.6, 12.7, 12.10, 11.5**
 
-  - [ ] 6.9 Extend `src/engine/campaign.ts` (additive)
+  - [x] 6.9 Extend `src/engine/campaign.ts` (additive)
     - `CampaignConfig` gains `findUntriggeredRules?: (runs: readonly RunResult[]) => readonly string[]` (D8); no other type gains a field; no new import
     - Inside `makeHandle` only, per the design pseudocode: a per-handle memo, `resolveUntriggered()` called once when the handle becomes finished with `structuredClone(runs)` (resumed Runs included), a throw giving `internal("untriggered-rule function failed: it threw")` and a non-array-of-strings return giving `internal("untriggered-rule function failed: it returned a value that is not an array of strings")`, kept in `failure` so later `runSlice` calls return the same `internal-error` and `state()` still returns every completed Run (D9); `computeVerdict` receives `untriggeredRules` only when the field is set, so with the field absent it receives the same object as today
     - Committed tests that must pass unchanged: `src/engine/__tests__/verdict.property.test.ts`, `copy-rules.test.ts`, `campaign.test.ts`, `campaign.handle.test.ts`, `campaign.overshoot.test.ts`, `campaign.property.test.ts` and `spike-monitor.test.ts`. If one fails, stop and report per Req 17.6
     - _Requirements: 13.2, 13.3, 13.5, 13.8, 13.9_
 
-  - [ ] 6.10 Implement `src/engine/rules/config-builder.ts`
+  - [x] 6.10 Implement `src/engine/rules/config-builder.ts`
     - `CampaignConfigRest`, `BuildResult` and `buildCampaignConfig(ruleSet, fixture, rest)`: on success `{ ...rest, fixture, checker, checkerSignals, findUntriggeredRules }` with `fixture` the given value and the other three from `compileRuleSet(ruleSet, fixture)`; on failure the `compileRuleSet` Reasons. `CampaignConfig` imported with `import type`. Never throws
     - _Requirements: 13.10, 13.11, 13.12_
 
-  - [ ] 6.11 Write `src/engine/__tests__/rules-wiring.test.ts`
+  - [x] 6.11 Write `src/engine/__tests__/rules-wiring.test.ts`
     - With a `bridgeFactory` test double where the emulator is not needed: field absent gives `RunResult`s, `SliceProgress` values and `CampaignResult` deep-equal to a run with today's config; the function is called once, with every completed Run in Run_Index order including Runs restored by `resumeCampaign`; later `runSlice` calls return the same `CampaignResult`; a throwing function and a non-array function each give a sticky `internal-error` whose message says the Untriggered_Rule function failed, no `CampaignResult`, and `state()` still holding every completed Run
     - On `blink_button` (HEX via `readFileSync`, no fallback, explicit timeout): a short Rule on a signal the Fixture lacks gives COULDN'T TELL through the `Signals not mapped to a pin: ` path and never HELD; a compiled Rule_Set wired with `compileRuleSet` runs the same through `runCampaign`, `runSlice(k)` and `resumeCampaign` from a JSON round-tripped `state()`
     - `buildCampaignConfig`: `fixture` is the same value, the other fields equal `rest`, `checkerSignals` equal the compile result; invalid Rule_Set and rejected Fixture give Reasons and no config; a hand-wired config with a different Fixture runs with no equality check
     - _Requirements: 13.1, 13.3, 13.4, 13.5, 13.8, 13.9, 13.10, 13.11, 13.12_
 
-- [ ] 7. Checkpoint - trigger check, verdict and Campaign wiring
+- [x] 7. Checkpoint - trigger check, verdict and Campaign wiring
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 
@@ -354,6 +364,7 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
 - Passing tests are evidence, not proof. Property tests sample inputs and do not cover every case.
 - The Requirement 16.12 example coverage is spread over tasks 1.6, 1.7, 2.4, 4.6, 4.7 and 6.6.
 - Requirement 17 is enforced by the rules section and the checkpoints, not by a separate task.
+- Task 4.10 was added after checkpoint 5 because `respondViolating` and `countViolating` were low (3 and 5) in Property 4, and it runs ahead of task 6.1 at the start of the next batch.
 
 ## Task Dependency Graph
 

@@ -1,19 +1,21 @@
 // Rule_Compiler wiring function. It checks a Rule_Set and a Fixture, then builds the
 // Checker and the signal list for a Campaign. Pure: no clock, no random source, no network.
-// The third field (the untriggered-rule function) is added by a later task.
+// The third field is the untriggered-rule function, bound to private copies of the inputs.
 
 import type { Checker } from "../checker";
 import { validateFixture } from "../fixture";
-import type { Fixture } from "../types";
+import type { Fixture, RunResult } from "../types";
 import { analyzeRuleSet } from "./bind";
 import { findRepeatedSentences, validateRuleSet } from "./ir";
 import type { RuleSet } from "./ir";
 import { cutReason } from "./reason";
 import { makeRuleChecker } from "./rule-checker";
+import { untriggeredRules } from "./trigger";
 
 export interface CompiledRuleSet {
   checker: Checker;
   checkerSignals: string[];
+  findUntriggeredRules: (runs: readonly RunResult[]) => string[];
 }
 
 export type CompileResult = { ok: true; compiled: CompiledRuleSet } | { ok: false; reasons: string[] };
@@ -48,7 +50,9 @@ export function compileRuleSet(ruleSet: unknown, fixture: Fixture): CompileResul
     const fixtureCopy = structuredClone(fixture);
     const plan = analyzeRuleSet(ruleSetCopy, fixtureCopy);
     const checker = makeRuleChecker(plan);
-    return { ok: true, compiled: { checker, checkerSignals: plan.checkerSignals.slice() } };
+    const findUntriggeredRules = (runs: readonly RunResult[]): string[] =>
+      untriggeredRules(ruleSetCopy, fixtureCopy, runs);
+    return { ok: true, compiled: { checker, checkerSignals: plan.checkerSignals.slice(), findUntriggeredRules } };
   } catch {
     return { ok: false, reasons: ["Rule set: the rules and the fixture could not be compiled."] };
   }

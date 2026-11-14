@@ -317,3 +317,131 @@ export function referenceEvaluate(input: ReferenceInput): ReferenceResult {
 
   return { rules, violation, floating };
 }
+
+// ---------------------------------------------------------------------------
+// Trigger check (Req 12.1). Written from the requirement text with direct loops over cycles.
+
+/** The parts of a Run that the trigger check reads. */
+export interface ReferenceTriggerRun {
+  readonly outputEvents: readonly OutputEvent[];
+  readonly appliedInputs: readonly AppliedInput[];
+  readonly endCycle: number;
+}
+
+/**
+ * Whether the Trigger of `rule` occurred in `run`, counting only windows that fit in the run.
+ * `window` is the generator's W, D or L (null for a never rule).
+ */
+export function referenceTriggerOccurred(
+  rule: Rule,
+  fixture: Fixture,
+  window: number | null,
+  run: ReferenceTriggerRun,
+): boolean {
+  if (rule.form === "never") return false;
+  if (!isActive(fixture, rule)) return false;
+  if (window === null) return false;
+  const E = run.endCycle;
+
+  const names: string[] = [];
+  for (const c of conditionsOf(rule)) {
+    for (const leaf of leavesOf(c)) if (!names.includes(leaf.signal)) names.push(leaf.signal);
+  }
+
+  const startValue = (s: string): Value => {
+    const pin = pinsFor(fixture, s)[0];
+    if (isAnalog(pin)) {
+      const rl = (pin as { restLevel?: number }).restLevel;
+      return rl === undefined ? 512 : rl;
+    }
+    if (pin.direction === "output") {
+      for (const ev of run.outputEvents) if (ev.signal === s && ev.cycle === 0) return ev.value;
+      return "input";
+    }
+    const inactive = (pin as { activeLevel?: string }).activeLevel === "high" ? 0 : 1;
+    let v: Value = inactive;
+    for (const ev of run.appliedInputs) {
+      if (ev.gremlinId !== "rest" || ev.signal !== s || !("value" in ev)) continue;
+      v = ev.value === "release" ? inactive : ev.value;
+    }
+    return v;
+  };
+
+  const start: Value[] = names.map(startValue);
+  const rows: Value[][] = [];
+  let now: Value[] = start.slice();
+  for (let c = 0; c <= E; c++) {
+    for (const ev of run.outputEvents) {
+      const k = names.indexOf(ev.signal);
+      if (k >= 0 && ev.cycle === c) now[k] = ev.value;
+    }
+    for (const ev of run.appliedInputs) {
+      if (ev.gremlinId === "rest" || ev.appliedCycle !== c) continue;
+      const k = names.indexOf(ev.signal);
+      if (k < 0) continue;
+      if ("analog" in ev) {
+        now[k] = ev.analog;
+      } else {
+        const pin = pinsFor(fixture, ev.signal)[0];
+        const inactive = (pin as { activeLevel?: string }).activeLevel === "high" ? 0 : 1;
+        now[k] = ev.value === "release" ? inactive : ev.value;
+      }
+    }
+    rows.push(now.slice());
+    now = now.slice();
+  }
+
+  const test = (cond: Condition, row: readonly Value[]): boolean => {
+    switch (cond.op) {
+      case "eq":
+        return row[names.indexOf(cond.signal)] === cond.value;
+      case "above": {
+        const v = row[names.indexOf(cond.signal)];
+        return typeof v === "number" && v > cond.value;
+      }
+      case "below": {
+        const v = row[names.indexOf(cond.signal)];
+        return typeof v === "number" && v < cond.value;
+      }
+      case "all":
+        return cond.of.every((m) => test(m, row));
+      case "any":
+        return cond.of.some((m) => test(m, row));
+    }
+  };
+
+  const truthAt = (cond: Condition): boolean[] => rows.map((row) => test(cond, row));
+  const occurrenceCycles = (edge: Edge): number[] => {
+    const before0 = test(edge.of, start);
+    const truth = truthAt(edge.of);
+    const found: number[] = [];
+    for (let c = 0; c <= E; c++) {
+      const prev = c === 0 ? before0 : truth[c - 1];
+      if (edge.op === "rise" ? !prev && truth[c] : prev && !truth[c]) found.push(c);
+    }
+    return found;
+  };
+
+  switch (rule.form) {
+    case "respond": {
+      for (const t of occurrenceCycles(rule.trigger)) if (t + window <= E) return true;
+      return false;
+    }
+    case "hold": {
+      for (const t of occurrenceCycles(rule.after)) if (t + window - 1 <= E) return true;
+      return false;
+    }
+    case "count":
+      return occurrenceCycles(rule.edge).length > 0;
+    case "notLongerThan": {
+      const truth = truthAt(rule.condition);
+      for (let s = 0; s <= E; s++) {
+        const isStart = truth[s] && (s === 0 || !truth[s - 1]);
+        if (!isStart) continue;
+        if (s + window <= E) return true;
+        for (let c = s + 1; c <= E; c++) if (!truth[c]) return true;
+      }
+      return false;
+    }
+  }
+}

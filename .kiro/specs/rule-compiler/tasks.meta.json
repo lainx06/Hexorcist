@@ -7,6 +7,10 @@
     "4.9 Write property test for the differential check in `src/engine/__tests__/rules-checker.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794669369615
+    },
+    "6.4 Write property test for the Trigger_Evaluator in `src/engine/__tests__/rules-trigger.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794670338370
     }
   },
   "executionHistory": {
@@ -377,6 +381,169 @@
         "executionId": "f0f3387b-089d-4ba8-ade9-dff22d153e24",
         "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
         "timestamp": 1794669498328
+      }
+    ],
+    "4.10 Write property test for the biased differential check in `src/engine/__tests__/rules-checker-bias.property.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669803188
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669915596
+      }
+    ],
+    "6.1 Implement `src/engine/rules/trigger.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794669916168
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670012150
+      }
+    ],
+    "6.2 Add `findUntriggeredRules` to `compileRuleSet` in `src/engine/rules/compile.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670012552
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670093131
+      }
+    ],
+    "6.3 Add the Reference_Evaluator's trigger check and the trigger generator": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670093735
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670298498
+      }
+    ],
+    "6.4 Write property test for the Trigger_Evaluator in `src/engine/__tests__/rules-trigger.property.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670298641
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670386339
+      }
+    ],
+    "6.5 Extend `src/engine/verdict.ts` (additive)": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670386947
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670470385
+      }
+    ],
+    "6.6 Write `src/engine/__tests__/rules-verdict.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670470522
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670631624
+      }
+    ],
+    "6.7 Write property test for verdict honesty in `src/engine/__tests__/rules-verdict.property.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670632186
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670725113
+      }
+    ],
+    "6.8 Write property test for the trigger check through the verdict in `src/engine/__tests__/rules-verdict.property.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670725850
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670860902
+      }
+    ],
+    "6.9 Extend `src/engine/campaign.ts` (additive)": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670861511
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670944740
+      }
+    ],
+    "6.10 Implement `src/engine/rules/config-builder.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794670944903
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671007492
+      }
+    ],
+    "6.11 Write `src/engine/__tests__/rules-wiring.test.ts`": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671008271
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671224030
+      }
+    ],
+    "6. Trigger check, verdict extension, Campaign wiring and Campaign_Config_Builder": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671224072
+      }
+    ],
+    "7. Checkpoint - trigger check, verdict and Campaign wiring": [
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671224208
+      },
+      {
+        "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794671312817
       }
     ]
   }

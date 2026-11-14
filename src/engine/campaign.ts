@@ -292,6 +292,8 @@ export interface CampaignConfig {
   maxStepCycles?: number;
   /** Signals the Checker names, for the unmapped-signal verdict. */
   checkerSignals?: readonly string[];
+  /** Returns the Canonical_Sentences of Untriggered_Rules for the completed Runs. Called once, when the Campaign finishes. */
+  findUntriggeredRules?: (runs: readonly RunResult[]) => readonly string[];
   /** Test seam, default EmulatorBridge.create. */
   bridgeFactory?: BridgeFactory;
 }
@@ -377,16 +379,44 @@ function makeHandle(
   const isFinished = (): boolean =>
     runs.length >= settings.n || (settings.stopOnFirstViolation && earliestViolation(runs) !== null);
 
-  const progress = (): SliceProgress => {
+  // Memo of the Untriggered_Rule list, kept once per handle.
+  let untriggered: readonly string[] | undefined = undefined;
+
+  const resolveUntriggered = (): readonly string[] | undefined | EngineError => {
+    const find = config.findUntriggeredRules;
+    if (find === undefined) return undefined;
+    if (untriggered !== undefined) return untriggered;
+    let out: unknown;
+    try {
+      out = find(structuredClone(runs));
+    } catch {
+      return internal("untriggered-rule function failed: it threw");
+    }
+    if (!Array.isArray(out) || out.some((s) => typeof s !== "string")) {
+      return internal(
+        "untriggered-rule function failed: it returned a value that is not an array of strings",
+      );
+    }
+    untriggered = (out as string[]).slice();
+    return untriggered;
+  };
+
+  const progress = (): SliceProgress | EngineError => {
     const finished = isFinished();
     let result: CampaignResult | null = null;
     if (finished) {
+      const u = resolveUntriggered();
+      if (u !== undefined && isEngineError(u)) {
+        failure = u;
+        return u;
+      }
       const verdict = computeVerdict({
         requestedRuns: settings.n,
         runs,
         finished: true,
         unmappedSignals: unmapped,
         unsupportedPeripherals: [],
+        ...(u === undefined ? {} : { untriggeredRules: u as readonly string[] }),
       });
       if (verdict !== null) {
         result = {

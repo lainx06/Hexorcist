@@ -25,7 +25,15 @@ export interface VerdictInput {
   unmappedSignals: readonly string[];
   /** Peripherals the Checker named as unsupported. */
   unsupportedPeripherals: readonly string[];
+  /** Canonical_Sentences of Untriggered_Rules, in Rule_Set order. Absent or empty: today's behaviour. */
+  untriggeredRules?: readonly string[];
 }
+
+/** "1 run" for 1, "N runs" for every other N, 0 included. */
+export const runCountPhrase = (n: number): string => (n === 1 ? "1 run" : `${n} runs`);
+
+/** "trigger never happened in <R>". */
+export const triggerReason = (n: number): string => `trigger never happened in ${runCountPhrase(n)}`;
 
 /** Cut at 200 UTF-16 units, never leaving half of a surrogate pair. */
 function truncateReason(text: string): string {
@@ -61,7 +69,15 @@ export function computeVerdict(input: VerdictInput): Verdict | null {
       unchecked.push({ rule: c.rule, reason: c.reason });
     }
   }
+  const untriggered = input.untriggeredRules ?? [];
   if (lowest !== null && lowest.violation !== null) {
+    const reason = triggerReason(runs.length);
+    for (const s of untriggered) {
+      const key = JSON.stringify([s, reason]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unchecked.push({ rule: s, reason });
+    }
     const trace: BrokeTrace = {
       runIndex: lowest.runIndex,
       runSeed: lowest.runSeed,
@@ -76,6 +92,12 @@ export function computeVerdict(input: VerdictInput): Verdict | null {
   const parts: string[] = [];
   for (const c of unchecked) {
     parts.push(`Rule "${c.rule}" could not be checked: ${c.reason}`);
+  }
+  const triggerSeen = new Set<string>();
+  for (const s of untriggered) {
+    if (triggerSeen.has(s)) continue;
+    triggerSeen.add(s);
+    parts.push(`Rule "${s}" could not be checked: ${triggerReason(runs.length)}`);
   }
   if (input.unmappedSignals.length > 0) {
     parts.push(`Signals not mapped to a pin: ${input.unmappedSignals.join(", ")}`);
