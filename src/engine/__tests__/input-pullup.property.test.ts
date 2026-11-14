@@ -133,11 +133,12 @@ describe('Preservation examples: snapshot, schedule, supports, error kinds', () 
     expect(b.schedule({ signal: 'BUTTON', value: 1, cycle: 6 })).toBeUndefined();
   });
 
-  it('supports() reports gpio, timer0 true and adc, usart, spi unsupported', () => {
+  it('supports() reports gpio, timer0, adc true and usart, spi unsupported', () => {
     const b = make();
     expect(b.supports('gpio')).toBe(true);
     expect(b.supports('timer0')).toBe(true);
-    for (const cap of ['adc', 'usart', 'spi']) {
+    expect(b.supports('adc')).toBe(true);
+    for (const cap of ['usart', 'spi']) {
       expect(b.supports(cap)).toMatchObject({ kind: 'unsupported-capability', capability: cap });
     }
   });

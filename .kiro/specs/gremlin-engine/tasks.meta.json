@@ -110,6 +110,202 @@
         "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
         "timestamp": 1794610702521
       }
+    ],
+    "6. Checkpoint - PRNG and Run_Seed": [
+      {
+        "executionId": "939a3630-4bf7-48e7-8006-5ba95552519e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794610843604
+      },
+      {
+        "executionId": "939a3630-4bf7-48e7-8006-5ba95552519e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794610891029
+      }
+    ],
+    "7.1 Add the additive types in `src/engine/types.ts`": [
+      {
+        "executionId": "939a3630-4bf7-48e7-8006-5ba95552519e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794610891571
+      },
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616035493
+      }
+    ],
+    "7.2 Implement `src/engine/adc-scale.ts`": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616037032
+      },
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616053602
+      }
+    ],
+    "7.3 Write `src/engine/__tests__/adc-scale.test.ts` (pure half of Property 23)": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616054204
+      },
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616091194
+      }
+    ],
+    "7.4 Implement `src/engine/fixture.ts`": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616091777
+      },
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616130887
+      }
+    ],
+    "7. Bridge types and pure helpers": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616130928
+      }
+    ],
+    "8.1 Use the validation and guard digital loops in `src/engine/emulator-bridge.ts`": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616131517
+      },
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616205136
+      }
+    ],
+    "8.2 Wire the ADC in `src/engine/emulator-bridge.ts`": [
+      {
+        "executionId": "415997a2-ac23-46ef-8b2b-447a8fc18160",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616205640
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616483707
+      }
+    ],
+    "8.3 Verify the existing suites are unchanged and passing": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616484368
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616536972
+      }
+    ],
+    "8. Wire the bridge": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616537035
+      }
+    ],
+    "9.1 Create `src/engine/__tests__/arbitraries.ts` (helper, not a test file)": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616538755
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616634155
+      }
+    ],
+    "9.2 Write `src/engine/__tests__/emulator-bridge.analog.test.ts` (examples)": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616634668
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616723515
+      }
+    ],
+    "9.3 Write property test for generated Fixtures in `src/engine/__tests__/emulator-bridge.analog.property.test.ts`": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616723879
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616787708
+      }
+    ],
+    "9.4 Write property test for rejected Fixtures and events in the same file": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616788446
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616884978
+      }
+    ],
+    "9.5 Write property test that the bridge ignores `gremlinId` in the same file": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616885171
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616959973
+      }
+    ],
+    "9. Bridge tests": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616960040
+      }
+    ],
+    "10. Checkpoint - bridge changes": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794616961796
+      },
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617015688
+      }
+    ],
+    "11. Write the `analog_read` sketch, then STOP for the user to compile": [
+      {
+        "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617016313
+      }
     ]
   }
 }

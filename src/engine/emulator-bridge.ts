@@ -1,5 +1,5 @@
 /**
- * EmulatorBridge — the ONLY file in src/ that imports avr8js.
+ * EmulatorBridge â€” the ONLY file in src/ that imports avr8js.
  *
  * All avr8js types are confined to this module; nothing leaks past EmulatorBridgeInterface.
  */
@@ -15,9 +15,13 @@ import {
   timer0Config,
   timer1Config,
   timer2Config,
+  AVRADC,
+  adcConfig,
 } from 'avr8js';
 
 import { hexToProgMem } from './hex-parser.js';
+import { isAnalogInputEvent, isAnalogPin, validateEvents, validateFixture } from './fixture.js';
+import { analogCountToVolts } from './adc-scale.js';
 import type {
   Fixture,
   FixturePin,
@@ -25,6 +29,8 @@ import type {
   OutputEvent,
   InputEvent,
   AppliedInputEvent,
+  AppliedAnalogInputEvent,
+  ScheduledInput,
   BridgeError,
   AdvanceResult,
   Diagnostic,
@@ -39,6 +45,8 @@ export type {
   OutputEvent,
   InputEvent,
   AppliedInputEvent,
+  AppliedAnalogInputEvent,
+  ScheduledInput,
   BridgeError,
   AdvanceResult,
   Diagnostic,
@@ -63,15 +71,25 @@ type PinRegisterName = 'PINB' | 'PINC' | 'PIND';
 interface BuilderHooks {
   pinReadStubs?: Partial<Record<PinRegisterName, (addr: number) => number>>;
   portListeners?: Partial<Record<'B' | 'C' | 'D', (value: number, oldValue: number) => void>>;
+  adcResultListener?: (result: AdcResult) => void;
 }
 
-// ── Type guard ──────────────────────────────────────────────────────────────
+/** One finished ADC conversion as seen by the test hook. */
+export interface AdcResult {
+  cycle: number;
+  value: number;
+  adcl: number;
+  adch: number;
+  admux: number;
+}
+
+// â”€â”€ Type guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function isBridgeError(x: unknown): x is BridgeError {
   return x != null && typeof x === 'object' && 'kind' in x;
 }
 
-// ── EmulatorBridgeInterface ─────────────────────────────────────────────────
+// â”€â”€ EmulatorBridgeInterface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface EmulatorBridgeInterface {
   advance(requestedCycles: number): AdvanceResult | BridgeError;
@@ -81,7 +99,7 @@ export interface EmulatorBridgeInterface {
   readonly cycleCount: number;
 }
 
-// ── EmulatorBridge ──────────────────────────────────────────────────────────
+// â”€â”€ EmulatorBridge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class EmulatorBridge implements EmulatorBridgeInterface {
   readonly clockHz: number;
@@ -94,7 +112,8 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   private readonly _portMap: Map<'B' | 'C' | 'D', AVRIOPort>;
   private readonly _fixture: Fixture;
   private readonly _pinShadow: Array<PinValue>;
-  private readonly _sortedInputs: InputEvent[];
+  private readonly _sortedInputs: ScheduledInput[];
+  private readonly _adc: AVRADC;
   private _nextInputIdx: number = 0;
   private _initialSnapshot: OutputEvent[];
   private _firstAdvance: boolean = true;
@@ -109,7 +128,8 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     portMap: Map<'B' | 'C' | 'D', AVRIOPort>,
     fixture: Fixture,
     pinShadow: Array<PinValue>,
-    sortedInputs: InputEvent[],
+    sortedInputs: ScheduledInput[],
+    adc: AVRADC,
     initialSnapshot: OutputEvent[],
     clockHz: number,
     extState: Array<'released' | 0 | 1>,
@@ -120,16 +140,17 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     this._fixture = fixture;
     this._pinShadow = pinShadow;
     this._sortedInputs = sortedInputs;
+    this._adc = adc;
     this._initialSnapshot = initialSnapshot;
     this.clockHz = clockHz;
   }
 
-  // ── Factory ───────────────────────────────────────────────────────────────
+  // â”€â”€ Factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   static create(
     hex: string,
     fixture: Fixture,
-    inputEvents?: InputEvent[],
+    inputEvents?: ScheduledInput[],
   ): EmulatorBridge | BridgeError {
     return EmulatorBridge._build(hex, fixture, inputEvents, undefined);
   }
@@ -144,10 +165,11 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   static createWithTestHooks(
     hex: string,
     fixture: Fixture,
-    inputEvents: InputEvent[],
+    inputEvents: ScheduledInput[],
     hooks: {
       pinReadStubs?: Partial<Record<'PINB' | 'PINC' | 'PIND', (addr: number) => number>>;
       portListeners?: Partial<Record<'B' | 'C' | 'D', (value: number, oldValue: number) => void>>;
+      adcResultListener?: (result: AdcResult) => void;
     },
   ): EmulatorBridge | BridgeError {
     return EmulatorBridge._build(hex, fixture, inputEvents, hooks);
@@ -157,44 +179,21 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   private static _build(
     hex: string,
     fixture: Fixture,
-    inputEvents: InputEvent[] | undefined,
+    inputEvents: ScheduledInput[] | undefined,
     hooks: BuilderHooks | undefined,
   ): EmulatorBridge | BridgeError {
     // 1. Parse HEX
     const progMem = hexToProgMem(hex);
     if (isBridgeError(progMem)) return progMem;
 
-    // 2. Validate fixture
-    if (fixture.clockHz !== undefined && fixture.clockHz <= 0) {
-      return { kind: 'invalid-fixture', message: 'clockHz must be positive' };
-    }
-    for (const pin of fixture.pins) {
-      if (pin.port !== 'B' && pin.port !== 'C' && pin.port !== 'D') {
-        return {
-          kind: 'unsupported-port',
-          port: pin.port,
-          message: `Port ${pin.port} is not supported; use B, C, or D`,
-        };
-      }
-      if (pin.bit < 0 || pin.bit > 7) {
-        return {
-          kind: 'invalid-fixture',
-          message: `Bit index ${pin.bit} is out of range; must be 0–7`,
-        };
-      }
-    }
+    // 2. Validate fixture (before any CPU exists)
+    const fixtureError = validateFixture(fixture);
+    if (fixtureError) return fixtureError;
 
-    // 3. Validate inputEvents
+    // 3. Validate inputEvents (before any CPU exists, so nothing is applied from a rejected list)
     const events = inputEvents ?? [];
-    for (const ev of events) {
-      if (!fixture.pins.some(p => p.signal === ev.signal)) {
-        return {
-          kind: 'unmapped-pin',
-          signal: ev.signal,
-          message: `Signal "${ev.signal}" is not mapped in the fixture`,
-        };
-      }
-    }
+    const eventsError = validateEvents(fixture, events);
+    if (eventsError) return eventsError;
 
     // 4. Construct CPU
     const cpu = new CPU(progMem, 2048);
@@ -228,6 +227,27 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     new AVRTimer(cpu, timer1Config);
     new AVRTimer(cpu, timer2Config);
 
+    // 6b. ADC. Every analog pin presents its rest level before any instruction runs.
+    const adc = new AVRADC(cpu, adcConfig);
+    for (const pin of fixture.pins) {
+      if (!isAnalogPin(pin)) continue;
+      adc.channelValues[pin.channel] = analogCountToVolts(pin.restLevel ?? 512);
+    }
+    if (hooks?.adcResultListener) {
+      const listener = hooks.adcResultListener;
+      const original = adc.completeADCRead.bind(adc);
+      adc.completeADCRead = (value: number): void => {
+        original(value);
+        listener({
+          cycle: cpu.cycles,
+          value,
+          adcl: cpu.data[adcConfig.ADCL],
+          adch: cpu.data[adcConfig.ADCH],
+          admux: cpu.data[adcConfig.ADMUX],
+        });
+      };
+    }
+
     // 7. Build port lookup map
     const portMap = new Map<'B' | 'C' | 'D', AVRIOPort>([
       ['B', portB],
@@ -246,6 +266,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     const initialSnapshot: OutputEvent[] = [];
     for (let i = 0; i < fixture.pins.length; i++) {
       const pin = fixture.pins[i];
+      if (isAnalogPin(pin)) continue;
       if (pin.direction !== 'output') continue;
       const port = portMap.get(pin.port)!;
       const raw = port.pinState(pin.bit);
@@ -257,16 +278,19 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
 
     // 10. Return bridge instance
     const clockHz = fixture.clockHz ?? 16_000_000;
-    const bridge = new EmulatorBridge(cpu, portMap, fixture, pinShadow, sortedInputs, initialSnapshot, clockHz, extState);
+    const bridge = new EmulatorBridge(cpu, portMap, fixture, pinShadow, sortedInputs, adc, initialSnapshot, clockHz, extState);
 
     // 11. Track DDR/PORT changes. Listeners are additive, so no existing hook is displaced.
     //     Runs after the AVRIOPort constructors. Driven pins are skipped.
     for (const [letter, port] of portMap) {
-      const hasInput = fixture.pins.some(p => p.port === letter && p.direction === 'input');
+      const hasInput = fixture.pins.some(
+        p => !isAnalogPin(p) && p.port === letter && p.direction === 'input',
+      );
       if (!hasInput) continue;
       port.addListener(() => {
         for (let i = 0; i < fixture.pins.length; i++) {
           const p = fixture.pins[i];
+          if (isAnalogPin(p)) continue;
           if (p.port !== letter || p.direction !== 'input') continue;
           if (extState[i] !== 'released') continue;
           bridge._presentReleased(i);
@@ -286,7 +310,9 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       const port = portMap.get(letter)!;
       const pinIdxs: number[] = [];
       for (let i = 0; i < fixture.pins.length; i++) {
-        if (fixture.pins[i].port === letter && fixture.pins[i].direction === 'input') pinIdxs.push(i);
+        const fp = fixture.pins[i];
+        if (isAnalogPin(fp)) continue;
+        if (fp.port === letter && fp.direction === 'input') pinIdxs.push(i);
       }
       if (pinIdxs.length === 0) continue;
       const pinAddr = letter === 'B' ? portBConfig.PIN : letter === 'C' ? portCConfig.PIN : portDConfig.PIN;
@@ -296,6 +322,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
         const original = prev ? prev(addr) : cpu.data[addr];
         for (const i of pinIdxs) {
           const p = fixture.pins[i];
+          if (isAnalogPin(p)) continue;
           if (extState[i] !== 'released') continue;
           if (bridge._floatingReported.has(p.signal)) continue;
           if (port.pinState(p.bit) !== PinState.Input) continue;
@@ -313,17 +340,20 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
 
     // 12. Make the initial presented level of every input pin consistent.
     for (let i = 0; i < fixture.pins.length; i++) {
-      if (fixture.pins[i].direction === 'input') bridge._presentReleased(i);
+      const fp = fixture.pins[i];
+      if (isAnalogPin(fp)) continue;
+      if (fp.direction === 'input') bridge._presentReleased(i);
     }
 
     return bridge;
   }
 
-  // ── advance() ─────────────────────────────────────────────────────────────
+  // â”€â”€ advance() â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   advance(requestedCycles: number): AdvanceResult | BridgeError {
     const outputEvents: OutputEvent[] = [];
     const appliedInputs: AppliedInputEvent[] = [];
+    const appliedAnalogInputs: AppliedAnalogInputEvent[] = [];
 
     // Prepend initial snapshot on the very first advance() call
     if (this._firstAdvance) {
@@ -332,7 +362,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     }
 
     if (requestedCycles <= 0) {
-      return { cyclesConsumed: 0, outputEvents, appliedInputs, diagnostics: this._takeDiagnostics() };
+      return { cyclesConsumed: 0, outputEvents, appliedInputs, appliedAnalogInputs, diagnostics: this._takeDiagnostics() };
     }
 
     const startCycles = this._cpu.cycles;
@@ -345,8 +375,13 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       ) {
         const ev = this._sortedInputs[this._nextInputIdx++];
         const pin = this._fixture.pins.find(p => p.signal === ev.signal)!;
-        this._applyInput(this._fixture.pins.indexOf(pin), ev.value);
-        appliedInputs.push({ ...ev, appliedCycle: this._cpu.cycles });
+        if (isAnalogInputEvent(ev)) {
+          if (isAnalogPin(pin)) this._adc.channelValues[pin.channel] = analogCountToVolts(ev.analog);
+          appliedAnalogInputs.push({ ...ev, appliedCycle: this._cpu.cycles });
+        } else {
+          this._applyInput(this._fixture.pins.indexOf(pin), ev.value);
+          appliedInputs.push({ ...ev, appliedCycle: this._cpu.cycles });
+        }
       }
 
       // 2. Execute one instruction
@@ -367,6 +402,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       // 5. Detect output pin changes in ascending fixture pin-index order
       for (let i = 0; i < this._fixture.pins.length; i++) {
         const pin = this._fixture.pins[i];
+        if (isAnalogPin(pin)) continue;
         if (pin.direction !== 'output') continue;
         const port = this._portMap.get(pin.port)!;
         const raw = port.pinState(pin.bit);
@@ -382,6 +418,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       cyclesConsumed: this._cpu.cycles - startCycles,
       outputEvents,
       appliedInputs,
+      appliedAnalogInputs,
       diagnostics: this._takeDiagnostics(),
     };
   }
@@ -392,10 +429,11 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     return out;
   }
 
-  // ── Released-pin model ────────────────────────────────────────────────────
+  // â”€â”€ Released-pin model â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private _applyInput(pinIdx: number, value: 0 | 1 | 'release'): void {
     const pin = this._fixture.pins[pinIdx];
+    if (isAnalogPin(pin)) return;
     if (value === 'release') {
       this._extState[pinIdx] = 'released';
       this._presentReleased(pinIdx);
@@ -412,13 +450,14 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
    */
   private _presentReleased(pinIdx: number): void {
     const pin = this._fixture.pins[pinIdx];
+    if (isAnalogPin(pin)) return;
     const port = this._portMap.get(pin.port)!;
     const state = port.pinState(pin.bit);
     if (state === PinState.High || state === PinState.Low) return;
     port.setPin(pin.bit, state === PinState.InputPullUp);
   }
 
-  // ── schedule() ────────────────────────────────────────────────────────────
+  // â”€â”€ schedule() â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   schedule(event: InputEvent): void | BridgeError {
     if (!this._fixture.pins.some(p => p.signal === event.signal)) {
@@ -445,7 +484,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     this._sortedInputs.splice(insertIdx, 0, event);
   }
 
-  // ── supports() ────────────────────────────────────────────────────────────
+  // â”€â”€ supports() â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   supports(capability: string): true | BridgeError {
     const wired = new Set([
@@ -455,6 +494,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       'timer0',
       'timer1',
       'timer2',
+      'adc',
     ]);
     if (wired.has(capability)) return true;
     return {
@@ -465,7 +505,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   }
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function mapPinState(state: PinState): PinValue {
   switch (state) {

@@ -1283,7 +1283,7 @@ Planned new test files: `catalogue.test.ts`, `prng.test.ts`, `prng.property.test
 | R2.4 | Properties 23, 8 |
 | R2.7, 2.8, 2.9, 2.10 | Property 26 |
 | R2.12 | Property 26 (shared-pin clause); Property 27 (generated Fixtures never trip it); shared pin examples in `emulator-bridge.analog.test.ts` |
-| R2.11 | existing suite unchanged; optional recorded baseline (see below) |
+| R2.11 | existing suite unchanged; optional recorded baseline (see below). Approved exception: input-pullup.property supports() assertion updated for adc (superseded by R2.2), approved by the user |
 | R3.1, 3.2, 3.3, 3.12, 3.13 | fixture acceptance examples; existing suite |
 | R3.4, 3.14 | Property 26 |
 | R3.5, 3.6, 3.7 | Property 5 |

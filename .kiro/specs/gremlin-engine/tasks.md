@@ -88,40 +88,40 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - numRuns 200 for the generated parts. Run_Index 0 to 9,999 gives 10,000 distinct Run_Seed values for each of the Campaign_Seed values 0, 1, 42 and 4294967295 plus generated ones. Invalid Campaign_Seed or Run_Index gives the matching typed error. `fmix32` composed with the test-side inverse (multipliers `0x7ed1b41d` and `0xa5cb9243`) is the identity over 100,000 sampled values. State in a comment that the assurance comes from the construction and the test is evidence
     - **Validates: Requirements 1.10, 1.11**
 
-- [ ] 6. Checkpoint - PRNG and Run_Seed
+- [x] 6. Checkpoint - PRNG and Run_Seed
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Bridge types and pure helpers
-  - [ ] 7.1 Add the additive types in `src/engine/types.ts`
+- [x] 7. Bridge types and pure helpers
+  - [x] 7.1 Add the additive types in `src/engine/types.ts`
     - `DigitalFixturePin`, `AnalogFixturePin` (with `direction?: "input"`, `port?: undefined`, `bit?: undefined`), `FixturePin` as their union, `gremlinId?` on `InputEvent`, `AnalogInputEvent`, `ScheduledInput`, `AppliedAnalogInputEvent`, `AppliedInput`, `appliedAnalogInputs` on `AdvanceResult` (always present), `invalid-analog-value` and `pin-kind-mismatch` in `BridgeError`, optional `signal` on `invalid-fixture`. `appliedInputs` keeps its current type
     - Add the Data Models run and campaign types later, in task 21.1
     - Run `npm run typecheck` and report it (design Finding F17: existing tests that read `direction` must still type check). Do not edit any existing test to fix a type error. If one fails, stop and report
     - _Requirements: 2.1, 2.6, 3.1, 3.11, 3.12_
 
-  - [ ] 7.2 Implement `src/engine/adc-scale.ts`
+  - [x] 7.2 Implement `src/engine/adc-scale.ts`
     - `ADC_FULL_SCALE_VOLTS = 5` and `analogCountToVolts(c) = ((2c + 1) * 5) / 2048`. Pure, no avr8js import
     - _Requirements: 2.4, 2.5_
 
-  - [ ] 7.3 Write `src/engine/__tests__/adc-scale.test.ts` (pure half of Property 23)
+  - [x] 7.3 Write `src/engine/__tests__/adc-scale.test.ts` (pure half of Property 23)
     - **Property 23 (pure half): ADC count round trip**
     - Exhaustive over counts 0 to 1023 (no random generator): a copy of the quoted conversion formula, labelled "mirror of adc.js:109-110", applied to `analogCountToVolts(c)` returns `c`
     - **Validates: Requirements 2.4, 2.5**
 
-  - [ ] 7.4 Implement `src/engine/fixture.ts`
+  - [x] 7.4 Implement `src/engine/fixture.ts`
     - `validateFixture` with the same checks and messages as today for digital pins, in the same order, then `activeLevel` and `restState` checks (allowed set, input digital pins only), analog pin checks (channel integer 0 to 5, no duplicate channel, `restLevel` integer 0 to 1023, `direction` absent or `"input"`, no `activeLevel` or `restState`), then the shared physical pin check (analog channel N against a non-analog pin with `port: "C"` and `bit` N, earliest conflict in Fixture order, message names both signals, `signal` field absent). Single-signal failures set `signal`
     - `validateEvents`: per event in list order, unknown signal gives `unmapped-pin` with today's text, kind mismatch gives `pin-kind-mismatch`, bad analog value gives `invalid-analog-value`. `isAnalogInputEvent(ev)` is `'analog' in ev`. Helper `isAnalogPin`
     - Pure, no avr8js import
     - _Requirements: 2.1, 2.7, 2.8, 2.9, 2.10, 2.12, 3.1, 3.2, 3.3, 3.4, 3.12, 3.13, 3.14_
 
-- [ ] 8. Wire the bridge
-  - [ ] 8.1 Use the validation and guard digital loops in `src/engine/emulator-bridge.ts`
+- [x] 8. Wire the bridge
+  - [x] 8.1 Use the validation and guard digital loops in `src/engine/emulator-bridge.ts`
     - Replace the inline fixture and event checks in `_build` with `validateFixture` and `validateEvents`, run before the CPU is built so no event is applied from a rejected list
     - Add a digital-pin guard to every loop that reads `pin.port`, `pin.bit` or `pin.direction` so analog pins are skipped (no snapshot entry, no listener, no PIN read hook)
     - Digital applied entries keep `{ ...ev, appliedCycle }`, which copies `gremlinId` unchanged. Nothing else reads `gremlinId`
     - Behaviour for Fixtures without new fields must stay identical, including error messages and order
     - _Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 3.1, 3.2, 3.3, 3.4, 3.11, 3.12, 3.13, 3.14_
 
-  - [ ] 8.2 Wire the ADC in `src/engine/emulator-bridge.ts`
+  - [x] 8.2 Wire the ADC in `src/engine/emulator-bridge.ts`
     - After the timers: `new AVRADC(cpu, adcConfig)` kept as `_adc`; for each analog pin set `channelValues[channel] = analogCountToVolts(restLevel ?? 512)` before any instruction runs
     - Apply analog events at the earliest instruction boundary at or after the event cycle, push `{ ...ev, appliedCycle }` to a local analog list, return it as `appliedAnalogInputs` on every path (always present, possibly empty, including `requestedCycles <= 0` and Fixtures with no analog pin)
     - `supports("adc")` returns true by adding `'adc'` to the wired set. Other capabilities unchanged
@@ -129,19 +129,20 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - avr8js imports stay inside this file
     - _Requirements: 2.2, 2.4, 2.5, 2.6, 2.11, 3.10, 3.11_
 
-  - [ ] 8.3 Verify the existing suites are unchanged and passing
+  - [x] 8.3 Verify the existing suites are unchanged and passing
     - Run `npm run typecheck`, `npm run guard` and `npx vitest --run`
     - Run `git diff --stat` on the existing test files listed in the rules and report the output (expected: no changes)
     - If any existing test fails or fails to compile, stop and report what it expects, what happened and the evidence. Do not edit it
+    - Approved exception: input-pullup.property supports() assertion updated for adc (superseded by R2.2), approved by the user
     - _Requirements: 2.11, 3.8, 3.9, 11.11_
 
-- [ ] 9. Bridge tests
-  - [ ] 9.1 Create `src/engine/__tests__/arbitraries.ts` (helper, not a test file)
+- [x] 9. Bridge tests
+  - [x] 9.1 Create `src/engine/__tests__/arbitraries.ts` (helper, not a test file)
     - `arbSeed` (full range, biased toward 0, 1, 4294967295), `arbRunIndex` (full range; small values for emulator properties), `arbRunCycles` (1 to 50,000,000 plus the constants 1, 1,600,000, 1,600,001, 8,000,000 and 4,294,967,296), `arbFixture` (0 to 6 pins with distinct signals, digital pins with random direction, port, bit, `activeLevel`, `restState`, and 0 to 3 analog pins on distinct channels with optional `restLevel`; built so no digital pin on port C uses a bit equal to a drawn analog channel, by construction and not by retry), `arbSharedPinFixture` (the opposite case, on purpose)
     - Imports only types and `fixture.ts`. No avr8js
     - _Requirements: 2.10, 2.12_
 
-  - [ ] 9.2 Write `src/engine/__tests__/emulator-bridge.analog.test.ts` (examples)
+  - [x] 9.2 Write `src/engine/__tests__/emulator-bridge.analog.test.ts` (examples)
     - Analog Fixture acceptance (`{ signal, kind: "analog", channel }` with and without `restLevel`), `supports("adc")` true, digital `kind`, `activeLevel`, `restState` acceptance and defaults, rejection of bad `activeLevel` and `restState` and of those fields on analog or output pins (`invalid-fixture` naming the signal)
     - Analog events on `blink_button` plus a `POT` pin on channel 0 are applied and recorded in `appliedAnalogInputs` with `appliedCycle`; `appliedAnalogInputs` is present and empty for a Fixture with no analog pin; `gremlinId` is copied unchanged into applied entries
     - Rejections before execution with `cycleCount` unchanged and no event applied: `invalid-analog-value` (out of range, non-integer), `pin-kind-mismatch` (both directions), unknown signal gives the same kind as a digital event today
@@ -150,17 +151,17 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - Load HEX with `readFileSync`, no fallback
     - _Requirements: 2.1, 2.2, 2.6, 2.7, 2.8, 2.9, 2.10, 2.12, 3.1, 3.2, 3.3, 3.4, 3.11, 3.12, 3.13, 3.14_
 
-  - [ ] 9.3 Write property test for generated Fixtures in `src/engine/__tests__/emulator-bridge.analog.property.test.ts`
+  - [x] 9.3 Write property test for generated Fixtures in `src/engine/__tests__/emulator-bridge.analog.property.test.ts`
     - **Property 27: Generated fixtures are valid**
     - numRuns 200. `validateFixture` accepts every `arbFixture` output, including that no analog channel N shares a pin with a digital pin on port C bit N
     - **Validates: Requirements 2.10, 2.12**
 
-  - [ ] 9.4 Write property test for rejected Fixtures and events in the same file
+  - [x] 9.4 Write property test for rejected Fixtures and events in the same file
     - **Property 26: Invalid fixtures and events are rejected before execution**
     - numRuns 200. No CPU run needed: duplicate analog channel, out-of-range channel or `restLevel`, bad `activeLevel` or `restState`, those fields on analog or output pins give `invalid-fixture` naming the signal; `arbSharedPinFixture` gives `invalid-fixture` with both names in the message; bad analog values give `invalid-analog-value`; kind mismatches give `pin-kind-mismatch`; `cycleCount` stays 0
     - **Validates: Requirements 2.7, 2.8, 2.9, 2.10, 2.12, 3.4, 3.14**
 
-  - [ ] 9.5 Write property test that the bridge ignores `gremlinId` in the same file
+  - [x] 9.5 Write property test that the bridge ignores `gremlinId` in the same file
     - **Property 25: Bridge ignores gremlinId**
     - numRuns 20 (emulator). `blink_button` plus `POT` Fixture, Run_Cycles at most 200,000. Running with and without `gremlinId` gives identical output events and diagnostics; every applied entry carries the original `gremlinId`
     - **Validates: Requirements 3.11**
@@ -169,10 +170,10 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - `supports()` and `unsupported()` results for peripherals other than ADC are unchanged, with literals recorded from the pre-change behaviour of the existing smoke test
     - _Requirements: 2.11_
 
-- [ ] 10. Checkpoint - bridge changes
+- [x] 10. Checkpoint - bridge changes
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Run `git diff --stat` on the existing test files and report it. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Write the `analog_read` sketch, then STOP for the user to compile
+- [-] 11. Write the `analog_read` sketch, then STOP for the user to compile
   - Create `fixtures/analog_read/analog_read.ino`. Write only this one file. Do not create `build/` or any HEX. Do not run `arduino-cli` or any compiler
   - Sketch per design: `setup()` configures D13 (PB5) as output. `loop()` stores `analogRead(A0)` in a `volatile` variable and drives D13 high when the reading is above 600. Fixture used by tests: LED on port B bit 5 (output) and an analog pin `POT` on channel 0
   - Original code and comments only. No third-party logos, names or music
