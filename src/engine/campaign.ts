@@ -10,19 +10,24 @@ import type { EngineError } from "./errors";
 import { buildEventList } from "./event-list";
 import type { GeneratedEvent } from "./event-list";
 import type { GremlinSpec } from "./gremlins/catalogue";
-import { planTarget } from "./step-plan";
+import { checkPlanInput, planTarget } from "./step-plan";
+import { computeVerdict } from "./verdict";
 import type {
   AdvanceResult,
   AppliedAnalogInputEvent,
   AppliedInput,
   AppliedInputEvent,
   BridgeError,
+  CampaignResult,
+  CampaignState,
   Diagnostic,
   Fixture,
   OutputEvent,
   RunResult,
   ScheduledInput,
+  SliceProgress,
 } from "./types";
+import type { CampaignError } from "./errors";
 
 export type BridgeFactory = (
   hex: string,
@@ -188,13 +193,16 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
     const before = bridge.cycleCount;
     const pending: number[] = [];
     for (let i = appliedCount; i < gen.events.length; i++) pending.push(gen.events[i].cycle);
-    const target = planTarget({
+    const planInput = {
       prevTarget,
       cycleCount: before,
       pendingCycles: pending,
       runCycles: cfg.runCycles,
       maxStepCycles: cfg.maxStepCycles,
-    });
+    };
+    const planErr = checkPlanInput(planInput);
+    if (planErr) return internal(planErr.message);
+    const target = planTarget(planInput);
     const r = bridge.advance(target - before);
     if (isBridgeError(r)) {
       return { kind: "bridge-error", runIndex, error: r, message: r.message };
@@ -254,4 +262,233 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
     violation,
     endCycle: bridge.cycleCount,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Campaign handle and slices
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_RUNS = 64;
+export const DEFAULT_RUN_CYCLES = 8_000_000;
+export const DEFAULT_MAX_STEP_CYCLES = 160_000;
+/** Largest valid Run_Cycles (2^32), inclusive. */
+export const MAX_RUN_CYCLES = 4_294_967_296;
+
+export interface CampaignConfig {
+  hex: string;
+  fixture: Fixture;
+  gremlinSet: readonly GremlinSpec[];
+  campaignSeed: number;
+  checker: Checker;
+  /** N, default 64. */
+  runs?: number;
+  /** Default: defaultRunCycles, else 8,000,000. */
+  runCycles?: number;
+  /** The selected example's Run_Cycles. */
+  defaultRunCycles?: number;
+  /** Default true. */
+  stopOnFirstViolation?: boolean;
+  /** Default 160,000. */
+  maxStepCycles?: number;
+  /** Signals the Checker names, for the unmapped-signal verdict. */
+  checkerSignals?: readonly string[];
+  /** Test seam, default EmulatorBridge.create. */
+  bridgeFactory?: BridgeFactory;
+}
+
+export interface CampaignHandle {
+  runSlice(k: number): SliceProgress | CampaignError;
+  /** Plain data copy of { nextRunIndex, runs }. */
+  state(): CampaignState;
+}
+
+interface ResolvedCampaign {
+  n: number;
+  runCycles: number;
+  maxStepCycles: number;
+  stopOnFirstViolation: boolean;
+}
+
+function invalidCampaign(message: string): EngineError {
+  return { kind: "invalid-campaign", message };
+}
+
+function isPositiveInteger(x: unknown): x is number {
+  return typeof x === "number" && Number.isSafeInteger(x) && x >= 1;
+}
+
+/** Validates the settings and fills defaults. No generator or bridge is touched. */
+function resolveSettings(config: CampaignConfig): ResolvedCampaign | EngineError {
+  const n = config.runs ?? DEFAULT_RUNS;
+  if (!isPositiveInteger(n)) return invalidCampaign(`runs must be a positive integer, got ${String(n)}`);
+
+  const runCycles = config.runCycles ?? config.defaultRunCycles ?? DEFAULT_RUN_CYCLES;
+  if (typeof runCycles !== "number" || !Number.isInteger(runCycles) || runCycles < 1 || runCycles > MAX_RUN_CYCLES) {
+    return invalidCampaign(
+      `runCycles must be an integer from 1 to ${MAX_RUN_CYCLES}, got ${String(runCycles)}`,
+    );
+  }
+
+  const maxStepCycles = config.maxStepCycles ?? DEFAULT_MAX_STEP_CYCLES;
+  if (!isPositiveInteger(maxStepCycles)) {
+    return invalidCampaign(`maxStepCycles must be a positive integer, got ${String(maxStepCycles)}`);
+  }
+
+  const stop = config.stopOnFirstViolation ?? true;
+  if (typeof stop !== "boolean") {
+    return invalidCampaign("stopOnFirstViolation must be a boolean");
+  }
+  return { n, runCycles, maxStepCycles, stopOnFirstViolation: stop };
+}
+
+/** Builds one bridge from the HEX and Fixture with no events, then drops it. */
+function probeBridge(config: CampaignConfig): BridgeError | null {
+  const factory = config.bridgeFactory ?? defaultBridgeFactory;
+  const made = factory(config.hex, config.fixture, []);
+  return isBridgeError(made) ? made : null;
+}
+
+function unmappedSignals(config: CampaignConfig): string[] {
+  const known = new Set(config.fixture.pins.map((p) => p.signal));
+  const out: string[] = [];
+  for (const s of config.checkerSignals ?? []) {
+    if (!known.has(s) && !out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
+function earliestViolation(runs: readonly RunResult[]): number | null {
+  let best: number | null = null;
+  for (const r of runs) {
+    if (r.violation !== null && (best === null || r.runIndex < best)) best = r.runIndex;
+  }
+  return best;
+}
+
+function makeHandle(
+  config: CampaignConfig,
+  settings: ResolvedCampaign,
+  initial: CampaignState,
+): CampaignHandle {
+  const runs: RunResult[] = initial.runs.map((r) => structuredClone(r));
+  let failure: EngineError | null = null;
+  const unmapped = unmappedSignals(config);
+
+  const isFinished = (): boolean =>
+    runs.length >= settings.n || (settings.stopOnFirstViolation && earliestViolation(runs) !== null);
+
+  const progress = (): SliceProgress => {
+    const finished = isFinished();
+    let result: CampaignResult | null = null;
+    if (finished) {
+      const verdict = computeVerdict({
+        requestedRuns: settings.n,
+        runs,
+        finished: true,
+        unmappedSignals: unmapped,
+        unsupportedPeripherals: [],
+      });
+      if (verdict !== null) {
+        result = {
+          runsCompleted: runs.length,
+          requestedRuns: settings.n,
+          violatingRunIndex: earliestViolation(runs),
+          verdict,
+        };
+      }
+    }
+    return {
+      runsCompleted: runs.length,
+      total: settings.n,
+      finished,
+      nextRunIndex: runs.length,
+      runs: structuredClone(runs),
+      result,
+    };
+  };
+
+  const runCfg: RunConfig = {
+    hex: config.hex,
+    fixture: config.fixture,
+    gremlinSet: config.gremlinSet,
+    campaignSeed: config.campaignSeed,
+    checker: config.checker,
+    runCycles: settings.runCycles,
+    maxStepCycles: settings.maxStepCycles,
+    bridgeFactory: config.bridgeFactory,
+  };
+
+  return {
+    runSlice(k: number): SliceProgress | CampaignError {
+      if (!isPositiveInteger(k)) {
+        return invalidCampaign(`slice size must be a positive integer, got ${String(k)}`);
+      }
+      if (failure !== null) return failure;
+      if (isFinished()) return progress();
+
+      const count = Math.min(k, settings.n - runs.length);
+      for (let j = 0; j < count; j++) {
+        const out = runOne(runCfg, runs.length);
+        if (isEngineError(out)) {
+          failure = out;
+          return out;
+        }
+        runs.push(out);
+        if (settings.stopOnFirstViolation && out.violation !== null) break;
+      }
+      return progress();
+    },
+    state(): CampaignState {
+      return { nextRunIndex: runs.length, runs: structuredClone(runs) };
+    },
+  };
+}
+
+export function createCampaign(config: CampaignConfig): CampaignHandle | CampaignError {
+  const settings = resolveSettings(config);
+  if (isEngineError(settings)) return settings;
+  const bad = probeBridge(config);
+  if (bad !== null) return bad;
+  return makeHandle(config, settings, { nextRunIndex: 0, runs: [] });
+}
+
+export function resumeCampaign(config: CampaignConfig, state: CampaignState): CampaignHandle | CampaignError {
+  const settings = resolveSettings(config);
+  if (isEngineError(settings)) return settings;
+
+  const runs = (state as { runs?: unknown } | null)?.runs;
+  if (!Array.isArray(runs)) return invalidCampaign("resume state has no runs list");
+  if (state.nextRunIndex !== runs.length) {
+    return invalidCampaign(`resume nextRunIndex ${String(state.nextRunIndex)} does not equal ${runs.length} stored runs`);
+  }
+  if (runs.length > settings.n) {
+    return invalidCampaign(`resume state holds ${runs.length} runs, more than the requested ${settings.n}`);
+  }
+  for (let i = 0; i < runs.length; i++) {
+    const r = runs[i] as RunResult | null;
+    if (typeof r !== "object" || r === null || r.runIndex !== i) {
+      return invalidCampaign(`resume run at position ${i} does not carry runIndex ${i}`);
+    }
+    if (settings.stopOnFirstViolation && r.violation !== null && i !== runs.length - 1) {
+      return invalidCampaign(`resume run ${i} has a violation but later runs are stored`);
+    }
+  }
+
+  const bad = probeBridge(config);
+  if (bad !== null) return bad;
+  return makeHandle(config, settings, state);
+}
+
+/** createCampaign, then one slice of N. Returns the final result. */
+export function runCampaign(config: CampaignConfig): CampaignResult | CampaignError {
+  const handle = createCampaign(config);
+  if ("runSlice" in handle) {
+    const n = resolveSettings(config) as ResolvedCampaign;
+    const p = handle.runSlice(n.n);
+    if ("runsCompleted" in p) {
+      return p.result ?? internal("campaign did not finish after a slice of N runs");
+    }
+    return p;
+  }
+  return handle;
 }

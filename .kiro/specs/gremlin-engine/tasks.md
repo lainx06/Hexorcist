@@ -369,65 +369,65 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - `heldText(n)` for several N equals "No violation found in N runs of this gremlin set. Not a proof." with the real N (including 1)
     - _Requirements: 10.4, 10.12_
 
-- [ ] 24. Campaign handle and slices
-  - [ ] 24.1 Implement `createCampaign`, `resumeCampaign`, `runCampaign` and `runSlice` in `src/engine/campaign.ts`
+- [x] 24. Campaign handle and slices
+  - [x] 24.1 Implement `createCampaign`, `resumeCampaign`, `runCampaign` and `runSlice` in `src/engine/campaign.ts`
     - Validate and resolve defaults (N 64, Run_Cycles from `defaultRunCycles` or 8,000,000, `maxStepCycles` 160,000, `stopOnFirstViolation` true); `invalid-campaign` for N, Run_Cycles (above 4,294,967,296 included), `maxStepCycles` or `stopOnFirstViolation` invalid; one probe construction through `bridgeFactory` so an invalid HEX or Fixture returns the bridge error before any Run and never `HELD`
     - `runSlice(k)`: `invalid-campaign` for non-positive-integer `k` with state untouched; finished handle returns final progress and runs nothing; otherwise `min(k, N - completed)` Runs in ascending order; `stopOnFirstViolation` true ends the Slice at the violating Run and sets finished; with false all N Runs run and the earliest violating Run_Index is recorded; a bridge or checker error stops the Campaign and later slices return the same error (Q6)
     - Handle state is `{ nextRunIndex, runs }`, plain data, no bridge between Slices. `resumeCampaign` checks `nextRunIndex === runs.length` and `runs[i].runIndex === i`, else `invalid-campaign`
     - `checkerSignals` produces `unmappedSignals` for the verdict
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.16, 8.17, 8.18, 8.19, 8.20, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 10.7, 10.9, 10.10_
 
-  - [ ] 24.2 Write campaign examples in `src/engine/__tests__/campaign.test.ts`
+  - [x] 24.2 Write campaign examples in `src/engine/__tests__/campaign.test.ts`
     - Defaults, `invalid-campaign` cases (Run_Cycles 4,294,967,296 accepted by validation, 4,294,967,297, 0, negative, fractional, NaN and infinite rejected; same for N and `maxStepCycles`), invalid HEX gives a bridge error and no `HELD`, scripted Checkers for stop at the violating Run and for running all N with `stopOnFirstViolation` false, slice edge cases (`k` of 0, negative, fractional, NaN, infinite, finished handle, stop at violation with `k` above runs left), `state()` is plain data, resume with inconsistent state gives `invalid-campaign`
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.16, 8.17, 8.18, 9.1, 9.3, 9.6, 9.7, 9.8_
 
-- [ ] 25. Level-timeout test Checker (design "Violation coverage for emulator properties")
-  - [ ] 25.1 Create `src/engine/__tests__/led-level-checker.ts` (helper, not a test file)
+- [x] 25. Level-timeout test Checker (design "Violation coverage for emulator properties")
+  - [x] 25.1 Create `src/engine/__tests__/led-level-checker.ts` (helper, not a test file)
     - `makeLevelTimeoutChecker({ signal: "LED", limitCycles: L })` exactly as specified: segments measured between output event cycles, Violation `{ rule, cycle: levelStart + L }` when a segment is longer than L, an open level reported only on the end-of-run call, `observation.cycle` read only there, state reset when `stepIndex` is 0, the reported cycle never equals the Step cycle. Rule text: `LED stays at one level longer than ${L} cycles`
     - Imports no avr8js and nothing from the engine except the `Checker` types
     - _Requirements: 8.13, 11.7, 11.10_
 
-  - [ ] 25.2 Write `src/engine/__tests__/led-level-checker.test.ts`
+  - [x] 25.2 Write `src/engine/__tests__/led-level-checker.test.ts`
     - Unit cases: a segment of exactly L is not a Violation and L + 1 is, reported at `levelStart + L`; end-of-run reports an open level at `levelStart + L`; an open level of exactly L at end-of-run reports nothing; events split across two calls give the same Violation as one call; a repeated value does not move the level start; a reset at `stepIndex` 0 forgets the previous Run
     - Two anchor Runs on `blink_button` through `runOne`, fixed example tests outside any property: Run_Cycles 60,000 with L 20,000 gives a Violation at the end-of-run call; Run_Cycles 60,000 with L 100,000 gives none. These anchors are acceptance tests: never change them to pass
     - _Requirements: 8.13, 11.7, 11.10_
 
-- [ ] 26. Emulator properties
+- [x] 26. Emulator properties
   - Each sub-task uses `blink_button` or `floating_input` HEX read with `readFileSync` (no fallback), numRuns 20, a fixed seed, an explicit 60,000 ms timeout, and the Run_Cycles and N ranges of the design "Test time budget". Cost is controlled by Run_Cycles and N, never by `numRuns`
-  - [ ] 26.1 Slice invariance in `src/engine/__tests__/campaign.property.test.ts`
+  - [x] 26.1 Slice invariance in `src/engine/__tests__/campaign.property.test.ts`
     - **Property 7: Slice invariance**
     - N 1 to 3, Run_Cycles 30,000 to 150,000, level-timeout Checker with `branch` drawn from violating or clean and L from the branch ranges of the design, both `stopOnFirstViolation` values, slice size `k` from 1 to N, one call versus Slices versus resumed from `{ nextRunIndex, runs }`. Counters `violatingRuns` and `cleanRuns` are declared before `fc.assert` and count the Run_Results of the single-call `stopOnFirstViolation` false execution only; after `fc.assert`, `expect(violatingRuns).toBeGreaterThan(0)` and `expect(cleanRuns).toBeGreaterThan(0)` with messages naming the missing branch and the counts. If a counter is 0: report it as a test failure, repair the generator ranges (not `numRuns`, not the assertion, not a re-picked seed), and report
     - **Validates: Requirements 9.1, 9.2, 9.4, 7.6, 11.7**
 
-  - [ ] 26.2 Replay in the same file
+  - [x] 26.2 Replay in the same file
     - **Property 8: Replay**
     - Includes a Fixture with the analog pin `POT` on channel 0 added to `blink_button`. Recorded Event_List replayed on a fresh bridge gives identical output events, applied inputs (digital and analog, same `analog` values at the same cycles) and diagnostics. Run_Cycles at most 400,000
     - **Validates: Requirements 3.10, 11.8**
 
-  - [ ] 26.3 Floating-input rule intact in the same file
+  - [x] 26.3 Floating-input rule intact in the same file
     - **Property 9: Floating-input rule intact**
     - `floating_input` Fixture with generated events: at most one `floating-input` diagnostic per signal, and diagnostics equal those of a replay of the recorded applied events. Run_Cycles at most 400,000
     - **Validates: Requirements 3.8, 3.9, 11.9**
 
-  - [ ] 26.4 Step size invariance in the same file
+  - [x] 26.4 Step size invariance in the same file
     - **Property 10: Step size invariance**
     - `maxStepCycles` 160,000 versus 16,000, Run_Cycles 30,000 to 399,000, level-timeout Checker with the branch generator. Output events, applied inputs, diagnostics and Violation (rule and cycle) identical; with a Violation, lists compared only up to the Violation cycle (output events `cycle <= v.cycle`; diagnostics and applied inputs strictly below `v.cycle`); with no Violation `endCycle` also identical; a Violation present in one result and absent in the other fails; Checker call counts excluded. Counters `violatingRuns` and `cleanRuns` from the 160,000 result with the same assertions as 26.1
     - **Validates: Requirements 8.9, 8.10, 8.11, 8.12, 8.13, 8.14, 8.15, 11.10**
 
-  - [ ] 26.5 Checker feed in the same file
+  - [x] 26.5 Checker feed in the same file
     - **Property 21: Checker feed**
     - Three branches counted across cases, each count must be above 0: (a) a recording Checker with no Violation, (b) a scripted violator at a drawn Step `j` from 0 to 2 (used only when the Run has at least `j + 1` Steps), (c) the level-timeout Checker whose Violation arrives on the end-of-run call. Observations concatenated equal the Run_Result lists, the final call has `endOfRun: true` and `cycle` equal to `endCycle`, calls equal Steps plus one, no call after a Violation. Run_Cycles at most 300,000
     - **Validates: Requirements 8.11, 8.12, 8.13, 8.14**
 
-  - [ ] 26.6 Run_Result JSON round trip in the same file
+  - [x] 26.6 Run_Result JSON round trip in the same file
     - **Property 24: Run_Result JSON round trip**
     - Emulator property: numRuns 20, Run_Cycles at most 100,000, each case one Run on the real bridge (`blink_button` or `floating_input`, generated Gremlin_Set and seeds, a Fixture that may add an analog pin so analog applied inputs appear). `JSON.parse(JSON.stringify(x))` deeply equals `x` for the Run_Results
     - **Validates: Requirements 9.5**
 
-- [ ] 27. Checkpoint - campaign and emulator properties
+- [x] 27. Checkpoint - campaign and emulator properties
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 28. Final checkpoint - full run, timing and cleanup
+- [x] 28. Final checkpoint - full run, timing and cleanup
   - Run `npx vitest --run`, `npm run typecheck`, `npm run build` and `npm run guard`. Report each result as evidence, not proof
   - Run the existing-suite check: `git diff --stat` on the existing test files, expecting no changes, and report the output. Confirm `src/engine/__tests__/baselines/gremlin-eventlists.json` and `input-pullup-preservation.json` show no change since the user's commit (`git status`, `git diff --stat`); do not regenerate either
   - Measure with the design command, writing the JSON to a temporary file outside the repository: `npx vitest --run --reporter=verbose --reporter=json --outputFile.json=$env:TEMP\hexorcist-vitest.json`. If the installed vitest rejects `--outputFile.json`, use `--reporter=json --outputFile=<path>` plus a second plain run for the verbose list and record which was used

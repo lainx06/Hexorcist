@@ -755,6 +755,171 @@
         "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
         "timestamp": 1794622724902
       }
+    ],
+    "24.1 Implement `createCampaign`, `resumeCampaign`, `runCampaign` and `runSlice` in `src/engine/campaign.ts`": [
+      {
+        "executionId": "60ea85e3-5fef-410c-8a7b-8dbd0f70df46",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794623533447
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794623921076
+      }
+    ],
+    "24.2 Write campaign examples in `src/engine/__tests__/campaign.test.ts`": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794623921208
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624076816
+      }
+    ],
+    "24. Campaign handle and slices": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624076892
+      }
+    ],
+    "25.1 Create `src/engine/__tests__/led-level-checker.ts` (helper, not a test file)": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624077093
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624134547
+      }
+    ],
+    "25.2 Write `src/engine/__tests__/led-level-checker.test.ts`": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624135265
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624218522
+      }
+    ],
+    "25. Level-timeout test Checker (design \"Violation coverage for emulator properties\")": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624218579
+      }
+    ],
+    "26.1 Slice invariance in `src/engine/__tests__/campaign.property.test.ts`": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624218724
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624300970
+      }
+    ],
+    "26.2 Replay in the same file": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624301207
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624403938
+      }
+    ],
+    "26.3 Floating-input rule intact in the same file": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624404712
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624485886
+      }
+    ],
+    "26.4 Step size invariance in the same file": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624486029
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624571584
+      }
+    ],
+    "26.5 Checker feed in the same file": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624572362
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624698994
+      }
+    ],
+    "26.6 Run_Result JSON round trip in the same file": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624699154
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624766221
+      }
+    ],
+    "26. Emulator properties": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624766270
+      }
+    ],
+    "27. Checkpoint - campaign and emulator properties": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624767012
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624906014
+      }
+    ],
+    "28. Final checkpoint - full run, timing and cleanup": [
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794624906740
+      },
+      {
+        "executionId": "3063a9b8-2344-4a34-a4d0-71299837e84d",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794625098824
+      }
     ]
   }
 }
