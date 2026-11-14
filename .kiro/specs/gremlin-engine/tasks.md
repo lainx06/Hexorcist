@@ -202,102 +202,102 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
 - [x] 13. Checkpoint - ADC
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Gremlin catalogue
-  - [-] 14.1 Implement `src/engine/gremlins/pins.ts` and `src/engine/gremlins/catalogue.ts`
+- [x] 14. Gremlin catalogue
+  - [x] 14.1 Implement `src/engine/gremlins/pins.ts` and `src/engine/gremlins/catalogue.ts`
     - `pins.ts`: eligible lists (`digitalInputs`, `restActiveInputs`, `analogInputs`, all in Fixture order), press value, Rest_Level (`restLevel ?? 512`), `msToCycles` by integer arithmetic (16,000 per ms; 0.1 ms is the constant 1,600 cycles), `floorDiv`, `truncDiv`
-    - `catalogue.ts`: six `GremlinDefinition` entries with ids, icon names (`gremlin-masher` and so on), targets, the parameter table from the design (names, shapes, units, defaults, allowed ranges), `resolveParams` with the error order of the design (`unknown-gremlin`, then `invalid-gremlin-parameter` naming Gremlin and parameter; earliest in listed order wins; nothing drawn yet), and the Drifter defensive duration check
+    - `catalogue.ts`: six `GremlinDefinition` entries with ids, icon names (`gremlin-masher` and so on), targets, the parameter table from the design (names, shapes, units, defaults, allowed ranges), `resolveParams` with the error order of the design (`unknown-gremlin`, then `invalid-gremlin-parameter` naming Gremlin and parameter; earliest in listed order wins; nothing drawn yet; override names within an entry are checked in catalogue order, then unknown names in sorted string order, never caller key order; the test for this is left to 14.2), and the Drifter defensive duration check
     - Append `arbGremlinSet` to `arbitraries.ts` (0 to 5 entries, overrides inside `allowed`)
     - Comments avoid the flagged API names
     - _Requirements: 4.1, 4.2, 4.5, 4.6, 4.7, 4.8, 4.9, 5.10, 6.8, 6.9, 6.10_
 
-  - [ ] 14.2 Write `src/engine/__tests__/catalogue.test.ts`
+  - [x] 14.2 Write `src/engine/__tests__/catalogue.test.ts`
     - Table-driven: every default and allowed range compared with literal numbers copied from R5 and R6 (Masher gap 80,000 and 2,400,000; Bouncer gap 1,600 and 48,000; Dropout gap 16,000 and 800,000; Stuck 1,600,000; Spike 1 and 20 ms; Drifter 50 and 500 ms; steps 2 to 32 with default 8). These literals are acceptance values: never change them to pass
     - `msToCycles(1)` is 16,000; Bouncer minimum is the integer constant 1,600
     - Each override at, just inside and just outside every allowed bound is accepted or rejected with `invalid-gremlin-parameter`; `unknown-gremlin`; unknown parameter name; scalar given as range and the reverse; min above max
     - Exactly six Gremlins, targets and icon names as in the design table
     - _Requirements: 4.1, 4.2, 4.5, 4.6, 4.7, 4.8, 5.10, 6.8, 6.9_
 
-- [ ] 15. Digital generators
-  - [ ] 15.1 Implement `src/engine/gremlins/digital.ts`
+- [x] 15. Digital generators
+  - [x] 15.1 Implement `src/engine/gremlins/digital.ts`
     - Masher, Bouncer, Stuck, Dropout with the skip checks and draw orders of the design table. Every draw is `prng.nextInt(min, max)`; `pick(list)` is `nextInt(0, list.length - 1)`
     - Masher single Press releases after `floor(gapCycles.min / 2)` of the resolved minimum (no literal 80,000 in the generator). Bouncer assigns values over the full flip list, then cuts flips at or above Run_Cycles. Stuck skips before any draw when `runCycles < minSpanCycles + 1`. `no-target-pin` wins over `run-too-short`. Dropout draws nothing without an active-rest input
     - Press events carry the pin's press value, Release events carry `"release"`, every event carries its `gremlinId`, every gap is at least 1 cycle
     - _Requirements: 3.5, 3.6, 3.7, 4.3, 4.4, 4.10, 4.11, 4.12, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.11_
 
-  - [ ] 15.2 Write digital examples in `src/engine/__tests__/gremlins.test.ts`
+  - [x] 15.2 Write digital examples in `src/engine/__tests__/gremlins.test.ts`
     - Scripted `Prng` objects (plain objects implementing the interface) returning each range minimum and maximum, one example per digital Gremlin per documented range
     - Masher single Press: default releases at start plus 40,000, with `gapCycles` min overridden to 1,000 it releases at start plus 500, and no literal 80,000 appears in the generator source
     - Stuck with Run_Cycles 1,600,000 (skipped, zero draws) and 1,600,001 (generated); Dropout and others with no eligible pin (`no-target-pin`, zero draws); Run_Cycles 1; target pin selection by one `pick` in Fixture order (R4.11 draw trace); discard at Run_Cycles keeps earlier events
     - _Requirements: 4.10, 4.11, 4.12, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.11, 11.11_
 
-- [ ] 16. Analog generators
-  - [ ] 16.1 Implement `src/engine/gremlins/analog.ts`
+- [x] 16. Analog generators
+  - [x] 16.1 Implement `src/engine/gremlins/analog.ts`
     - Spike (draws pin, value 0 or 1023, start, gap in ms converted with `msToCycles`) and Drifter (draws pin, direction, duration ms then `D`, then the three-draw `run-too-short` skip, then start; `S` is a parameter and never drawn; step `i` at `start + floorDiv(D * i, S)` with value `rest + truncDiv((target - rest) * i, S)`, integer arithmetic only)
     - Drifter returns `invalid-gremlin-parameter` naming `drifter` when `D < S`, emits all `S` events when `rest == target`, never returns the pin to Rest_Level. Both skip with `no-target-pin` and zero draws when no analog pin exists
     - _Requirements: 4.10, 4.12, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.12_
 
-  - [ ] 16.2 Write analog examples in `src/engine/__tests__/gremlins.test.ts`
+  - [x] 16.2 Write analog examples in `src/engine/__tests__/gremlins.test.ts`
     - Scripted `Prng` range examples for Spike and Drifter, Drifter with Run_Cycles smaller than `D + 1` (exactly three `nextInt` calls then skip), no analog pin (zero draws), Rest_Level present and absent, the `D < S` defence tested through the internal generator function, invalid `steps` and range overrides
     - _Requirements: 6.1, 6.2, 6.3, 6.5, 6.8, 6.9, 6.10, 6.11, 11.11_
 
-  - [ ] 16.3 Write property test for Drifter arithmetic in `src/engine/__tests__/gremlins.test.ts`
+  - [x] 16.3 Write property test for Drifter arithmetic in `src/engine/__tests__/gremlins.test.ts`
     - **Property 18: Drifter arithmetic**
-    - numRuns 200. Against a `BigInt` reference: cycles `start + floor(D * i / S)`, values `rest + trunc((target - rest) * i / S)`, strictly increasing cycles, step `S` at `start + D` with value `target`, nothing returns to Rest_Level, `rest == target` still gives `S` events
+    - numRuns 200. Against a `BigInt` reference: cycles `start + floor(D * i / S)`, values `rest + trunc((target - rest) * i / S)`, strictly increasing cycles, step `S` at `start + D` with value `target`, no return-to-rest event after the drift (early steps equal to rest through truncation are legal), `rest == target` still gives `S` events
     - **Validates: Requirements 6.4, 6.5, 6.6, 6.7**
 
-  - [ ] 16.4 Write property test for digital and Spike Gremlin shape in the same file
+  - [x] 16.4 Write property test for digital and Spike Gremlin shape in the same file
     - **Property 19: Digital Gremlin shape**
     - numRuns 200. Run_Cycles long enough that nothing is cut: Masher 1 to 6 Presses each followed by its Release (single Press released `floor(gapCycles.min / 2)` later, default and overridden), Bouncer 2 to 8 alternating flips ending on its edge value, Stuck Press then Release at least 1,600,000 cycles later when it fits, Dropout Release then Press 16,000 to 800,000 cycles later, Spike value then Rest_Level 16,000 to 320,000 cycles later; no two events of one instance on one pin share a cycle; for short runs every kept event is a prefix of the uncut list
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 5.8, 6.1, 6.2**
 
-- [ ] 17. Event-list builder
-  - [ ] 17.1 Implement `src/engine/event-list.ts`
+- [x] 17. Event-list builder
+  - [x] 17.1 Implement `src/engine/event-list.ts`
     - `buildEventList(input)` as in the design: resolve all entries before any draw, derive `runSeed` and exactly one PRNG, emit Rest_Events in Fixture order with `gremlinId: "rest"` and zero draws (also when Run_Cycles is 1), run each entry in listed order passing the same PRNG, append skips, sort by decorated key `(cycle, generation index)`, defensive cycle-range check returning `internal-error`
     - Expose an `@internal` function that takes an already created PRNG (`buildEventList` calls it with the one it creates). This is the seam that scripted-PRNG tests for R7.1 and Property 16 need; it changes no behaviour. If the user prefers another seam, stop and ask
     - Reads nothing from any other Run
     - _Requirements: 3.15, 4.3, 4.4, 4.9, 4.13, 4.14, 7.1, 7.2, 7.3, 7.5, 7.7_
 
-  - [ ] 17.2 Write property test for event list determinism in `src/engine/__tests__/event-list.property.test.ts`
+  - [x] 17.2 Write property test for event list determinism in `src/engine/__tests__/event-list.property.test.ts`
     - **Property 1: Event list determinism**
     - numRuns 200. Two calls give identical length, order, and every field of every event, and identical Skipped_Lists
     - **Validates: Requirements 7.4, 4.14, 11.1**
 
-  - [ ] 17.3 Write property test for targets, kinds and cycle range in the same file
+  - [x] 17.3 Write property test for targets, kinds and cycle range in the same file
     - **Property 2: Targets, kinds and cycle range**
     - numRuns 200. Targets match the producing Gremlin's kinds, Dropout only on active-rest pins, cycles are integers in `[0, Run_Cycles)`, one leading Rest_Event per active-rest input in Fixture order including Run_Cycles 1
     - **Validates: Requirements 4.1, 4.4, 4.13, 5.9, 11.2**
 
-  - [ ] 17.4 Write property test for analog values in the same file
+  - [x] 17.4 Write property test for analog values in the same file
     - **Property 3: Analog values in range**
     - numRuns 200. Every `analog` is an integer from 0 to 1023
     - **Validates: Requirements 6.12, 11.3**
 
-  - [ ] 17.5 Write property test for sorted and stable order in the same file
+  - [x] 17.5 Write property test for sorted and stable order in the same file
     - **Property 4: Sorted and stable**
     - numRuns 200. Cycles non-decreasing; equal cycles keep generation order with Rest_Events ahead of Gremlin events
     - **Validates: Requirements 7.3, 11.4**
 
-  - [ ] 17.6 Write property test for digital values in the same file
+  - [x] 17.6 Write property test for digital values in the same file
     - **Property 5: Digital values**
     - numRuns 200. Each digital value is the pin's Active_Level value or `"release"`
     - **Validates: Requirements 3.5, 3.6, 3.7, 11.5**
 
-  - [ ] 17.7 Write property test for Gremlin ids in the same file
+  - [x] 17.7 Write property test for Gremlin ids in the same file
     - **Property 6: Gremlin ids**
     - numRuns 200. Every `gremlinId` is an id in the set or `"rest"` for Rest_Events only
     - **Validates: Requirements 4.3, 11.6**
 
-  - [ ] 17.8 Write property test that skips draw nothing in the same file
+  - [x] 17.8 Write property test that skips draw nothing in the same file
     - **Property 16: Skips draw nothing (with one named exception)**
     - numRuns 200. Using a counting PRNG through the seam of 17.1: `no-target-pin` and Stuck `run-too-short` make zero draws and later entries draw as if the skipped entry were removed; an empty set draws zero; a Drifter `run-too-short` skip makes exactly three `nextInt` calls (counted on the scripted PRNG, not `drawCount`)
     - **Validates: Requirements 4.10, 4.12, 5.6, 5.11, 6.11, 7.2, 7.7**
 
-  - [ ] 17.9 Write property test for Run independence in the same file
+  - [x] 17.9 Write property test for Run independence in the same file
     - **Property 17: Run independence**
     - numRuns 200. `buildEventList` for Run_Index `i` returns the same result alone, after other indices, or in any order
     - **Validates: Requirements 7.5**
 
-  - [ ] 17.10 Write event-list examples in the same file
+  - [x] 17.10 Write event-list examples in the same file
     - Repeated Gremlin ids run as separate instances in listed order with their own overrides (R4.9); one PRNG instance passed in set order (R7.1, scripted); Rest_Event ordering ahead of Gremlin events at equal cycles; `unknown-gremlin` and `invalid-gremlin-parameter` generate no events
     - _Requirements: 4.8, 4.9, 7.1, 7.2, 7.3_
 
@@ -305,10 +305,10 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
     - `buildEventList` with Run_Cycles 4,294,967,296 returns events and never `invalid-range` for each Gremlin (pure, no emulator)
     - _Requirements: 8.6, 1.3_
 
-- [ ] 18. Checkpoint - gremlins and event list
+- [x] 18. Checkpoint - gremlins and event list
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. Record the Event_List baseline, then STOP for the user to commit
+- [-] 19. Record the Event_List baseline, then STOP for the user to commit
   - **Precondition**: every generator, the catalogue and `buildEventList` are written and their tests pass (tasks 14 to 17). This is the final draw order, including the post-Q4 Masher behaviour
   - Write `src/engine/__tests__/baselines/gremlin-eventlists.json` once, from the current generator: Campaign_Seed 0, 1, 42 and 4294967295; Run_Index 0 to 2; the full six-Gremlin set with default parameters; three Fixtures: the two existing ones, `blink_button` and `floating_input` (same pin maps as their existing tests), and the synthetic Fixture `synthetic_events` exactly as the design "Baseline file policy" defines it (clock 16,000,000 Hz; `BUTTON` digital input on port D bit 2 with `activeLevel: "low"`; `BEAM` digital input on port D bit 3 with `activeLevel: "high"` and `restState: "active"`; `POT` analog channel 0 with `restLevel: 300`; `LED` output on port B bit 5; no HEX, event generation only, never run on an emulator). The same seeds and Run_Index values apply to all three Fixtures; Run_Cycles 8,000,000. Record `runSeed`, the ordered events and the Skipped_List for each case. On `blink_button` and `floating_input`, Spike and Drifter still appear as `no-target-pin` skips (design Finding F21); on `synthetic_events` they appear with real events, as does Dropout (BEAM gives a Rest_Event at cycle 0 with value 1)
   - Add `src/engine/__tests__/gremlin-baseline.test.ts`, which regenerates the same cases for all three Fixtures (the synthetic one without any HEX or emulator, after `validateFixture` accepts it) and compares them with the file. No git commands inside the test

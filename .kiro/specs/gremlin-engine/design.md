@@ -575,7 +575,7 @@ Parameter table (the one place that lists every parameter of every Gremlin). Uni
 | gremlin | parameter | default (min/max or value) | allowed range | unit |
 |---------|-----------|----------------------------|---------------|------|
 | masher | `pressCount` | 1 / 6 (R5.1) | 1 to 32 | count |
-| masher | `gapCycles` | 80 000 / 2 400 000 (5 ms to 150 ms, R5.1) | 1 to 160 000 000 | cycles |
+| masher | `gapCycles` | 80 000 / 2 400 000 (5 ms to 150 ms, R5.1) | 2 to 160 000 000 | cycles |
 | bouncer | `flipCount` | 2 / 8 (R5.3) | 2 to 64 | count |
 | bouncer | `gapCycles` | 1 600 / 48 000 (0.1 ms to 3 ms, R5.3) | 1 to 1 600 000 | cycles |
 | stuck | `minSpanCycles` | 1 600 000 (100 ms, R5.5) | 1 to 160 000 000 | cycles |
@@ -589,10 +589,12 @@ Notes on the table:
 - Masher: `gapCycles` is the name of the gap parameter. Its resolved minimum also sets the release delay of a single Press, `floor(gapCycles.min / 2)` (40,000 cycles at the default), not a literal 80,000 (Q4, resolved).
 - Stuck: the span runs from `minSpanCycles` (100 ms by default) to the end of the run. The upper end is `Run_Cycles - start`, which depends on the Run, so it is not a parameter and has no row. There is no user-set maximum for the span (Q3, resolved). The Stuck skip test is `Run_Cycles < minSpanCycles + 1`, which is `Run_Cycles < 1 600 001` at the default (R5.6).
 - Drifter `steps` is a scalar and is never drawn (R6.3). Every other row except Stuck is a range whose min and max are each drawn with `nextInt` over `[min, max]`.
-- Every range parameter is checked as min and max both inside the allowed range and min at most max. A gap or duration minimum below 1 cycle (digital) or 1 ms (Spike, Drifter) is outside the allowed range (R5.10, R6.9).
+- Every range parameter is checked as min and max both inside the allowed range and min at most max. A gap or duration minimum below 1 cycle (digital; below 2 cycles for the Masher gap) or 1 ms (Spike, Drifter) is outside the allowed range (R5.10, R6.9).
 - All allowed upper bounds are at most 160 000 000 cycles (10 s), so every drawn width stays far below 2^32 and no parameter draw can return `invalid-range`.
 
 Parameter resolution (R4.6, R4.7, R5.10, R6.8, R6.9): the caller's `GremlinSpec` is `{ id: string; params?: Record<string, number | { min: number; max: number }> }`. Resolution runs for every entry, in listed order, before any draw: an unknown `id` gives `unknown-gremlin`; an unknown parameter name, a non-integer value, a value outside `allowed`, a range with `min > max`, or a scalar given as a range (or the reverse) gives `invalid-gremlin-parameter` naming the Gremlin and parameter. The earliest error in listed order is returned and no events are generated for the Run. For the Drifter, the defensive check `durationMs.min * cyclesPerMs < steps` also returns `invalid-gremlin-parameter` (R6.5); see Finding F8 on its reach.
+
+Decision (override check order inside one entry): the override names are checked in catalogue order, which is the parameter table order for that Gremlin, not the order of the caller's keys. Names not in the catalogue for that Gremlin come after all known names, in sorted string order. The same overrides therefore always give the same first error, whatever the key order.
 
 Draw orders. Every draw is `prng.nextInt(min, max)`. Range widths never exceed 2^32 because `Run_Cycles` is at most 2^32 (R8.6, decision D8, Finding F9 resolved). The widest draw is `start = nextInt(0, runCycles - 1)` with a width of `runCycles`; at `runCycles = 2^32` it takes the raw-output path of `nextInt`. Stuck and Drifter ranges are narrower still. "pick(list)" means `nextInt(0, list.length - 1)`.
 
@@ -604,6 +606,10 @@ Draw orders. Every draw is `prng.nextInt(min, max)`. Range widths never exceed 2
 | dropout | no `restActiveInputs` gives `no-target-pin` | (a) `pick(restActiveInputs)`; (b) `start = nextInt(0, runCycles - 1)`; (c) `gap = nextInt(gap.min, gap.max)` | Release at `start`; Press (Active_Level value) at `start + gap` when `< runCycles`. |
 | spike | no `analogInputs` gives `no-target-pin` | (a) `pick(analogInputs)`; (b) `v = nextInt(0, 1)` (0 means 0, 1 means 1023); (c) `start = nextInt(0, runCycles - 1)`; (d) `ms = nextInt(gapMs.min, gapMs.max)` | Analog event `v` at `start`; Analog event Rest_Level at `start + msToCycles(ms)` when `< runCycles`. |
 | drifter | no `analogInputs` gives `no-target-pin` | (a) `pick(analogInputs)`; (b) `t = nextInt(0, 1)` (0 means target 0, 1 means target 1023); (c) `ms = nextInt(durationMs.min, durationMs.max)`, `D = msToCycles(ms)`; then if `runCycles - 1 - D < 0`: skip as `run-too-short` and stop; (d) `start = nextInt(0, runCycles - 1 - D)` | For `i = 1..S`: cycle `start + floor(D * i / S)`, analog `rest + trunc((target - rest) * i / S)`. Integer division is written without float division: `floorDiv(a, b)` for `a >= 0`, `truncDiv(a, b) = (a - a % b) / b` (JavaScript `%` keeps the sign of the dividend, so this truncates toward zero). `S` is a parameter and is not drawn. The last event is the target and nothing returns the pin to Rest_Level (R6.7). |
+
+Decision (Drifter after the drift): no return-to-rest event follows the drift, unlike the Spike. Early steps whose value equals Rest_Level because of truncation are legal.
+
+Masher gap minimum is 2 cycles, so floor(g/2) is in [1, g-1] and every Release falls strictly between its Press and the next Press (R5.8).
 
 Digital Press events carry the Press value of the chosen pin (0 for `activeLevel` low or absent, 1 for high). Release events carry `"release"`. Every event carries the `gremlinId` of its entry.
 
@@ -1068,7 +1074,7 @@ The suite includes the PCG32 reference vectors, the existing `emulator-bridge` a
 
 ### Property 18: Drifter arithmetic
 
-*For any* Rest_Level, target in {0, 1023}, `S` in 2..32, `D >= S` and `start`, the emitted steps `i = 1..S` have cycle `start + floor(D * i / S)` and analog `rest + trunc((target - rest) * i / S)`, computed against a BigInt reference; cycles are strictly increasing; step `S` has cycle `start + D` and value `target`; the last event is the target; no event returns to Rest_Level; when `rest == target`, all `S` events still appear.
+*For any* Rest_Level, target in {0, 1023}, `S` in 2..32, `D >= S` and `start`, the emitted steps `i = 1..S` have cycle `start + floor(D * i / S)` and analog `rest + trunc((target - rest) * i / S)`, computed against a BigInt reference; cycles are strictly increasing; step `S` has cycle `start + D` and value `target`; the last event is the target; no return-to-rest event follows the drift (early steps equal to rest through truncation are legal); when `rest == target`, all `S` events still appear.
 
 **Validates: Requirements 6.4, 6.5, 6.6, 6.7**
 

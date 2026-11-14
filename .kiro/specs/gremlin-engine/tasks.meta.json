@@ -1,5 +1,10 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "16.3 Write property test for Drifter arithmetic in `src/engine/__tests__/gremlins.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794619916899
+    }
+  },
   "executionHistory": {
     "4.1 Create `src/engine/errors.ts`": [
       {
@@ -360,6 +365,262 @@
         "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
         "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
         "timestamp": 1794617532498
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618683864
+      }
+    ],
+    "14.2 Write `src/engine/__tests__/catalogue.test.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618684062
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618790082
+      }
+    ],
+    "14. Gremlin catalogue": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618790151
+      }
+    ],
+    "15.1 Implement `src/engine/gremlins/digital.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618790847
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618929466
+      }
+    ],
+    "15.2 Write digital examples in `src/engine/__tests__/gremlins.test.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794618929673
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619061277
+      }
+    ],
+    "15. Digital generators": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619061353
+      }
+    ],
+    "16.1 Implement `src/engine/gremlins/analog.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619061957
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619163038
+      }
+    ],
+    "16.2 Write analog examples in `src/engine/__tests__/gremlins.test.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619163706
+      },
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619277602
+      }
+    ],
+    "16.3 Write property test for Drifter arithmetic in `src/engine/__tests__/gremlins.test.ts`": [
+      {
+        "executionId": "fc0d9c47-b4c4-4d0c-856c-3d2d30f45acd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619278252
+      },
+      {
+        "executionId": "065700aa-87fc-4ffe-b302-0aa70d175abf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619925031
+      }
+    ],
+    "16.4 Write property test for digital and Spike Gremlin shape in the same file": [
+      {
+        "executionId": "065700aa-87fc-4ffe-b302-0aa70d175abf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794619925668
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620546503
+      }
+    ],
+    "16. Analog generators": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620546573
+      }
+    ],
+    "17.1 Implement `src/engine/event-list.ts`": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620546794
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620645633
+      }
+    ],
+    "17.2 Write property test for event list determinism in `src/engine/__tests__/event-list.property.test.ts`": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620646299
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620720135
+      }
+    ],
+    "17.3 Write property test for targets, kinds and cycle range in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620720551
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620807922
+      }
+    ],
+    "17.4 Write property test for analog values in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620808684
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620876415
+      }
+    ],
+    "17.5 Write property test for sorted and stable order in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620877230
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620960578
+      }
+    ],
+    "17.6 Write property test for digital values in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794620961233
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621028788
+      }
+    ],
+    "17.7 Write property test for Gremlin ids in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621029432
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621098011
+      }
+    ],
+    "17.8 Write property test that skips draw nothing in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621098253
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621219230
+      }
+    ],
+    "17.9 Write property test for Run independence in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621220052
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621288728
+      }
+    ],
+    "17.10 Write event-list examples in the same file": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621289449
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621398871
+      }
+    ],
+    "17. Event-list builder": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621398920
+      }
+    ],
+    "18. Checkpoint - gremlins and event list": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621399692
+      },
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621456870
+      }
+    ],
+    "19. Record the Event_List baseline, then STOP for the user to commit": [
+      {
+        "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621463036
       }
     ]
   }

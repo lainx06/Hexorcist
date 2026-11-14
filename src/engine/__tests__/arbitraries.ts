@@ -1,6 +1,6 @@
 /**
  * Shared fast-check generators for the gremlin-engine tests. Helper file, not a test file.
- * Imports only fast-check and engine types. No emulator code.
+ * Imports fast-check, engine types, and the gremlin catalogue data (no emulator code).
  */
 import fc from 'fast-check';
 import type {

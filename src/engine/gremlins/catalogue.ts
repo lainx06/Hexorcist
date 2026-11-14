@@ -2,6 +2,9 @@
 // Generators arrive in later tasks; this module holds data and validation only.
 
 import type { EngineError } from "../errors";
+import { generateDrifter, generateSpike } from "./analog";
+import { generateBouncer, generateDropout, generateMasher, generateStuck } from "./digital";
+import type { GenerateFn } from "./generate-types";
 import { DEFAULT_CLOCK_HZ, msToCycles } from "./pins";
 
 export type GremlinId = "masher" | "bouncer" | "stuck" | "dropout" | "spike" | "drifter";
@@ -32,6 +35,8 @@ export interface GremlinDefinition {
   iconName: string;
   targets: ReadonlyArray<{ kind: "digital" | "analog"; restState?: "active" }>;
   params: readonly ParamSpec[];
+  /** Event generator. */
+  generate: GenerateFn;
 }
 
 /** The caller's request for one gremlin. */
@@ -81,8 +86,9 @@ export const GREMLIN_CATALOGUE: readonly GremlinDefinition[] = [
     targets: [{ kind: "digital" }],
     params: [
       range("pressCount", "count", [1, 6], [1, 32]),
-      range("gapCycles", "cycles", [80_000, 2_400_000], [1, MAX_GAP_CYCLES]),
+      range("gapCycles", "cycles", [80_000, 2_400_000], [2, MAX_GAP_CYCLES]),
     ],
+    generate: generateMasher,
   },
   {
     id: "bouncer",
@@ -92,24 +98,28 @@ export const GREMLIN_CATALOGUE: readonly GremlinDefinition[] = [
       range("flipCount", "count", [2, 8], [2, 64]),
       range("gapCycles", "cycles", [1_600, 48_000], [1, 1_600_000]),
     ],
+    generate: generateBouncer,
   },
   {
     id: "stuck",
     iconName: "gremlin-stuck",
     targets: [{ kind: "digital" }],
     params: [scalar("minSpanCycles", "cycles", 1_600_000, [1, MAX_GAP_CYCLES])],
+    generate: generateStuck,
   },
   {
     id: "dropout",
     iconName: "gremlin-dropout",
     targets: [{ kind: "digital", restState: "active" }],
     params: [range("gapCycles", "cycles", [16_000, 800_000], [1, MAX_GAP_CYCLES])],
+    generate: generateDropout,
   },
   {
     id: "spike",
     iconName: "gremlin-spike",
     targets: [{ kind: "analog" }],
     params: [range("gapMs", "ms", [1, 20], [1, 1_000])],
+    generate: generateSpike,
   },
   {
     id: "drifter",
@@ -119,6 +129,7 @@ export const GREMLIN_CATALOGUE: readonly GremlinDefinition[] = [
       range("durationMs", "ms", [50, 500], [1, 10_000]),
       scalar("steps", "steps", 8, [2, 32]),
     ],
+    generate: generateDrifter,
   },
 ];
 
@@ -170,9 +181,11 @@ function checkOne(
 }
 
 /**
- * Resolve one entry. Errors in order: unknown gremlin; then, in the order the
- * caller listed the parameters, an unknown name or a bad value; then the
- * drifter's own duration check. Nothing is drawn here.
+ * Resolve one entry. Errors in order: unknown gremlin; then the override names
+ * in catalogue order (the parameter table order for that gremlin), with unknown
+ * names after the known ones in sorted string order, so the first error does
+ * not depend on the caller's key order; then the drifter's own duration check.
+ * Nothing is drawn here.
  */
 export function resolveParams(spec: GremlinSpec): ResolvedGremlin | EngineError {
   const def = findGremlin(spec.id);
@@ -188,7 +201,11 @@ export function resolveParams(spec: GremlinSpec): ResolvedGremlin | EngineError 
     resolved[p.name] = p.shape === "scalar" ? p.default : { ...p.default };
   }
   const given = spec.params ?? {};
-  for (const name of Object.keys(given)) {
+  const known = def.params.map((p) => p.name).filter((n) => Object.prototype.hasOwnProperty.call(given, n));
+  const unknown = Object.keys(given)
+    .filter((n) => !def.params.some((p) => p.name === n))
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  for (const name of [...known, ...unknown]) {
     const ps = def.params.find((p) => p.name === name);
     if (ps === undefined) {
       return paramError(def.id, name, `${def.id} has no parameter "${name}"`);
