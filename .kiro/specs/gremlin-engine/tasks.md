@@ -308,7 +308,7 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
 - [x] 18. Checkpoint - gremlins and event list
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
-- [-] 19. Record the Event_List baseline, then STOP for the user to commit
+- [x] 19. Record the Event_List baseline, then STOP for the user to commit
   - **Precondition**: every generator, the catalogue and `buildEventList` are written and their tests pass (tasks 14 to 17). This is the final draw order, including the post-Q4 Masher behaviour
   - Write `src/engine/__tests__/baselines/gremlin-eventlists.json` once, from the current generator: Campaign_Seed 0, 1, 42 and 4294967295; Run_Index 0 to 2; the full six-Gremlin set with default parameters; three Fixtures: the two existing ones, `blink_button` and `floating_input` (same pin maps as their existing tests), and the synthetic Fixture `synthetic_events` exactly as the design "Baseline file policy" defines it (clock 16,000,000 Hz; `BUTTON` digital input on port D bit 2 with `activeLevel: "low"`; `BEAM` digital input on port D bit 3 with `activeLevel: "high"` and `restState: "active"`; `POT` analog channel 0 with `restLevel: 300`; `LED` output on port B bit 5; no HEX, event generation only, never run on an emulator). The same seeds and Run_Index values apply to all three Fixtures; Run_Cycles 8,000,000. Record `runSeed`, the ordered events and the Skipped_List for each case. On `blink_button` and `floating_input`, Spike and Drifter still appear as `no-target-pin` skips (design Finding F21); on `synthetic_events` they appear with real events, as does Dropout (BEAM gives a Rest_Event at cycle 0 with value 1)
   - Add `src/engine/__tests__/gremlin-baseline.test.ts`, which regenerates the same cases for all three Fixtures (the synthetic one without any HEX or emulator, after `validateFixture` accepts it) and compares them with the file. No git commands inside the test
@@ -320,47 +320,47 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
   - _Requirements: 7.4, 4.14, 11.1_
   - STOP: report and wait for the user
 
-- [ ] 20. Step planner
-  - [ ] 20.1 Implement `src/engine/step-plan.ts`
+- [x] 20. Step planner
+  - [x] 20.1 Implement `src/engine/step-plan.ts`
     - `planTarget` exactly as the design pseudocode: candidates are the next pending cycle above `prevTarget`, `runCycles`, and `prevTarget + maxStepCycles`; a target at or below `cycleCount` is skipped and the next is derived from the skipped target. Pure, no emulator import
     - _Requirements: 8.9, 8.10_
 
-  - [ ] 20.2 Write property test for the step planner in `src/engine/__tests__/step-plan.property.test.ts`
+  - [x] 20.2 Write property test for the step planner in `src/engine/__tests__/step-plan.property.test.ts`
     - **Property 20: Step planner**
     - numRuns 200. Result strictly above `cycleCount` and at most `runCycles`, equals a reference loop of the R8.9 and R8.10 rules (overshoot up to 8 cycles); repeated calls with simulated overshoot give strictly increasing targets ending at `runCycles`
     - **Validates: Requirements 8.9, 8.10**
 
-- [ ] 21. Checker contract and run data types
-  - [ ] 21.1 Create `src/engine/checker.ts` and add the Data Models run and campaign types to `src/engine/types.ts`
+- [x] 21. Checker contract and run data types
+  - [x] 21.1 Create `src/engine/checker.ts` and add the Data Models run and campaign types to `src/engine/types.ts`
     - `checker.ts`: types only (`CheckerObservation`, `Violation`, `CannotCheck`, `CheckerOutcome`, `Checker`) as in the design. The observation holds data only: no clock, PRNG or network handle
     - `types.ts`: `RunResult`, `CampaignResult`, `SliceProgress`, `CampaignState`. Plain JSON shapes only (no `undefined`, `NaN`, `BigInt`, `Date`, class instances; absent values are `null`)
     - `npm run typecheck` passes
     - _Requirements: 8.11, 8.12, 8.13, 8.14, 8.21, 9.5_
 
-- [ ] 22. Campaign runner and step loop
-  - [ ] 22.1 Implement `runOne` and `mergeApplied` in `src/engine/campaign.ts`
+- [x] 22. Campaign runner and step loop
+  - [x] 22.1 Implement `runOne` and `mergeApplied` in `src/engine/campaign.ts`
     - Follow the design pseudocode: `buildEventList`, fresh bridge from `bridgeFactory` (default `EmulatorBridge.create`) per Run, `planTarget` with absolute targets, `advance(target - cycleCount)`, merge applied digital and analog entries by consuming both arrays exactly (otherwise `internal-error`), one Checker call per Step with only new data (frozen shallow copies), the end-of-run call with `endOfRun: true` and the bridge `cycleCount`, stop at the Step that returned a Violation, collect de-duplicated `cannotCheck`, `bridge-error` and `checker-error` (throw or malformed outcome) with Run_Index
     - The engine reads the bridge `cycleCount` and nothing else for time
     - Stored Run_Result fields are plain data. Event_Lists are never read back from stored results
     - _Requirements: 7.5, 8.8, 8.9, 8.10, 8.11, 8.12, 8.13, 8.14, 8.15, 8.19, 8.20, 8.21_
 
-  - [ ] 22.2 Write runner examples in `src/engine/__tests__/campaign.test.ts`
+  - [x] 22.2 Write runner examples in `src/engine/__tests__/campaign.test.ts`
     - Using the `blink_button` HEX (no new HEX): Checker called once per Step plus the end-of-run call, with only new data; a scripted Violation stops the Run with no further Checker call; end-of-run cycle comes from `cycleCount`; a failing `bridgeFactory` gives `bridge-error` with the Run_Index and no `HELD`; a throwing Checker and a malformed outcome (empty rule, non-integer cycle, cycle above `observation.cycle`) give `checker-error` with Run_Index and cycle; `cannotCheck` entries are collected without repeats
     - _Requirements: 8.8, 8.11, 8.12, 8.13, 8.14, 8.19, 8.20_
 
-- [ ] 23. Verdict and copy rules
-  - [ ] 23.1 Implement `src/engine/copy-rules.ts` and `src/engine/verdict.ts`
+- [x] 23. Verdict and copy rules
+  - [x] 23.1 Implement `src/engine/copy-rules.ts` and `src/engine/verdict.ts`
     - `copy-rules.ts`: one constant holding the product-rule banned word list, used by the copy test
     - `verdict.ts`: `VERDICT_BROKE`, `VERDICT_COULDNT_TELL`, `heldText(n)` with the exact HELD sentence, `computeVerdict` with the selection order of the design (`BROKE` with the lowest violating Run_Index trace and unchecked rules listed, then `COULDN'T TELL` with a reason of 1 to 200 characters truncated deterministically, then `HELD`), returns `null` while not finished. Pure
     - Verdict strings and any user-visible text avoid the banned words and never imply correct behaviour outside the Runs performed
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 10.11, 10.12, 10.13_
 
-  - [ ] 23.2 Write property test for the verdict function in `src/engine/__tests__/verdict.property.test.ts`
+  - [x] 23.2 Write property test for the verdict function in `src/engine/__tests__/verdict.property.test.ts`
     - **Property 22: Verdict function**
     - numRuns 200. Pure (input not mutated), `null` when not finished, exactly one verdict, priority BROKE then COULDN'T TELL then HELD, BROKE trace from the lowest violating Run_Index, unchecked rules never change BROKE, reason length 1 to 200, HELD never while runs completed is below N
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 10.11, 10.12**
 
-  - [ ] 23.3 Write `src/engine/__tests__/copy-rules.test.ts`
+  - [x] 23.3 Write `src/engine/__tests__/copy-rules.test.ts`
     - Scan only the user-visible strings, not whole source files or comments: the exported text constants (`VERDICT_BROKE`, `VERDICT_COULDNT_TELL` and any other exported constant holding text shown to a user), `heldText(n)` for several values of `n`, and the verdict and COULDN'T TELL reason strings that `computeVerdict` generates on every reason path (including the fixed plain sentence used when a reason would be empty). Match the words in `copy-rules.ts` as whole words, case-insensitively
     - Caller or Checker supplied text (a rule name, a Checker's own `reason`) is passed through data, so the test feeds neutral inputs for those parts
     - _Requirements: 10.13_

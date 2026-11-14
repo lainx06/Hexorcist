@@ -1,3 +1,7 @@
+import type { CannotCheck, Violation } from "./checker";
+import type { SkippedEntry } from "./event-list";
+import type { GeneratedEvent } from "./gremlins/generate-types";
+
 export interface DigitalFixturePin {
   signal: string;
   port: "B" | "C" | "D";
@@ -110,4 +114,59 @@ export interface AdvanceResult {
   appliedAnalogInputs: AppliedAnalogInputEvent[];
   /** Always present, possibly empty. */
   diagnostics: Diagnostic[];
+}
+
+// Run and Campaign data. Plain JSON shapes: no undefined, NaN, BigInt, Date or
+// class instances. Absent values are null.
+
+/** Everything needed to show the lowest violating Run. */
+export interface BrokeTrace {
+  runIndex: number;
+  runSeed: number;
+  eventList: GeneratedEvent[];
+  outputEvents: OutputEvent[];
+  violation: Violation;
+}
+
+export type Verdict =
+  | { verdict: "BROKE"; trace: BrokeTrace; unchecked: CannotCheck[] }
+  | { verdict: "HELD"; text: string; runs: number }
+  | { verdict: "COULDN'T TELL"; reason: string };
+
+export interface RunResult {
+  runIndex: number;
+  runSeed: number;
+  eventList: GeneratedEvent[];
+  skipped: SkippedEntry[];
+  /** Digital and analog merged, in application order. */
+  appliedInputs: AppliedInput[];
+  outputEvents: OutputEvent[];
+  diagnostics: Diagnostic[];
+  cannotCheck: CannotCheck[];
+  violation: Violation | null;
+  /** Bridge cycleCount at the stop point. */
+  endCycle: number;
+}
+
+export interface CampaignResult {
+  runsCompleted: number;
+  requestedRuns: number;
+  /** Earliest violating Run_Index, or null. */
+  violatingRunIndex: number | null;
+  verdict: Verdict;
+}
+
+export interface SliceProgress {
+  runsCompleted: number;
+  total: number;
+  finished: boolean;
+  nextRunIndex: number;
+  runs: RunResult[];
+  /** Set when finished, otherwise null. */
+  result: CampaignResult | null;
+}
+
+export interface CampaignState {
+  nextRunIndex: number;
+  runs: RunResult[];
 }

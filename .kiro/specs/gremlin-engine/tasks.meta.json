@@ -3,6 +3,10 @@
     "16.3 Write property test for Drifter arithmetic in `src/engine/__tests__/gremlins.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794619916899
+    },
+    "20.2 Write property test for the step planner in `src/engine/__tests__/step-plan.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794621977319
     }
   },
   "executionHistory": {
@@ -621,6 +625,135 @@
         "executionId": "6e7e0950-5c17-4af3-a35a-acb330dbaabd",
         "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
         "timestamp": 1794621463036
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621862536
+      }
+    ],
+    "20.1 Implement `src/engine/step-plan.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621868345
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621935830
+      }
+    ],
+    "20.2 Write property test for the step planner in `src/engine/__tests__/step-plan.property.test.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794621936793
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622030058
+      }
+    ],
+    "20. Step planner": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622030127
+      }
+    ],
+    "21.1 Create `src/engine/checker.ts` and add the Data Models run and campaign types to `src/engine/types.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622030849
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622118371
+      }
+    ],
+    "22.1 Implement `runOne` and `mergeApplied` in `src/engine/campaign.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622118121
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622226248
+      }
+    ],
+    "21. Checker contract and run data types": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622118422
+      }
+    ],
+    "22.2 Write runner examples in `src/engine/__tests__/campaign.test.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622226975
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622380831
+      }
+    ],
+    "22. Campaign runner and step loop": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622380885
+      }
+    ],
+    "23.1 Implement `src/engine/copy-rules.ts` and `src/engine/verdict.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622381170
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622516890
+      }
+    ],
+    "23.2 Write property test for the verdict function in `src/engine/__tests__/verdict.property.test.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622517024
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622651299
+      }
+    ],
+    "23.3 Write `src/engine/__tests__/copy-rules.test.ts`": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622651934
+      },
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622724835
+      }
+    ],
+    "23. Verdict and copy rules": [
+      {
+        "executionId": "03e0b531-af30-49b3-83da-68f0a2bbbfbf",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794622724902
       }
     ]
   }
