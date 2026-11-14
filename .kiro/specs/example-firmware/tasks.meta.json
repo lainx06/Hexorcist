@@ -1,0 +1,60 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.2 Add the `examples:build` npm script to `package.json`": [
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699062846
+      },
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699187764
+      }
+    ],
+    "1.1 Write `scripts/build-examples.mjs` exactly as `design.md` section 8 gives it": [
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699062917
+      },
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699187347
+      }
+    ],
+    "1.3 Add the `.gitignore` entry for example build folders": [
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699063729
+      },
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699188771
+      }
+    ],
+    "1.4 Write the six Core_Example sketch sources": [
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699064055
+      },
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699189366
+      }
+    ],
+    "1. Build script, `.gitignore` entry and Core_Example sketch sources": [
+      {
+        "executionId": "7f38cf66-a0a1-4a03-a6f6-7812d0ff864b",
+        "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
+        "timestamp": 1794699189403
+      }
+    ]
+  }
+}

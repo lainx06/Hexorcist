@@ -151,3 +151,5 @@ vite.config.ts.timestamp-*
 # Vite
 dist-ssr
 *.local
+# Example build folders (only <variant>.hex is kept)
+examples/**/build/
