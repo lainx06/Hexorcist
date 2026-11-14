@@ -301,35 +301,35 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference) and `git status --short`.
   - Ensure all tests pass. If a committed test or a user-dictated acceptance test fails, stop and report the expectation, the actual value and the evidence, and wait for the user (Req 17.6). Ask the user if questions arise.
 
-- [ ] 8. Spike wrapper, spike IR campaign, step-size invariance, copy and source tests
-  - [ ] 8.1 Replace the body of `src/engine/spike/led-timeout-monitor.ts` with the compiled-Rule wrapper
+- [x] 8. Spike wrapper, spike IR campaign, step-size invariance, copy and source tests
+  - [x] 8.1 Replace the body of `src/engine/spike/led-timeout-monitor.ts` with the compiled-Rule wrapper
     - Same exports, names, parameter order, defaults and string literals (`checkLedTimeout`, `MonitorViolation`, `MonitorClean`, `MonitorResult`); header comment says the file wraps one compiled Rule; imports `../rules/compile` and `../rules/ir`
     - Argument checks in the design order, each thrown as `new Error(reason)` before any Rule_Checker call: `signal` by `isSignalName`; `maxOnCycles` integer 1 to 159,999,999,999; `runEndCycle` non-negative integer, then at most 9,007,199,254,740,991 (`runEndCycle must be at most 9007199254740991`); per element of `events` for `signal` at original index i: non-integer `cycle`, `cycle` above 9,007,199,254,740,991 (`events[<i>].cycle must be at most 9007199254740991`, replacing the above-`runEndCycle` Reason), above `runEndCycle`, below the previous element's cycle. No argument text copied
     - Compile `notLongerThan(eq(signal, 1), maxOnCycles / 16_000)` against `{ clockHz: 16_000_000, pins: [{ signal, port: "B", bit: 5, direction: "output" }] }`; call the checker with the `stepIndex` 0 observation (`cycle` `runEndCycle`, the filtered events) and, only without a Violation, the end-of-run observation; return the result shapes of Req 14.5, `'no violation in this run'` also when a `CannotCheck` is returned
     - Committed test that must pass unchanged: `src/engine/__tests__/spike-monitor.test.ts` (all four tests). The other committed tests listed in task 6.5 must also still pass. If one fails, stop and report per Req 17.6
     - _Requirements: 14.1, 14.2, 14.3, 14.5, 14.6, 14.7_
 
-  - [ ] 8.2 Write the wrapper examples in `src/engine/__tests__/rules-spike-wrapper.test.ts`
+  - [x] 8.2 Write the wrapper examples in `src/engine/__tests__/rules-spike-wrapper.test.ts`
     - Defaults give the Rule whose sentence is `LED is 1 must never last 300 ms or longer.`; `maxOnCycles` 1 and 159,999,999,999 accepted, 0 and 160,000,000,000 rejected
     - Each argument rejection of Req 14.7 with its exact Reason, including `runEndCycle must be at most 9007199254740991` and `events[<i>].cycle must be at most 9007199254740991`, and no `rule checker:` text ever surfacing; elements for other signals are not checked
     - An element at `runEndCycle` counts; a span with onCycle + maxOnCycles equal to `runEndCycle` is reported by the end-of-run call
     - _Requirements: 14.2, 14.5, 14.6, 14.7_
 
-  - [ ] 8.3 Write property test S1 in `src/engine/__tests__/rules-spike-wrapper.test.ts`
+  - [x] 8.3 Write property test S1 in `src/engine/__tests__/rules-spike-wrapper.test.ts`
     - **Property S1: Spike wrapper equals the spike algorithm (supplementary, Req 14.6)**
     - A test-only function written from the Req 14.6 text. For `events` for one signal with at most one element per cycle, ascending cycles 0 to `runEndCycle`, values 0, 1 or `"input"`, `runEndCycle` 0 to 50,000 and `maxOnCycles` 1 to 20,000, `checkLedTimeout` returns the same result
     - Seed: one literal recorded in the file, never changed. numRuns 200 (no emulator)
     - Counters asserted > 0 after `fc.assert`: `broke`, `clean`, `offAtLimit`, `offBeforeLimit`
     - **Validates: Requirements 14.6**
 
-  - [ ] 8.4 Write the spike IR campaign test in `src/engine/__tests__/rules-spike-campaign.test.ts`
+  - [x] 8.4 Write the spike IR campaign test in `src/engine/__tests__/rules-spike-campaign.test.ts`
     - Read `fixtures/blink_button/build/blink_button.ino.hex` (no fallback); parse `LED is 1 must never last 300 ms or longer.`; write the one-Rule Rule_Set with `writeIr`, read it back with `readIr`, check deep equality and use the read-back set from then on; compile it against `{ pins: [BUTTON D2 input, LED B5 output] }` with no `clockHz`
     - Run through `createCampaign` with the compiled `checker` and `checkerSignals`, `gremlinSet: []`, `runs: 1`, `runCycles: 20_000_000` and a `campaignSeed` literal recorded in the file (D12), then `runSlice(1)` on the handle. The design text names `runCampaign`, which calls `createCampaign` but returns no `RunResult`; the handle gives the `RunResult` list and `endCycle` the checks need
     - Take the Run whose `runIndex` equals `violatingRunIndex`; check BROKE and `violation.rule` equal to the sentence; check `violation.cycle` equals onCycle + 4,800,000, onCycle being the latest `LED` event of value 1 whose preceding `LED` event has another value among events with `cycle` ≤ `violation.cycle` − 4,800,000; check `violation.cycle` equals `checkLedTimeout(outputEvents, endCycle).violationCycle` for that Run. These checks are acceptance tests
     - Timeout 120,000 ms
     - _Requirements: 14.4_
 
-  - [ ] 8.5 Write property test for step-size invariance in `src/engine/__tests__/rules-campaign.property.test.ts`
+  - [x] 8.5 Write property test for step-size invariance in `src/engine/__tests__/rules-campaign.property.test.ts`
     - **Property 5: Step-size invariance on the bridge**
     - HEX from `blink_button`, `floating_input` and `analog_read` (`readFileSync`, no fallback) with the design Fixtures; Gremlin_Sets from catalogue entries with targets on that Fixture; 1 to 3 Runs; Run_Cycles 30,000 to 400,000; `campaignSeed` from `fc.integer({ min: 0, max: 0xffffffff })`; Rules from the per-HEX templates with the `aimBroke`/`aimClean` branch (`LED is 0 must never last d ms or longer.` with W from 1,600 to Run_Cycles − 10,000, or W above Run_Cycles + 64) plus 0 to 2 further template Rules; Rule_Set compiled and wired through `compileRuleSet`
     - `maxStepCycles` 160,000 and 16,000 give the same `verdict` string, the same `trace.violation.rule` and `trace.violation.cycle` when BROKE, and the same `text` when HELD. The BROKE `unchecked` list is not compared (design "Step-size invariance and floating inputs")
@@ -337,16 +337,16 @@ Build the Rule_Compiler under `src/engine/rules/` in five phases, each ending in
     - Counters asserted > 0 after `fc.assert`: `broke`, `notBroke` (from the 160,000 result), `blinkButton`, `floatingInput`, `analogRead`
     - **Validates: Requirements 10.9, 13.1, 13.5**
 
-  - [ ] 8.6 Write `src/engine/__tests__/rules-copy.test.ts`
+  - [x] 8.6 Write `src/engine/__tests__/rules-copy.test.ts`
     - Scan for `BANNED_WORDS` (imported from `copy-rules.ts`) with the matcher of `copy-rules.test.ts` (case-insensitive, not preceded or followed by a letter, digit, `_` or `-`): every fixed Reason text of the design "Error Handling" tables, every `CannotCheck` reason with a neutral signal name, the trigger reason for 0, 1 and 2 runs, the Reasons produced by the rejection examples of `readIr`, `render`, `parse`, `readRulesFile`, `compileRuleSet`, `buildCampaignConfig` and `checkLedTimeout`, and rendered sentences from `arbRule` cases
     - _Requirements: 15.8, 15.9_
 
-  - [ ] 8.7 Write `src/engine/__tests__/rules-source.test.ts`
+  - [x] 8.7 Write `src/engine/__tests__/rules-source.test.ts`
     - For every `.ts` file under `src/engine/rules/` and for `src/engine/spike/led-timeout-monitor.ts`: imports are relative modules under `src/engine/` only; no `avr8js`, `emulator-bridge` or `prng` import; `campaign` only through `import type`; no line (comments included) contains the guard "b" and "b2" patterns, `process.hrtime`, `setImmediate`, `queueMicrotask` or a bare `Date(`
     - `package.json` dependencies are unchanged from the pinned list (no package added)
     - _Requirements: 13.6, 15.1, 15.2, 15.3, 15.4_
 
-- [ ] 9. Final checkpoint - full run, timing report and cleanup
+- [x] 9. Final checkpoint - full run, timing report and cleanup
   - Run `npm run typecheck`, `npm run guard` and the full `npx vitest --run` with no filter. Report `git diff --exit-code HEAD -- src/engine/__tests__/ fixtures/` (expected: no difference), `git status --short` (expected: only `src/engine/rules/`, `src/engine/verdict.ts`, `src/engine/campaign.ts`, `src/engine/spike/led-timeout-monitor.ts` and the new `src/engine/__tests__/rules-*` files, plus files already modified or untracked at the start), and `git rev-parse HEAD` (unchanged).
   - Timing report, measured, not estimated. Run `npx vitest --run --reporter=verbose --reporter=json --outputFile.json=$env:TEMP\hexorcist-rules-vitest.json` (if the installed vitest rejects `--outputFile.json`, use `--reporter=json --outputFile=<path>` plus a plain run for the verbose list, and say which was used). From the JSON, print `name` and `endTime - startTime` for every new test file: `rules-sentence.property`, `rules-ir.property`, `rules-checker.property`, `rules-campaign.property`, `rules-verdict.property`, `rules-trigger.property`, `rules-prefix.property`, `rules-templates`, `rules-ir`, `rules-duration`, `rules-file`, `rules-compile`, `rules-monitor`, `rules-verdict`, `rules-wiring`, `rules-spike-campaign`, `rules-spike-wrapper`, `rules-copy`, `rules-source`, and their sum. Set them beside the design "Test time budget" rows (Property 5 about 1.1 s, spike IR test about 0.3 s, wiring examples about 0.1 s, Property 4 about 5 s, other properties and examples about 8 s, collection and transform about 6 s, total about 20.5 s, cap 60 s).
   - Total suite time: the wall `Duration` of the full run. Added time: that `Duration` minus the `Duration` of the same command with the new files excluded (`--exclude "**/rules-*.test.ts" --exclude "**/node_modules/**"`, because `--exclude` replaces the default list). This excluded run is for measurement only; the done check above is the unfiltered run. Report both durations, the difference and the per-file table.

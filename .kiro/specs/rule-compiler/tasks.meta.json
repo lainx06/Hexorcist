@@ -11,6 +11,10 @@
     "6.4 Write property test for the Trigger_Evaluator in `src/engine/__tests__/rules-trigger.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794670338370
+    },
+    "8.5 Write property test for step-size invariance in `src/engine/__tests__/rules-campaign.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794672744695
     }
   },
   "executionHistory": {
@@ -544,6 +548,109 @@
         "executionId": "826315be-e0be-493e-bcdd-bf4f86ea6c89",
         "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
         "timestamp": 1794671312817
+      }
+    ],
+    "8.1 Replace the body of `src/engine/spike/led-timeout-monitor.ts` with the compiled-Rule wrapper": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672174625
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672287809
+      }
+    ],
+    "8.2 Write the wrapper examples in `src/engine/__tests__/rules-spike-wrapper.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672288094
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672424843
+      }
+    ],
+    "8.3 Write property test S1 in `src/engine/__tests__/rules-spike-wrapper.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672425426
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672518270
+      }
+    ],
+    "8.4 Write the spike IR campaign test in `src/engine/__tests__/rules-spike-campaign.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672518667
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672616629
+      }
+    ],
+    "8.5 Write property test for step-size invariance in `src/engine/__tests__/rules-campaign.property.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672616810
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672755349
+      }
+    ],
+    "8.6 Write `src/engine/__tests__/rules-copy.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672755660
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672928831
+      }
+    ],
+    "8.7 Write `src/engine/__tests__/rules-source.test.ts`": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794672929586
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794673007903
+      }
+    ],
+    "8. Spike wrapper, spike IR campaign, step-size invariance, copy and source tests": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794673007952
+      }
+    ],
+    "9. Final checkpoint - full run, timing report and cleanup": [
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794673008104
+      },
+      {
+        "executionId": "356ba841-9325-41b8-a8b2-7ba3bff7a4b8",
+        "chatSessionId": "sess_2e5df753-cae7-4215-95bc-bdc8f922e477",
+        "timestamp": 1794673316064
       }
     ]
   }
