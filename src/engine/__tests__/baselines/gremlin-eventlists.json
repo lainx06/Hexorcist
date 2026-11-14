@@ -1,0 +1,4074 @@
+{
+ "runCycles": 8000000,
+ "campaignSeeds": [
+  0,
+  1,
+  42,
+  4294967295
+ ],
+ "runIndices": [
+  0,
+  1,
+  2
+ ],
+ "gremlinSet": [
+  {
+   "id": "masher"
+  },
+  {
+   "id": "bouncer"
+  },
+  {
+   "id": "stuck"
+  },
+  {
+   "id": "dropout"
+  },
+  {
+   "id": "spike"
+  },
+  {
+   "id": "drifter"
+  }
+ ],
+ "fixtures": {
+  "blink_button": {
+   "pins": [
+    {
+     "signal": "BUTTON",
+     "port": "D",
+     "bit": 2,
+     "direction": "input"
+    },
+    {
+     "signal": "LED",
+     "port": "B",
+     "bit": 5,
+     "direction": "output"
+    }
+   ]
+  },
+  "floating_input": {
+   "pins": [
+    {
+     "signal": "LED",
+     "port": "B",
+     "bit": 5,
+     "direction": "output"
+    },
+    {
+     "signal": "D3_IN",
+     "port": "D",
+     "bit": 3,
+     "direction": "input"
+    },
+    {
+     "signal": "D4_IN",
+     "port": "D",
+     "bit": 4,
+     "direction": "input"
+    }
+   ]
+  },
+  "synthetic_events": {
+   "clockHz": 16000000,
+   "pins": [
+    {
+     "signal": "BUTTON",
+     "port": "D",
+     "bit": 2,
+     "direction": "input",
+     "activeLevel": "low"
+    },
+    {
+     "signal": "BEAM",
+     "port": "D",
+     "bit": 3,
+     "direction": "input",
+     "activeLevel": "high",
+     "restState": "active"
+    },
+    {
+     "signal": "POT",
+     "kind": "analog",
+     "channel": 0,
+     "restLevel": 300
+    },
+    {
+     "signal": "LED",
+     "port": "B",
+     "bit": 5,
+     "direction": "output"
+    }
+   ]
+  }
+ },
+ "cases": [
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 0,
+   "runIndex": 0,
+   "runSeed": 0,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 433966,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 2949499,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5201694,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6295556,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7083768,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7090823,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7121455,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7124835,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7126545,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7389418,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 0,
+   "runIndex": 1,
+   "runSeed": 1364076727,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1484725,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3387804,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4179300,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4183275,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4216264,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4225787,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4978746,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5774217,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7790159,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 0,
+   "runIndex": 2,
+   "runSeed": 821347078,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 855033,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 899954,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 923102,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3186068,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5212961,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6410069,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6980081,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7550093,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7706241,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7862390,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 1,
+   "runIndex": 0,
+   "runSeed": 804215951,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4356555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4396555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4801795,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4804435,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4834641,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4871152,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4911987,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4937458,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4958564,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4993814,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5585965,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7964487,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 1,
+   "runIndex": 1,
+   "runSeed": 2726825882,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 329016,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6242909,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6254025,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6286196,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6306666,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6319894,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6348021,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6412486,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7089883,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 1,
+   "runIndex": 2,
+   "runSeed": 664193924,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1549388,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1700952,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1720970,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1756680,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1787499,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1811896,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7138494,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7896615,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 42,
+   "runIndex": 0,
+   "runSeed": 3118121311,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 2687430,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3369602,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3991054,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4612507,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5032805,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5453103,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5873401,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6741692,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6764240,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6788547,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6791606,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6818716,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6844845,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7226493,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 42,
+   "runIndex": 1,
+   "runSeed": 3269203343,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 247590,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3635968,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4552303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4778222,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5004142,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5445402,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5886662,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6584195,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6614158,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6622669,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6659127,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6688016,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6701505,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6741318,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7358677,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 42,
+   "runIndex": 2,
+   "runSeed": 3059423427,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3572807,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3607286,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3613362,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4160203,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7558303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7972215,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 4294967295,
+   "runIndex": 0,
+   "runSeed": 3807975093,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1203822,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1233759,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1235653,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1242579,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1286683,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1309828,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1346932,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1352220,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3557349,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5012409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5052409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5797689,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 4294967295,
+   "runIndex": 1,
+   "runSeed": 3989038653,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3863376,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5759201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6123538,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6387135,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6391451,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6426576,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6446675,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6470794,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6487876,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6511725,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7183680,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7879484,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "blink_button",
+   "campaignSeed": 4294967295,
+   "runIndex": 2,
+   "runSeed": 2049858837,
+   "events": [
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 660545,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1809262,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 2957979,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3090267,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3222555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3412378,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3602201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3792024,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4579852,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4840476,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4872844,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4877516,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4879971,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4906733,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4917205,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7615285,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 0,
+   "runIndex": 0,
+   "runSeed": 0,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 433966,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 2949499,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 5201694,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6295556,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7083768,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 7090823,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7121455,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 7124835,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7126545,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 7389418,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 0,
+   "runIndex": 1,
+   "runSeed": 1364076727,
+   "events": [
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1484725,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 3387804,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4179300,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4183275,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4216264,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4225787,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4978746,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 5774217,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 7790159,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 0,
+   "runIndex": 2,
+   "runSeed": 821347078,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 855033,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 899954,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 923102,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 3186068,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 5212961,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6410069,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6980081,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 7550093,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 7706241,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 7862390,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 1,
+   "runIndex": 0,
+   "runSeed": 804215951,
+   "events": [
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4356555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4396555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4801795,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4804435,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4834641,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4871152,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4911987,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4937458,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4958564,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 4993814,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 5585965,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 7964487,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 1,
+   "runIndex": 1,
+   "runSeed": 2726825882,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 329016,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6242909,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6254025,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6286196,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6306666,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6319894,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6348021,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6412486,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 7089883,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 1,
+   "runIndex": 2,
+   "runSeed": 664193924,
+   "events": [
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1549388,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 1700952,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 1720970,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 1756680,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 1787499,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 1811896,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 7138494,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 7896615,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 42,
+   "runIndex": 0,
+   "runSeed": 3118121311,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 2687430,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 3369602,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 3991054,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 4612507,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 5032805,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 5453103,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 5873401,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6741692,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6764240,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6788547,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6791606,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6818716,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6844845,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7226493,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 42,
+   "runIndex": 1,
+   "runSeed": 3269203343,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 247590,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 3635968,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4552303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 4778222,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 5004142,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 5445402,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 5886662,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6584195,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6614158,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6622669,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6659127,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6688016,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 6701505,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 6741318,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 7358677,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 42,
+   "runIndex": 2,
+   "runSeed": 3059423427,
+   "events": [
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 3572807,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 3607286,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 3613362,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4160203,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 7558303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7972215,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 4294967295,
+   "runIndex": 0,
+   "runSeed": 3807975093,
+   "events": [
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1203822,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 1233759,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1235653,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 1242579,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1286683,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 1309828,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 1346932,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 1352220,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 3557349,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D3_IN",
+     "value": 0,
+     "cycle": 5012409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D3_IN",
+     "value": "release",
+     "cycle": 5052409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 5797689,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 4294967295,
+   "runIndex": 1,
+   "runSeed": 3989038653,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 3863376,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 5759201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6123538,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6387135,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6391451,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 6426576,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6446675,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 6470794,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 6487876,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 6511725,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7183680,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 7879484,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "floating_input",
+   "campaignSeed": 4294967295,
+   "runIndex": 2,
+   "runSeed": 2049858837,
+   "events": [
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 660545,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 1809262,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 2957979,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 3090267,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 3222555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 3412378,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 3602201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 3792024,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4579852,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4840476,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 4872844,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4877516,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 4879971,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": 0,
+     "cycle": 4906733,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 4917205,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "D4_IN",
+     "value": "release",
+     "cycle": 7615285,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": [
+    {
+     "gremlinId": "dropout",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "spike",
+     "reason": "no-target-pin"
+    },
+    {
+     "gremlinId": "drifter",
+     "reason": "no-target-pin"
+    }
+   ]
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 0,
+   "runIndex": 0,
+   "runSeed": 0,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 433966,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 2251490,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2452928,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 2949499,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 5201694,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 5278321,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 5294321,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 5320603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 5536603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 5752603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 5968603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 6184603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6295556,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 6400603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 6616603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 6832603,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7083768,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7090823,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7121455,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7124835,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7126545,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7389418,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 0,
+   "runIndex": 1,
+   "runSeed": 1364076727,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1484725,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 1814993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 2660993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3387804,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 3506993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4179300,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4183275,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4216264,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4225787,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 4352993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4978746,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 5198993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5774217,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6015566,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 6044993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6181748,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 6890993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 7047912,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 7127912,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 7736993,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7790159,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 0,
+   "runIndex": 2,
+   "runSeed": 821347078,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 855033,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 899954,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 923102,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 2806991,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2995199,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3186068,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 3230276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 3372276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 3514276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 3656276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 3798276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 3940276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 4082276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 4224276,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5212961,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6410069,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6980081,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 7335381,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 7351381,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7550093,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7706241,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7862390,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 1,
+   "runIndex": 0,
+   "runSeed": 804215951,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4356555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4396555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4801795,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4804435,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4834641,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4871152,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4911987,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4937458,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4958564,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 4993814,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 5233323,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 5553323,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5585965,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 6039485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 6181485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 6323485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 6465485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 6607485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 6749485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 6891485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6961845,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 7033485,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7591576,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7964487,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 1,
+   "runIndex": 1,
+   "runSeed": 2726825882,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 329016,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 1882950,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2132893,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 2304494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 2870494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 3436494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 4002494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 4568494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 5134494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 5700494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 5943450,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 5991450,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6242909,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6254025,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 6266494,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6286196,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6306666,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6319894,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6348021,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6412486,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7089883,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 1,
+   "runIndex": 2,
+   "runSeed": 664193924,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 209223,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 241223,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1549388,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 1700952,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 1720970,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 1756680,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 1787499,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 1811896,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 3225406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 3507406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 3789406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 4071406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 4353406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 4635406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 4917406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 5199406,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 5963825,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6468659,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 7138494,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7896615,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 42,
+   "runIndex": 0,
+   "runSeed": 3118121311,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 1656895,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 1800895,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2687430,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 3090981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3369602,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 3764981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3991054,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 4438981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 4612507,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5032805,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 5112981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5453103,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 5786981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5873401,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6190279,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 6460981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6664359,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6741692,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6764240,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6788547,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6791606,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6818716,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6844845,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 7134981,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7226493,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 7808981,
+     "gremlinId": "drifter"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 42,
+   "runIndex": 1,
+   "runSeed": 3269203343,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 247590,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 1719498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 1839498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 1959498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 2079498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 2199498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 2319498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 2439498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 2559498,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 3635968,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4552303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 4778222,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 5004142,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 5445402,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 5886662,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 5924934,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6243070,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6584195,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6614158,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6622669,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6659127,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6688016,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 6701505,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 6741318,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 6991632,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 7199632,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7358677,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 42,
+   "runIndex": 2,
+   "runSeed": 3059423427,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 2416067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 3114067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 3494190,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3572807,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 3607286,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 3613362,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 3812067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 3926927,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4160203,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 4510067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 5208067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 5312658,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 5344658,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 5906067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 6604067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 7302067,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 7558303,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7972215,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 4294967295,
+   "runIndex": 0,
+   "runSeed": 3807975093,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 138793,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 442793,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 815360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1203822,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1233759,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1235653,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1242579,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1286683,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1309828,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 1313360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 1346932,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 1352220,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 1811360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 1929464,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 2309360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2519202,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 2807360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 3305360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 3557349,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 3803360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 4301360,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BUTTON",
+     "value": 0,
+     "cycle": 5012409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BUTTON",
+     "value": "release",
+     "cycle": 5052409,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 5797689,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 4294967295,
+   "runIndex": 1,
+   "runSeed": 3989038653,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 1795707,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 2035707,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 390,
+     "cycle": 2906577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 480,
+     "cycle": 3366577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 571,
+     "cycle": 3826577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 3863376,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 661,
+     "cycle": 4286577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 751,
+     "cycle": 4746577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 842,
+     "cycle": 5206577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 932,
+     "cycle": 5666577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 5759201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6123538,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 6126577,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6387135,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6391451,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6426576,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6446675,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6470794,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 6487876,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6511725,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 6861435,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7077333,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7183680,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 7879484,
+     "gremlinId": "masher"
+    }
+   ],
+   "skipped": []
+  },
+  {
+   "fixture": "synthetic_events",
+   "campaignSeed": 4294967295,
+   "runIndex": 2,
+   "runSeed": 2049858837,
+   "events": [
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 0,
+     "gremlinId": "rest"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 660545,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 791731,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 1061708,
+     "gremlinId": "dropout"
+    },
+    {
+     "signal": "POT",
+     "analog": 263,
+     "cycle": 1128636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 1809262,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 225,
+     "cycle": 2010636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 188,
+     "cycle": 2892636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 2957979,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 3090267,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 3222555,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 3412378,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 3602201,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 1023,
+     "cycle": 3666483,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "POT",
+     "analog": 150,
+     "cycle": 3774636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 3792024,
+     "gremlinId": "masher"
+    },
+    {
+     "signal": "POT",
+     "analog": 300,
+     "cycle": 3922483,
+     "gremlinId": "spike"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4579852,
+     "gremlinId": "stuck"
+    },
+    {
+     "signal": "POT",
+     "analog": 113,
+     "cycle": 4656636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4840476,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 4872844,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4877516,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 4879971,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": 1,
+     "cycle": 4906733,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 4917205,
+     "gremlinId": "bouncer"
+    },
+    {
+     "signal": "POT",
+     "analog": 75,
+     "cycle": 5538636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 38,
+     "cycle": 6420636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "POT",
+     "analog": 0,
+     "cycle": 7302636,
+     "gremlinId": "drifter"
+    },
+    {
+     "signal": "BEAM",
+     "value": "release",
+     "cycle": 7615285,
+     "gremlinId": "stuck"
+    }
+   ],
+   "skipped": []
+  }
+ ]
+}
