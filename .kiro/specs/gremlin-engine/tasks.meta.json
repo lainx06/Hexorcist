@@ -305,6 +305,61 @@
         "executionId": "1626753a-bd42-4626-b1ca-c3a5847610a4",
         "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
         "timestamp": 1794617016313
+      },
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617334263
+      }
+    ],
+    "12.1 Smoke and rest-level examples in `src/engine/__tests__/adc-roundtrip.test.ts`": [
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617334398
+      },
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617411152
+      }
+    ],
+    "12.2 Exhaustive round trip in the same file": [
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617411772
+      },
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617474441
+      }
+    ],
+    "12. ADC through the bridge (needs the user-compiled HEX)": [
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617474511
+      }
+    ],
+    "13. Checkpoint - ADC": [
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617475099
+      },
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617531833
+      }
+    ],
+    "14.1 Implement `src/engine/gremlins/pins.ts` and `src/engine/gremlins/catalogue.ts`": [
+      {
+        "executionId": "600de4db-e283-4cdb-baa4-70ae87ed2a9e",
+        "chatSessionId": "sess_fd2dc3b7-09ac-4fd2-ae01-dc720f2d3819",
+        "timestamp": 1794617532498
       }
     ]
   }

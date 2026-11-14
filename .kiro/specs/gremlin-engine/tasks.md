@@ -173,7 +173,7 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
 - [x] 10. Checkpoint - bridge changes
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Run `git diff --stat` on the existing test files and report it. Ensure all tests pass, ask the user if questions arise.
 
-- [-] 11. Write the `analog_read` sketch, then STOP for the user to compile
+- [x] 11. Write the `analog_read` sketch, then STOP for the user to compile
   - Create `fixtures/analog_read/analog_read.ino`. Write only this one file. Do not create `build/` or any HEX. Do not run `arduino-cli` or any compiler
   - Sketch per design: `setup()` configures D13 (PB5) as output. `loop()` stores `analogRead(A0)` in a `volatile` variable and drives D13 high when the reading is above 600. Fixture used by tests: LED on port B bit 5 (output) and an analog pin `POT` on channel 0
   - Original code and comments only. No third-party logos, names or music
@@ -185,25 +185,25 @@ Build the Gremlin_Engine in the order fixed by the design section "Implementatio
   - _Requirements: 2.2, 2.4_
   - STOP: report and wait for the user
 
-- [ ] 12. ADC through the bridge (needs the user-compiled HEX)
+- [x] 12. ADC through the bridge (needs the user-compiled HEX)
   - **Dependency**: each sub-task begins by checking that `fixtures/analog_read/build/analog_read.ino.hex` exists. If it is missing, stop and ask the user to compile. Do not skip, weaken or substitute another HEX
-  - [ ] 12.1 Smoke and rest-level examples in `src/engine/__tests__/adc-roundtrip.test.ts`
+  - [x] 12.1 Smoke and rest-level examples in `src/engine/__tests__/adc-roundtrip.test.ts`
     - Using `createWithTestHooks` with `adcResultListener`: confirm the own `completeADCRead` wrapper is honoured (settles the "UNVERIFIED by running" row), record ADMUX at each conversion
     - Rest level: with no analog event the delivered value matches `restLevel` when given and 512 when absent
     - Report what ADMUX shows (ADLAR clear? REFS 01?). This settles the UNVERIFIED rows of the design evidence table; report them as observations
     - _Requirements: 2.2, 2.4, 2.5_
 
-  - [ ] 12.2 Exhaustive round trip in the same file
+  - [x] 12.2 Exhaustive round trip in the same file
     - **Property 23 (through-bridge half): ADC count round trip**
     - Exhaustive over counts 0 to 1023, one run of about 8.2 million cycles, events 8,000 cycles apart; for each count only conversions delivered in the second half of its interval are checked; the result decoded with ADLAR taken from the recorded ADMUX equals the applied count; REFS bits are asserted to be 00 or 01 so the test cannot pass on a reference it does not model. Timeout 60,000 ms
     - If a count fails to read back, report it as a finding with the counts, the registers and ADMUX, and stop for a decision
     - **Validates: Requirements 2.4, 2.5**
 
-- [ ] 13. Checkpoint - ADC
+- [x] 13. Checkpoint - ADC
   - Run `npm run guard`, `npm run typecheck` and `npx vitest --run`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 14. Gremlin catalogue
-  - [ ] 14.1 Implement `src/engine/gremlins/pins.ts` and `src/engine/gremlins/catalogue.ts`
+  - [-] 14.1 Implement `src/engine/gremlins/pins.ts` and `src/engine/gremlins/catalogue.ts`
     - `pins.ts`: eligible lists (`digitalInputs`, `restActiveInputs`, `analogInputs`, all in Fixture order), press value, Rest_Level (`restLevel ?? 512`), `msToCycles` by integer arithmetic (16,000 per ms; 0.1 ms is the constant 1,600 cycles), `floorDiv`, `truncDiv`
     - `catalogue.ts`: six `GremlinDefinition` entries with ids, icon names (`gremlin-masher` and so on), targets, the parameter table from the design (names, shapes, units, defaults, allowed ranges), `resolveParams` with the error order of the design (`unknown-gremlin`, then `invalid-gremlin-parameter` naming Gremlin and parameter; earliest in listed order wins; nothing drawn yet), and the Drifter defensive duration check
     - Append `arbGremlinSet` to `arbitraries.ts` (0 to 5 entries, overrides inside `allowed`)

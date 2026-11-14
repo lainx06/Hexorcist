@@ -166,3 +166,42 @@ export const arbSharedPinFixture: fc.Arbitrary<SharedPinCase> = fc
       };
     });
   });
+
+// ---- Gremlin sets (task 14.1) ----
+import { GREMLIN_CATALOGUE } from '../gremlins/catalogue.js';
+import type { GremlinDefinition, GremlinSpec, ParamSpec } from '../gremlins/catalogue.js';
+
+/** One override for a parameter, always inside its allowed range. */
+function arbParamValue(spec: ParamSpec): fc.Arbitrary<number | { min: number; max: number }> {
+  const { min, max } = spec.allowed;
+  const arbInRange = fc.oneof(
+    { arbitrary: fc.constantFrom(min, max), weight: 1 },
+    { arbitrary: fc.integer({ min, max }), weight: 3 },
+  );
+  if (spec.shape === 'scalar') return arbInRange;
+  return fc
+    .tuple(arbInRange, arbInRange)
+    .map(([a, b]) => ({ min: Math.min(a, b), max: Math.max(a, b) }));
+}
+
+function arbGremlinEntry(def: GremlinDefinition): fc.Arbitrary<GremlinSpec> {
+  const optional: Record<string, fc.Arbitrary<number | { min: number; max: number } | undefined>> = {};
+  for (const p of def.params) {
+    optional[p.name] = fc.option(arbParamValue(p), { nil: undefined });
+  }
+  return fc.record(optional).map(overrides => {
+    const params: Record<string, number | { min: number; max: number }> = {};
+    for (const [k, v] of Object.entries(overrides)) {
+      if (v !== undefined) params[k] = v;
+    }
+    return Object.keys(params).length === 0
+      ? { id: def.id }
+      : { id: def.id, params };
+  });
+}
+
+/** 0 to 5 gremlin entries (repeats allowed), every override inside its allowed range. */
+export const arbGremlinSet: fc.Arbitrary<GremlinSpec[]> = fc.array(
+  fc.oneof(...GREMLIN_CATALOGUE.map(arbGremlinEntry)),
+  { minLength: 0, maxLength: 5 },
+);
