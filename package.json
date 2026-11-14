@@ -11,7 +11,8 @@
     "verify:avr8js": "npx tsx scripts/verify-avr8js.ts",
     "bench": "npx tsx bench/benchmark.ts",
     "guard": "node scripts/guard.mjs",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "bench:campaign": "tsx bench/campaign-bench.ts"
   },
   "dependencies": {
     "avr8js": "0.21.1"
