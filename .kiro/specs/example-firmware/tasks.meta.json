@@ -587,6 +587,85 @@
         "executionId": "501e1c78-e9dc-48a8-9f2f-ee6688196dd3",
         "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
         "timestamp": 1794760846797
+      },
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761045354
+      }
+    ],
+    "12.1 Write the `heater` sketch sources": [
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761053511
+      },
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761111117
+      }
+    ],
+    "12.2 Write the `heater` data files": [
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761053571
+      },
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761112097
+      }
+    ],
+    "12. `heater` example (optional, earliest to cut, last)": [
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761111169
+      }
+    ],
+    "12.4 STOP: the user runs `npm run examples:build` for all examples": [
+      {
+        "executionId": "5c1d6e5d-14d2-4a6e-b788-c65053a5704f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761112810
+      },
+      {
+        "executionId": "4615e281-84ea-4d15-93f9-f790065c1dc0",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761992658
+      }
+    ],
+    "12.5 Write `tests/examples/examples.heater.test.ts`: campaigns, span and shared Scripted_Runs": [
+      {
+        "executionId": "4615e281-84ea-4d15-93f9-f790065c1dc0",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794761993612
+      },
+      {
+        "executionId": "8633d6fe-21db-4625-9d43-2f13c0f2068f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794763233997
+      }
+    ],
+    "13. CHECKPOINT CP7, after task 12 (`heater`)": [
+      {
+        "executionId": "8633d6fe-21db-4625-9d43-2f13c0f2068f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794763234240
+      },
+      {
+        "executionId": "8633d6fe-21db-4625-9d43-2f13c0f2068f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794763279254
+      }
+    ],
+    "14. Final CHECKPOINT CPF": [
+      {
+        "executionId": "8633d6fe-21db-4625-9d43-2f13c0f2068f",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794763282173
       }
     ]
   }

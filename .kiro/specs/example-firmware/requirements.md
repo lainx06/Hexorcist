@@ -109,6 +109,7 @@ Design-review decisions (user):
 - D30. Ruling: `examples/README.md` text is replaced by the user's text (results at the committed seeds, demo timings, five sentence patterns). The same text is in `design.md` section 2. Task 12.3 adds a heater row to both tables only if heater is kept. No criterion changes.
 - D31. Ruling (D17 added check): the brand test asserts 0 banned-word matches over the `.ino`, `.json` and `.txt` files under `examples/`; a failure lists every path:line and word. No criterion changes.
 - D32. Ruling: the verdict strings (BROKE, HELD, COULDN'T TELL, the HELD sentence) are never used to describe test, scan or build results, in files or reports. Those are reported as "N passed, M failed". Campaign verdict output is unchanged. Process rule; no criterion changes.
+- D33. Ruling (user's words): Heater is cut (D16). Both cut conditions held: at TEMP 1023 the buggy build drives HEATER to 0 at cycle 1,602,262 (the byte read past the table is 0, not 1), and the buggy campaign at seed 20261104 returned HELD. Nothing was re-tuned. The user removed `examples/heater/` (git rm of the four files from 5631c64, plus the untracked data files) and deleted `tests/examples/examples.heater.test.ts`. `examples/README.md` keeps "Three" and gets no heater row. The heater-only conditional checks in `tests/examples/examples.files.test.ts` stay as they are; they do not run without `examples/heater/`. No criterion changes.
 
 ## Glossary
 

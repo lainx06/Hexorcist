@@ -1095,9 +1095,16 @@ Recorded_Acceptance_Values: each buggy campaign test asserts `BROKE`, a non-null
 | D21 (optional `clock` argument supplied by the test files; the helper never names a clock) | section 7 (wall clock); section 9 (`runExampleCampaign`); Data Models (`durationMs`); coverage row for 15.10, 15.11 |
 | D22 (README says "Three", becomes "Four" with the `heater` row in task 12.3 only if `heater` is kept) | section 2 (README text and the heater addition) |
 | D23 (the `git ls-files` check is a checkpoint report item, not a test) | Test files table (`examples.files.test.ts` row); coverage row for 1.5 |
+| D24 (limits judged on the standalone `npm run bench:examples` time of each Fixed_Sketch campaign: report above 12,000 ms, stop above 30,000 ms; Vitest times are information only) | section 7 (wall clock); section 11; Test files table |
+| D25 (`TEST_TIMEOUT_MS` = 120,000 ms; every emulator test uses the constant, no literal timeout) | section 9; section 11; Test files table |
+| D26 (dispatch prompts must not introduce values that are not in the spec; if a value is missing the agent stops and asks) | none; process rule |
+| D27 (`examples-support.ts` takes its folder from `fileURLToPath(new URL(".", import.meta.url))`, not `__dirname`; bench imports the helper normally) | section 9 |
+| D28 (tasks 6 and 8 each get a sub-task that adds the Fixed_Sketch campaign to `bench/example-campaign-bench.ts` and reports its time against D24) | none; applied in `tasks.md` (sub-tasks 6.8 and 8.8) |
+| D29 (Requirement 8, criterion 4 option B: second Press at 4,800,000 plus the offset, second Release 800,000 cycles later, both 50 ms Ordinary_Holds) | section 4.1 |
 | D30 (README text replaced: results table, demo timings, five sentence patterns; heater row goes in both tables in 12.3) | section 2 (README text) |
 | D31 (brand test asserts 0 banned-word matches in `.ino`, `.json`, `.txt` under `examples/`) | brand test |
 | D32 (test, scan and build results are reported as "N passed, M failed", never with verdict strings) | none; process rule |
+| D33 (heater cut: buggy build drives HEATER to 0 at cycle 1,602,262 after TEMP 1023, and the buggy campaign at seed 20261104 returned HELD; `examples/heater/` and its test removed; README keeps "Three", no heater row; heater-only checks in the files test stay and do not run) | none; the Core_Examples are the whole set |
 
 ## Appendix A: Sketch sources and diffs
 

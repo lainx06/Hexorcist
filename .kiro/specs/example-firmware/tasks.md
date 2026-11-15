@@ -350,19 +350,20 @@ At every CHECKPOINT the agent:
     - Note any S9 edit for the CP6 report. Delete any debug script. The stop is CP6 (task 11).
     - _Requirements: 5.6, 18.7, 19.5, 19.6, 19.7, 19.8, 20.8_
 
-- [ ] 11. CHECKPOINT CP6, after task 10 (README, brand and file tests)
+- [x] 11. CHECKPOINT CP6, after task 10 (README, brand and file tests)
   - Follow the checkpoint procedure with the acceptance values of all three Core_Examples and the brand and file test results. The user commits `examples/README.md`, `tests/examples/examples.brand.test.ts` and `tests/examples/examples.files.test.ts`. STOP.
   - _Requirements: 15.6, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 
-- [ ] 12. `heater` example (optional, earliest to cut, last)
+- [x] 12. `heater` example (optional, earliest to cut, last)
   - Every sub-task is optional (`*`). No other task, helper, script behaviour or test depends on `heater`: the build script, the Brand_Check and the file validation tests already run over the Examples that exist. Start only after CP6 (task 11). Values from `design.md`: `campaignSeed` 20261104, N = 16, `runCycles` 8,000,000, `gremlinSet` `[{"id":"spike"}]`.
+  - Cut (D33): skipped, not built. Measured on the buggy build: TEMP 1023 at cycle 1,600,000, HEATER to 0 at cycle 1,602,262 (the byte read past the table is 0, not 1). The buggy campaign at seed 20261104 returned HELD. Fixed campaign: HELD 16/16, 30 spike events, TEMP applied 0 to 1023, rule triggered in 9 of 16 runs, no CannotCheck, no floating input. Nothing was re-tuned. The user removed `examples/heater/` and `tests/examples/examples.heater.test.ts`. The README keeps "Three" and gets no heater row. The heater-only conditional checks in `tests/examples/examples.files.test.ts` stay as they are; they do not run without `examples/heater/`. Sub-task text below is kept as written; optional checkboxes are unchanged.
   - _Requirements: 1.9, 1.10, 1.12, 1.13, 11.9_
 
-  - [ ]* 12.1 Write the `heater` sketch sources
+  - [x]* 12.1 Write the `heater` sketch sources
     - `examples/heater/buggy/buggy.ino` and `examples/heater/fixed/fixed.ino`, verbatim from Appendix A.10 and A.11.
     - _Requirements: 1.9, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 11.4, 11.5, 11.6, 11.8, 11.9_
 
-  - [ ]* 12.2 Write the `heater` data files
+  - [x]* 12.2 Write the `heater` data files
     - `examples/heater/fixture.json`, `rules.txt` and `meta.json`, exactly as `design.md` section 2 gives them.
     - _Requirements: 1.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.5, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.9, 11.1, 11.2, 11.3, 12.1, 22.1, 22.2, 22.3, 22.6_
 
@@ -370,7 +371,7 @@ At every CHECKPOINT the agent:
     - Add the `heater` row from `design.md` section 2 to BOTH README tables (first table and results table) and change "Three" to "Four", only if heater is kept (D30). Nothing else changes. This is an edit to a file created in task 10, allowed under D17 as an addition, and it is named in the CP7 report (S9).
     - _Requirements: 19.5, 21.13_
 
-  - [ ]* 12.4 STOP: the user runs `npm run examples:build` for all examples
+  - [x]* 12.4 STOP: the user runs `npm run examples:build` for all examples
     - The agent stops and asks the user to run `npm run examples:build`. The run passes when it prints eight `PASS` lines, `examples:build: 8 passed, 0 failed`, exits with code 0 and leaves no `build/` folder. The user commits the `heater` sketches and Build_HEX files. Then the agent checks the `heater` pair with `git diff --no-index -U0` against Appendix A.12.
     - _Requirements: 1.4, 1.9, 7.13, 19.4, 20.8_
 
@@ -389,13 +390,14 @@ At every CHECKPOINT the agent:
     - Otherwise, on the first pass of the Buggy_Sketch campaign test, add the three literals, change nothing else, rerun, report the Campaign_Duration, note any S9 edit for the CP7 report, delete debug scripts. The stop is CP7 (task 13).
     - _Requirements: 1.10, 11.10, 15.5, 15.6, 15.12, 15.13, 15.14, 15.16, 15.17, 19.5, 19.6, 19.7, 19.8_
 
-- [ ] 13. CHECKPOINT CP7, after task 12 (`heater`)
+- [x] 13. CHECKPOINT CP7, after task 12 (`heater`)
   - If task 12 was skipped or `heater` was cut, report that `heater` is not included and go on to the final checkpoint (task 14). Otherwise follow the checkpoint procedure with the acceptance values of all four Examples (`heater` seed 20261104). The user commits the `heater` data files, `tests/examples/examples.heater.test.ts` and the README change. STOP.
+  - Cut (D33): task 12 was cut and skipped, so this checkpoint is skipped. `heater` is not included. Values: see the "Cut (D33)" note under task 12. Go on to task 14.
   - _Requirements: 1.10, 15.5, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 
-- [ ] 14. Final CHECKPOINT CPF
+- [-] 14. Final CHECKPOINT CPF
   - Run `npm test -- --run` and report the test-file count, the test count and the pass/fail result.
-  - Report the acceptance values of every included Example (seed, verdicts, `violatingRunIndex`, v, span in cycles and ms, cut flag, Campaign_Duration, gremlin-event counts) and whether `heater` is included.
+  - Report the acceptance values of every included Example (seed, verdicts, `violatingRunIndex`, v, span in cycles and ms, cut flag, Campaign_Duration, gremlin-event counts) and whether `heater` is included (D33: heater is not included).
   - List every edit made during Phase F to a file created earlier in this spec, with its reason, grouped by checkpoint; say none if there were none (S9, D17).
   - Confirm that no temporary debug script remains.
   - Confirm with `git status` and `git ls-files` that no file committed before Phase F, no file under `src/engine/__tests__/baselines/`, no file at all under `src/engine/`, no file under `fixtures/` and no `package.json` dependency changed, and that the committed files under `examples/` are exactly the allowed set of Requirement 1.5.
