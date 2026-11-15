@@ -1,0 +1,7 @@
+{
+  "pins": [
+    { "signal": "PWM_A", "port": "D", "bit": 6, "direction": "output" },
+    { "signal": "PWM_B", "port": "B", "bit": 1, "direction": "output" },
+    { "signal": "LED", "port": "B", "bit": 5, "direction": "output" }
+  ]
+}
