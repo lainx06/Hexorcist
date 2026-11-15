@@ -160,3 +160,17 @@ Same script, same machine, same session. Out edges per run and events applied pe
 | (e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 400,000,018 | 6.423 | 62,277,046 | n/a (checker not wrapped in this case) | 8 / 10.7 / 14 | n/a (checker not wrapped in this case) | 3 / 10.1 / 17 |
 | (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 384,000,010 | 5.286 | 72,647,253 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |
 | (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 384,000,010 | 5.603 | 68,540,167 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |
+
+## Reducer speed (2026-11-15, Node v26.13.1, standalone via tsx)
+
+One machine: Windows_NT 10.0.26200 x64, AMD Ryzen 7 7800X3D 8-Core Processor, 16 logical cores. All figures were measured standalone under `tsx` (not under Vitest). This section holds no browser measurement.
+
+Method: each timed span runs from just before `createReducer` until the Step_Report of one `step(300)` call has `ended` true. It covers every candidate run on a fresh emulator, the confirmation run included, and the rule compile inside the reducer. It leaves out the campaign that found the BROKE trace, file loading, the replays, the failure story and the fingerprint. Each example was reduced 3 times in one process with the default budget of 300 and slice size 300. All 3 runs are kept (none dropped as warm-up) and the median is reported. Per candidate is the median divided by the candidates tried. The timing ran in a temporary script under `npx tsx`, which was deleted after the run. Every run returned the counts pinned in the acceptance test.
+
+| Example | Candidates tried | Runs (s) | Median (s) | Per candidate (ms) |
+|---|---|---|---|---|
+| crosswalk | 30 | 6.507 / 6.844 / 6.606 | 6.606 | 220.2 |
+| garage | 30 | 4.505 / 4.458 / 4.322 | 4.458 | 148.6 |
+| heartbeat | 4 | 0.881 / 0.819 / 0.802 | 0.819 | 204.7 |
+
+In gremlin events, the smallest replay this reducer found has 3 of 8 for crosswalk, 3 of 7 for garage and 1 of 2 for heartbeat. None of the three reductions reached the budget.

@@ -152,19 +152,34 @@ function callChecker(checker: Checker, obs: CheckerObservation): CheckResult {
   return { ok: true, violation, cannotCheck };
 }
 
-/** Runs one Run on a fresh bridge. Returns plain data, or an error that stops the Campaign. */
-export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineError {
-  const gen = buildEventList({
-    fixture: cfg.fixture,
-    gremlinSet: cfg.gremlinSet,
-    runCycles: cfg.runCycles,
-    campaignSeed: cfg.campaignSeed,
-    runIndex,
-  });
-  if (isEngineError(gen)) return gen;
+/** The RunConfig fields the Run_Path reads. A RunConfig is a RunPathConfig. */
+export type RunPathConfig = Pick<
+  RunConfig,
+  "hex" | "fixture" | "checker" | "runCycles" | "maxStepCycles" | "bridgeFactory"
+>;
 
+/** The Run_Path part of a RunResult. */
+export interface RunPathResult {
+  appliedInputs: AppliedInput[];
+  outputEvents: OutputEvent[];
+  diagnostics: Diagnostic[];
+  cannotCheck: CannotCheck[];
+  violation: Violation | null;
+  endCycle: number;
+}
+
+/**
+ * The Run_Path: one ordered event list on a fresh bridge, stopping at the earliest
+ * Violation, with one end-of-run Checker call when none was found. runOne calls this
+ * after buildEventList; the trace reducer calls it with a candidate event list.
+ */
+export function runEventList(
+  cfg: RunPathConfig,
+  events: readonly GeneratedEvent[],
+  runIndex: number,
+): RunPathResult | EngineError {
   const factory = cfg.bridgeFactory ?? defaultBridgeFactory;
-  const made = factory(cfg.hex, cfg.fixture, gen.events.slice());
+  const made = factory(cfg.hex, cfg.fixture, events.slice());
   if (isBridgeError(made)) {
     return { kind: "bridge-error", runIndex, error: made, message: made.message };
   }
@@ -192,7 +207,7 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
   while (bridge.cycleCount < cfg.runCycles) {
     const before = bridge.cycleCount;
     const pending: number[] = [];
-    for (let i = appliedCount; i < gen.events.length; i++) pending.push(gen.events[i].cycle);
+    for (let i = appliedCount; i < events.length; i++) pending.push(events[i].cycle);
     const planInput = {
       prevTarget,
       cycleCount: before,
@@ -211,7 +226,7 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
       return internal(`bridge did not advance at cycle ${before}`);
     }
     prevTarget = target;
-    const merged = mergeApplied(gen.events, appliedCount, r);
+    const merged = mergeApplied(events, appliedCount, r);
     if (isEngineError(merged)) return merged;
     appliedCount += merged.length;
     appliedInputs.push(...merged);
@@ -250,17 +265,34 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
     violation = res.violation;
   }
 
+  return { appliedInputs, outputEvents, diagnostics, cannotCheck, violation, endCycle: bridge.cycleCount };
+}
+
+/** Runs one Run on a fresh bridge. Returns plain data, or an error that stops the Campaign. */
+export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineError {
+  const gen = buildEventList({
+    fixture: cfg.fixture,
+    gremlinSet: cfg.gremlinSet,
+    runCycles: cfg.runCycles,
+    campaignSeed: cfg.campaignSeed,
+    runIndex,
+  });
+  if (isEngineError(gen)) return gen;
+
+  const path = runEventList(cfg, gen.events, runIndex);
+  if (isEngineError(path)) return path;
+
   return {
     runIndex,
     runSeed: gen.runSeed,
     eventList: gen.events.map((e) => ({ ...e })),
     skipped: gen.skipped.map((s) => ({ ...s })),
-    appliedInputs,
-    outputEvents,
-    diagnostics,
-    cannotCheck,
-    violation,
-    endCycle: bridge.cycleCount,
+    appliedInputs: path.appliedInputs,
+    outputEvents: path.outputEvents,
+    diagnostics: path.diagnostics,
+    cannotCheck: path.cannotCheck,
+    violation: path.violation,
+    endCycle: path.endCycle,
   };
 }
 
