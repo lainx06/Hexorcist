@@ -337,12 +337,12 @@ describe("computeVerdict untriggeredRules: absent and empty field (Req 12.9)", (
   });
 });
 
-describe("heldText wording today (documentation of an unchanged function, Req 12.8)", () => {
-  it("heldText(1) still reads 'runs' for one run", () => {
-    expect(heldText(1)).toBe("No violation found in 1 runs of this gremlin set. Not a proof.");
+describe("heldText wording: emulated runs, singular 'run' for one run (Req 12.8)", () => {
+  it("heldText(1) reads '1 emulated run'", () => {
+    expect(heldText(1)).toBe("No violation found in 1 emulated run of this gremlin set. Not a proof.");
   });
 
-  it("heldText(2) reads '2 runs'", () => {
-    expect(heldText(2)).toBe("No violation found in 2 runs of this gremlin set. Not a proof.");
+  it("heldText(2) reads '2 emulated runs'", () => {
+    expect(heldText(2)).toBe("No violation found in 2 emulated runs of this gremlin set. Not a proof.");
   });
 });

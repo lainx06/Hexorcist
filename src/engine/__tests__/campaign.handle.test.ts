@@ -231,7 +231,7 @@ describe('scripted Checkers', { timeout: 60_000 }, () => {
     const p = progressOf(handleOf(cfg({ runs: 3 })).runSlice(3));
     expect(p.result?.verdict).toEqual({
       verdict: 'HELD',
-      text: 'No violation found in 3 runs of this gremlin set. Not a proof.',
+      text: 'No violation found in 3 emulated runs of this gremlin set. Not a proof.',
       runs: 3,
     });
   });

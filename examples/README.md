@@ -15,9 +15,9 @@ patterns) and the campaign settings (`meta.json`).
 
 | Example | Gremlins | Buggy build | Fixed build |
 |---|---|---|---|
-| crosswalk | masher | BROKE (run index 3, seed 20261101) | HELD: no violation found in 24 runs of this gremlin set, not a proof |
-| garage | bouncer, masher | BROKE (run index 7, seed 20261102) | HELD: no violation found in 40 runs of this gremlin set, not a proof |
-| heartbeat | stuck | BROKE (run index 1, seed 20261103) | HELD: no violation found in 24 runs of this gremlin set, not a proof |
+| crosswalk | masher | BROKE (run index 3, seed 20261101) | HELD: no violation found in 24 emulated runs of this gremlin set, not a proof |
+| garage | bouncer, masher | BROKE (run index 7, seed 20261102) | HELD: no violation found in 40 emulated runs of this gremlin set, not a proof |
+| heartbeat | stuck | BROKE (run index 1, seed 20261103) | HELD: no violation found in 24 emulated runs of this gremlin set, not a proof |
 
 In the tests, one ordinary input on its own (a single press, beam break or pulse) does not break
 any buggy build. The bugs need the gremlins' timing.

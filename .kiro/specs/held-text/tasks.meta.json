@@ -1,0 +1,315 @@
+{
+  "pbtResults": {
+    "2.4 Add the fix-checking property test `src/engine/__tests__/held-text.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794764979704
+    },
+    "2.8 Verify the fix-checking property passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1794765001579
+    }
+  },
+  "executionHistory": {
+    "1.1 Write the temporary recording script `scripts/record-held-baseline.ts`": [
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764602774
+      },
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764738260
+      }
+    ],
+    "1.2 Write the preservation test `src/engine/__tests__/held-text-preservation.test.ts`": [
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764739755
+      },
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764777389
+      }
+    ],
+    "1.3 Run the preservation test on UNFIXED code": [
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764780394
+      },
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764793101
+      }
+    ],
+    "1.4 Delete the temporary script": [
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764793544
+      },
+      {
+        "executionId": "01e8e1e7-14b7-40cb-ad63-27fd5370181e",
+        "chatSessionId": "sess_03c0c75f-f59c-4d26-b958-ef9eab3fb19c",
+        "timestamp": 1794764803729
+      }
+    ],
+    "1.5 **STOP. User commits the baseline on its own.**": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764873408
+      }
+    ],
+    "1. Write the preservation baseline on UNFIXED code, then STOP for the user to commit it": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764873456
+      }
+    ],
+    "2.1 Edit `heldText` in `src/engine/verdict.ts` (lines 11-12), HELD text only": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764875811
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764896072
+      }
+    ],
+    "2.2.1 T1: `src/engine/__tests__/campaign.handle.test.ts:234`": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764900930
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764929691
+      }
+    ],
+    "2.2.2 T2: `src/engine/__tests__/rules-verdict.test.ts:342`": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764901550
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764929845
+      }
+    ],
+    "2.2.3 T3: `src/engine/__tests__/rules-verdict.test.ts:346`": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764902346
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764930641
+      }
+    ],
+    "2.3.1 T4: `src/engine/__tests__/rules-verdict.test.ts:340`, the `describe` title": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764902903
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764931141
+      }
+    ],
+    "2.3.2 T5: `src/engine/__tests__/rules-verdict.test.ts:341`, test name": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764903698
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764931939
+      }
+    ],
+    "2.3.3 T6: `src/engine/__tests__/rules-verdict.test.ts:345`, test name": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764904284
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764947364
+      }
+    ],
+    "2.2 Edit the approved committed-test literals (T1 to T3). Literal only, no other change on these lines.": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764930688
+      }
+    ],
+    "2.3 Edit the approved committed-test names (T4 to T6). Names only, no assertion changes.": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764947412
+      }
+    ],
+    "2.4 Add the fix-checking property test `src/engine/__tests__/held-text.property.test.ts`": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764949270
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764987201
+      }
+    ],
+    "2.5 Edit `examples/README.md` lines 18-20, all three rows": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764950082
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764987251
+      }
+    ],
+    "2.6 Edit `.kiro/steering/verdicts.md` line 6, the HELD line, to read exactly": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764950561
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764987713
+      }
+    ],
+    "2.7 Verify the preservation test from task 1 still passes": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764989501
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794765005126
+      }
+    ],
+    "2.8 Verify the fix-checking property passes": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794764990116
+      },
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794765005636
+      }
+    ],
+    "2. Fix the HELD text (NOT to start until the user confirms the baseline commit)": [
+      {
+        "executionId": "dd70684c-293d-4856-a71b-aa941fa6f8d8",
+        "chatSessionId": "sess_b6aae849-c876-4d8f-8a9f-f30168be3cad",
+        "timestamp": 1794765005671
+      }
+    ],
+    "3.1 Run the full suite once (`npx vitest --run`, or the project's test script with `--run`). Report pass and fail counts as evidence, not proof.": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765050663
+      },
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765196284
+      }
+    ],
+    "3.2 Run `npm run typecheck`": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765050791
+      },
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765197079
+      }
+    ],
+    "3.3 Run `npm run guard`": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765051288
+      },
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765197630
+      }
+    ],
+    "3.4 Run `npm run build`": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765051791
+      },
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765198067
+      }
+    ],
+    "3.5 Confirm no debug scripts remain": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765199565
+      },
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765212394
+      }
+    ],
+    "3.6 Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765212823
+      }
+    ],
+    "3. Final checks": [
+      {
+        "executionId": "88d088be-5b28-484b-9f92-43db59dd9804",
+        "chatSessionId": "sess_0a0cbbc8-5d9d-40c6-8754-2ef1ae5dc0ac",
+        "timestamp": 1794765212860
+      }
+    ]
+  }
+}

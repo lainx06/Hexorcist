@@ -9,7 +9,7 @@ export const VERDICT_BROKE = "BROKE";
 export const VERDICT_COULDNT_TELL = "COULDN'T TELL";
 
 export const heldText = (n: number): string =>
-  `No violation found in ${n} runs of this gremlin set. Not a proof.`;
+  `No violation found in ${n} emulated ${n === 1 ? "run" : "runs"} of this gremlin set. Not a proof.`;
 
 /** Used when a reason would otherwise be empty. */
 export const EMPTY_REASON_TEXT = "The rules could not be checked with the signals and run length available.";
