@@ -1,0 +1,9 @@
+{
+  "pins": [
+    { "signal": "CLOSE", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" },
+    { "signal": "BEAM_CLEAR", "port": "D", "bit": 3, "direction": "input", "activeLevel": "low" },
+    { "signal": "MOTOR_CLOSE", "port": "B", "bit": 0, "direction": "output" },
+    { "signal": "MOTOR_OPEN", "port": "B", "bit": 1, "direction": "output" },
+    { "signal": "LAMP", "port": "B", "bit": 2, "direction": "output" }
+  ]
+}

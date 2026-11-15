@@ -1,0 +1,9 @@
+{
+  "title": "Garage door and the cat",
+  "story": "The door closes by itself after 300 ms open. A cat walks through the beam and its legs break it twice in a few milliseconds. The door keeps closing.",
+  "timingNote": "Demo timing: the door closes by itself after 300 ms open and takes 300 ms to close (a real door waits and moves for several seconds).",
+  "gremlinSet": [{ "id": "bouncer" }, { "id": "masher" }],
+  "runCycles": 10000000,
+  "campaignSeed": 20261102,
+  "runs": 40
+}

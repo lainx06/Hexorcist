@@ -184,6 +184,16 @@ for (let repeat = 1; repeat <= REPEATS; repeat++) {
   rawCase('(d2) raw, blink_button HEX (E9b), no events, 3 x 16,000,000 in 160,000 steps', repeat, BLINK_HEX, BLINK_FIXTURE, []);
 }
 
+// (e) garage Fixed_Sketch campaign, built the same way as (b): runExampleCampaign on loadExample, fixed build (D28).
+const garage = loadExample('garage');
+console.log(`garage meta: N ${garage.meta.runs}, runCycles ${fmt(garage.meta.runCycles)}, seed ${garage.meta.campaignSeed}, gremlins ${garage.meta.gremlinSet.map((g) => g.id).join(', ')}`);
+for (let repeat = 1; repeat <= REPEATS; repeat++) {
+  const t0 = performance.now();
+  const out = runExampleCampaign(garage, 'fixed');
+  const seconds = (performance.now() - t0) / 1000; // includes buildCampaignConfig + compile, as in (b)
+  summarise('(e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build', repeat, seconds, out.runs, null);
+}
+
 console.log('\n| Case | Repeat | Total cycles | Seconds | Cycles/s | Steps/run (min / avg / max) | Out edges/run (min / avg / max) | Checker calls | Events applied/run (min / avg / max) |');
 console.log('|---|---|---|---|---|---|---|---|---|');
 for (const r of rows) {

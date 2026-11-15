@@ -216,40 +216,40 @@ At every CHECKPOINT the agent:
     - Delete any debug script. The stop that Requirement 15.5 asks for is CP3 (task 5).
     - _Requirements: 1.11, 15.5, 15.6, 15.12, 15.13, 15.14, 15.16, 15.17, 19.5, 19.6, 19.7, 19.8, 19.9_
 
-- [-] 5. CHECKPOINT CP3, after task 4 (`crosswalk`; also reports the task 3 helper tests)
+- [x] 5. CHECKPOINT CP3, after task 4 (`crosswalk`; also reports the task 3 helper tests)
   - Follow the checkpoint procedure with the `crosswalk` acceptance values (seed 20261101, Buggy_Sketch verdict, `violatingRunIndex`, v, span in cycles and ms, cut flag, Campaign_Duration, gremlin-event counts) and the result of the task 3 helper tests. Also name the D20 edit to `tsconfig.node.json` (the single `include` line that adds `"tests"`) and confirm that `npm run typecheck` passes with `tests/examples/` included. The user commits the `crosswalk` data files, `tests/examples/examples-support.ts`, `tests/examples/examples.helpers.property.test.ts`, `tests/examples/examples.crosswalk.test.ts` and the `tsconfig.node.json` line; the literals are then fixed acceptance values. STOP.
   - _Requirements: 15.5, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11, 19.14_
 
-- [ ] 6. `garage` example
+- [x] 6. `garage` example
   - Values from `design.md`: `campaignSeed` 20261102, N = 40, `runCycles` 10,000,000, `gremlinSet` `[{"id":"bouncer"},{"id":"masher"}]`, debounce 10 ms, CLOSE response time 1 ms, auto-close 300 ms, the door-closed-does-nothing branch of Requirement 9.8 (chosen in `design.md` section 12.1).
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 9.10, 9.11, 9.12, 9.13_
 
-  - [ ] 6.1 Write the `garage` data files
+  - [x] 6.1 Write the `garage` data files
     - `examples/garage/fixture.json`, `rules.txt` and `meta.json`, exactly as `design.md` section 2 gives them (story with `cat`, `beam` and `300 ms`; timingNote with `300 ms` and `Demo`).
     - _Requirements: 1.3, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.5, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.9, 9.1, 9.2, 9.3, 9.7, 9.11, 9.12, 12.1, 22.1, 22.2, 22.3, 22.6_
 
-  - [ ] 6.2 STOP gate: confirm the `garage` Build_HEX before any emulator test
+  - [x] 6.2 STOP gate: confirm the `garage` Build_HEX before any emulator test
     - Same check as 4.2 for `examples/garage/`, with the sketch pair against Appendix A.6. Missing HEX or a changed sketch: STOP, the user runs `npm run examples:build` and commits.
     - _Requirements: 1.4, 15.7, 16.7, 19.4, 20.8_
 
-  - [ ] 6.3 Write `tests/examples/examples.garage.test.ts`: Buggy_Sketch campaign and span
+  - [x] 6.3 Write `tests/examples/examples.garage.test.ts`: Buggy_Sketch campaign and span
     - As 4.3 for `garage`: expect `BROKE`, non-null `violatingRunIndex`, the trace; print the three values; Replay_Run to the Replay_End, prefix check, span at least 16,000 cycles (S3 applies to `garage` too), span line.
     - _Requirements: 15.2, 15.4, 15.7, 15.8, 15.9, 15.15, 21.1, 21.3, 21.4, 21.5, 21.6, 21.7_
 
-  - [ ] 6.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.garage.test.ts`
+  - [x] 6.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.garage.test.ts`
     - Expect `HELD` with `heldText(40)`, 40 Runs requested and completed, 40 Run_Results; Campaign_Duration line.
     - No CannotCheck, no Floating_Diagnostic, no `skipped` entry for `bouncer` or `masher`; at least one non-rest event.
     - Requirement 12.2, per GremlinSpec: some Run_Result holds an event of that Gremlin below `runCycles` on CLOSE or BEAM_CLEAR, and `untriggeredRules(ruleSet, fixture, [run])` on that one Run_Result does not list the `garage` sentence. `untriggeredRules` over all 40 is empty. Requirement 12.7 per GremlinSpec, with the 12.8 failure message.
     - The pair (MOTOR_CLOSE, MOTOR_OPEN) is never both 1 in any Run_Result.
     - _Requirements: 3.5, 3.7, 9.6, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 13.1, 13.2, 13.3, 13.4, 13.5, 13.7, 15.3, 15.10, 15.11, 21.8, 21.9, 21.10, 21.11_
 
-  - [ ] 6.5 Add the shared `garage` Scripted_Run tests to `tests/examples/examples.garage.test.ts`
+  - [x] 6.5 Add the shared `garage` Scripted_Run tests to `tests/examples/examples.garage.test.ts`
     - Single_Input on the Buggy_Sketch (BEAM_CLEAR Press at 6,400,000, Release at 6,432,000): no Violation.
     - Minimal_Bug_Input (`design.md` section 4.2): check its shape against Requirement 9.13 on the constant list; on both builds MOTOR_CLOSE rises within 16,000 cycles of 1,600,000. Buggy_Sketch to the Replay_End: a Violation of the `garage` sentence with v below `runCycles`, MOTOR_CLOSE at 1 from c through c + 320,000, span at least 16,000 cycles, span line, same Rule and cycle on a fresh bridge. Fixed_Sketch to `runCycles`: no Violation, no CannotCheck.
     - Every Scripted_Run: no Floating_Diagnostic.
     - _Requirements: 3.6, 3.7, 9.4, 9.13, 14.1, 14.3, 14.4, 14.5, 14.6, 16.1, 16.2, 16.3, 16.5, 16.6, 21.2, 21.6, 21.7_
 
-  - [ ] 6.6 Add the `garage` behaviour Scripted_Runs to `tests/examples/examples.garage.test.ts`
+  - [x] 6.6 Add the `garage` behaviour Scripted_Runs to `tests/examples/examples.garage.test.ts`
     - Steady block on the Buggy_Sketch (BEAM_CLEAR Press at 6,400,000, Release at 6,880,000): MOTOR_CLOSE falls to 0 at or before c + 320,000 (Requirement 9.5).
     - CLOSE_Press with the door open (Press at 1,600,000, Release at 2,400,000), both builds: MOTOR_CLOSE rises at a cycle from 1,600,000 to 1,616,000.
     - CLOSE_Press with the door closed (one Press at 9,700,000), both builds: no MOTOR_CLOSE or MOTOR_OPEN edge from 9,700,000 to 10,000,000, and `doorStateChanges` reads the change near 9,600,000 as `closing` to `closed` (the D12 branch `design.md` chose; Requirement 9.9).
@@ -258,15 +258,15 @@ At every CHECKPOINT the agent:
     - Every Fixed_Sketch Scripted_Run: (MOTOR_CLOSE, MOTOR_OPEN) never both 1. An unknown Door_State edge pattern fails the test with the run name, cycles and edges.
     - _Requirements: 9.5, 9.6, 9.8, 9.9, 9.10, 16.1, 16.5, 21.10, 21.11_
 
-  - [ ] 6.7 Run the `garage` tests and record the acceptance values
+  - [x] 6.7 Run the `garage` tests and record the acceptance values
     - As 4.6 for `garage`: run, apply S1 to S6 and S8, add the three literals on the first pass of the Buggy_Sketch campaign test, rerun, report the Campaign_Duration, note any S9 edit for the CP4 report, delete debug scripts. The stop is CP4 (task 7).
     - _Requirements: 1.11, 15.5, 15.6, 15.12, 15.13, 15.14, 15.16, 15.17, 19.5, 19.6, 19.7, 19.8, 19.9_
 
-  - [ ] 6.8 Add the `garage` Fixed_Sketch campaign to the campaign bench (D28)
+  - [x] 6.8 Add the `garage` Fixed_Sketch campaign to the campaign bench (D28)
     - Add the `garage` Fixed_Sketch campaign as a case in `bench/example-campaign-bench.ts`, run `npm run bench:examples`, and report the time against D24 (report above 12,000 ms, S4 above 30,000 ms).
     - _Requirements: 15.10, 15.12, 15.13, 15.14, 15.17_
 
-- [ ] 7. CHECKPOINT CP4, after task 6 (`garage`)
+- [-] 7. CHECKPOINT CP4, after task 6 (`garage`)
   - Follow the checkpoint procedure with the `crosswalk` and `garage` acceptance values (`garage` seed 20261102). A changed `crosswalk` literal is S6. The user commits the `garage` data files and `tests/examples/examples.garage.test.ts`. STOP.
   - _Requirements: 15.5, 15.6, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 

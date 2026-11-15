@@ -78,5 +78,12 @@ Rerun after D27 (same machine and Node version, standalone via tsx). The bench n
 | (d2) raw, blink_button HEX (E9b) | 1 | 48,000,000 | 1.119 | 42,904,798 |
 | (d2) raw, blink_button HEX (E9b) | 2 | 48,000,000 | 1.073 | 44,736,091 |
 
+Garage case (D28, sub-task 6.8; same machine and Node version, standalone via tsx). Case (e) is `runExampleCampaign(loadExample("garage"), "fixed")`, built the same way as (b), so its seconds also include `buildCampaignConfig`. Garage meta: N 40, Run_Cycles 10,000,000, campaignSeed 20261102, gremlins `bouncer`, `masher`. Under D24 the standalone time is 16.854 s and 16.848 s, above the 12,000 ms report level and below the 30,000 ms stop limit. The same run measured crosswalk case (b) at 20.669 s and 20.768 s. The other cases in that run are not repeated here.
+
+| Case | Repeat | Total cycles | Seconds | Cycles/s | Out edges/run (min / avg / max) | Events applied/run (min / avg / max) |
+|---|---|---|---|---|---|---|
+| (e) campaign, garage fixed, runExampleCampaign | 1 | 400,000,018 | 16.854 | 23,732,985 | 8 / 10.7 / 14 | 3 / 10.1 / 17 |
+| (e) campaign, garage fixed, runExampleCampaign | 2 | 400,000,018 | 16.848 | 23,741,885 | 8 / 10.7 / 14 | 3 / 10.1 / 17 |
+
 Edits to the bench path: the section had no text about the `__dirname` workaround, so nothing was removed from it. The workaround itself (a `globalThis.__dirname` assignment and a dynamic import in the bench script) is gone from the code.
 <!-- bench:examples:end -->

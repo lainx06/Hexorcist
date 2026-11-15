@@ -253,6 +253,121 @@
         "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
         "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
         "timestamp": 1794702906069
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794710446119
+      }
+    ],
+    "6.1 Write the `garage` data files": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794710453841
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794714045577
+      }
+    ],
+    "6.2 STOP gate: confirm the `garage` Build_HEX before any emulator test": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794710453912
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794714046009
+      }
+    ],
+    "6.3 Write `tests/examples/examples.garage.test.ts`: Buggy_Sketch campaign and span": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794714048727
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794714095759
+      }
+    ],
+    "6.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.garage.test.ts`": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794714098617
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716335309
+      }
+    ],
+    "6.5 Add the shared `garage` Scripted_Run tests to `tests/examples/examples.garage.test.ts`": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716338551
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716503616
+      }
+    ],
+    "6.6 Add the `garage` behaviour Scripted_Runs to `tests/examples/examples.garage.test.ts`": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716506634
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716664166
+      }
+    ],
+    "6.7 Run the `garage` tests and record the acceptance values": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794716667057
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794717058950
+      }
+    ],
+    "6.8 Add the `garage` Fixed_Sketch campaign to the campaign bench (D28)": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794717061739
+      },
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794717269392
+      }
+    ],
+    "6. `garage` example": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794717269440
+      }
+    ],
+    "7. CHECKPOINT CP4, after task 6 (`garage`)": [
+      {
+        "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794717272213
       }
     ]
   }
