@@ -6,6 +6,7 @@ import { untriggeredRules } from "../../src/engine/rules/trigger";
 import type { OutputEvent, ScheduledInput } from "../../src/engine/types";
 import { heldText } from "../../src/engine/verdict";
 import {
+  DoorPatternError,
   TEST_TIMEOUT_MS,
   bothOnAt,
   buildScriptedEvents,
@@ -147,6 +148,29 @@ describe("garage Fixed_Sketch campaign", () => {
       console.log(`trigger runs | ${triggerLines.join(" | ")}`);
       console.log(`overlap check | 1 pair x ${n} Run_Results | ${overlapResult}`);
       expect(overlaps, `Conflicting_Outputs overlap (checked ${n} Run_Results, 1 pair)`).toEqual([]);
+
+      // D17: Door_State changes over every Run_Result. No closed to closing change, no DoorPatternError.
+      const kindCounts = new Map<string, number>();
+      let totalChanges = 0;
+      const closedToClosing: string[] = [];
+      const patternErrors: string[] = [];
+      for (const r of runs) {
+        try {
+          for (const d of doorStateChanges(r.outputEvents)) {
+            totalChanges++;
+            const kind = `${d.from}->${d.to}`;
+            kindCounts.set(kind, (kindCounts.get(kind) ?? 0) + 1);
+            if (d.from === "closed" && d.to === "closing") closedToClosing.push(`Run ${r.runIndex}: ${kind} at cycle ${d.cycle}`);
+          }
+        } catch (e) {
+          if (!(e instanceof DoorPatternError)) throw e;
+          patternErrors.push(`Run ${r.runIndex}: ${e.message}`);
+        }
+      }
+      const kindText = [...kindCounts.entries()].map(([k, c]) => `${k}=${c}`).join(", ");
+      console.log(`door state changes garage fixed | runs checked=${n} | total changes=${totalChanges} | ${kindText || "none"}`);
+      expect(closedToClosing, `D17: closed to closing change (checked ${n} Run_Results)`).toEqual([]);
+      expect(patternErrors, `D17: DoorPatternError (checked ${n} Run_Results)`).toEqual([]);
     },
   );
 });

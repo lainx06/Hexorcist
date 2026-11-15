@@ -1,0 +1,2 @@
+HEARTBEAT is 0 must never last 600 ms or longer.
+HEARTBEAT is 1 must never last 600 ms or longer.

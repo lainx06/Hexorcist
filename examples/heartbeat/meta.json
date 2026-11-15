@@ -1,0 +1,9 @@
+{
+  "title": "Heartbeat",
+  "story": "A heartbeat LED shows the program is running. When the pulse sensor sticks, the sketch waits for the pulse to end and the heartbeat stops.",
+  "timingNote": "Demo timing: HEARTBEAT toggles every 200 ms and a pulse wait gives up after 100 ms (a real monitor beats about once a second).",
+  "gremlinSet": [{ "id": "stuck" }],
+  "runCycles": 16000000,
+  "campaignSeed": 20261103,
+  "runs": 24
+}

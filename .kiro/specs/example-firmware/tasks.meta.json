@@ -306,6 +306,16 @@
         "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
         "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
         "timestamp": 1794716335309
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794756611566
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794756747844
       }
     ],
     "6.5 Add the shared `garage` Scripted_Run tests to `tests/examples/examples.garage.test.ts`": [
@@ -368,6 +378,121 @@
         "executionId": "920ecb42-2ae9-483f-8baa-03074f1e9e89",
         "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
         "timestamp": 1794717272213
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794756597550
+      }
+    ],
+    "8.1 Write the `heartbeat` data files": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794756748583
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757129912
+      }
+    ],
+    "8.2 STOP gate: confirm the `heartbeat` Build_HEX before any emulator test": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757130542
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757147929
+      }
+    ],
+    "8.3 Write `tests/examples/examples.heartbeat.test.ts`: Buggy_Sketch campaign and span": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757148712
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757205442
+      }
+    ],
+    "8.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.heartbeat.test.ts`": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757206344
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757825361
+      }
+    ],
+    "8.5 Add the shared `heartbeat` Scripted_Run tests to `tests/examples/examples.heartbeat.test.ts`": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757825963
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757906514
+      }
+    ],
+    "8.6 Add the `heartbeat` behaviour Scripted_Runs to `tests/examples/examples.heartbeat.test.ts`": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794757907121
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758012966
+      }
+    ],
+    "8.7 Run the `heartbeat` tests and record the acceptance values": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758013138
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758328081
+      }
+    ],
+    "8.8 Add the `heartbeat` Fixed_Sketch campaign to the campaign bench (D28)": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758328315
+      },
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758553512
+      }
+    ],
+    "8. `heartbeat` example": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758553571
+      }
+    ],
+    "9. CHECKPOINT CP5, after task 8 (`heartbeat`)": [
+      {
+        "executionId": "7d15d91d-23e7-494c-93c0-6d8ff986ce24",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794758554239
       }
     ]
   }

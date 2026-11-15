@@ -85,5 +85,12 @@ Garage case (D28, sub-task 6.8; same machine and Node version, standalone via ts
 | (e) campaign, garage fixed, runExampleCampaign | 1 | 400,000,018 | 16.854 | 23,732,985 | 8 / 10.7 / 14 | 3 / 10.1 / 17 |
 | (e) campaign, garage fixed, runExampleCampaign | 2 | 400,000,018 | 16.848 | 23,741,885 | 8 / 10.7 / 14 | 3 / 10.1 / 17 |
 
+Heartbeat case (D28, sub-task 8.8; same machine and Node version, standalone via tsx). Case (f) is `runExampleCampaign(loadExample("heartbeat"), "fixed")`, built the same way as (b) and (e), so its seconds also include `buildCampaignConfig`. Heartbeat meta: N 24, Run_Cycles 16,000,000, campaignSeed 20261103, gremlin `stuck`. Under D24 the standalone time is 8.652 s and 8.296 s, below the 12,000 ms report level. The same run measured crosswalk case (b) at 18.631 s and 18.506 s, and garage case (e) at 17.806 s and 17.560 s. The other cases in that run are not repeated here.
+
+| Case | Repeat | Total cycles | Seconds | Cycles/s | Out edges/run (min / avg / max) | Events applied/run (min / avg / max) |
+|---|---|---|---|---|---|---|
+| (f) campaign, heartbeat fixed, runExampleCampaign | 1 | 384,000,010 | 8.652 | 44,380,976 | 6 / 6.0 / 6 | 2 / 2.0 / 2 |
+| (f) campaign, heartbeat fixed, runExampleCampaign | 2 | 384,000,010 | 8.296 | 46,285,752 | 6 / 6.0 / 6 | 2 / 2.0 / 2 |
+
 Edits to the bench path: the section had no text about the `__dirname` workaround, so nothing was removed from it. The workaround itself (a `globalThis.__dirname` assignment and a dynamic import in the bench script) is gone from the code.
 <!-- bench:examples:end -->

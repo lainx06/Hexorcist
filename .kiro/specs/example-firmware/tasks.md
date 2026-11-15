@@ -266,51 +266,51 @@ At every CHECKPOINT the agent:
     - Add the `garage` Fixed_Sketch campaign as a case in `bench/example-campaign-bench.ts`, run `npm run bench:examples`, and report the time against D24 (report above 12,000 ms, S4 above 30,000 ms).
     - _Requirements: 15.10, 15.12, 15.13, 15.14, 15.17_
 
-- [-] 7. CHECKPOINT CP4, after task 6 (`garage`)
+- [x] 7. CHECKPOINT CP4, after task 6 (`garage`)
   - Follow the checkpoint procedure with the `crosswalk` and `garage` acceptance values (`garage` seed 20261102). A changed `crosswalk` literal is S6. The user commits the `garage` data files and `tests/examples/examples.garage.test.ts`. STOP.
   - _Requirements: 15.5, 15.6, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 
-- [ ] 8. `heartbeat` example
+- [x] 8. `heartbeat` example
   - Values from `design.md`: `campaignSeed` 20261103, N = 24, `runCycles` 16,000,000, `gremlinSet` `[{"id":"stuck"}]`, pulse timeout 100 ms. `heartbeat` has one output and no Conflicting_Outputs.
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9_
 
-  - [ ] 8.1 Write the `heartbeat` data files
+  - [x] 8.1 Write the `heartbeat` data files
     - `examples/heartbeat/fixture.json`, `rules.txt` (two lines, each followed by LF) and `meta.json`, exactly as `design.md` section 2 gives them.
     - _Requirements: 1.3, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.5, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.9, 10.1, 10.2, 10.4, 10.8, 12.1, 22.1, 22.2, 22.3, 22.6_
 
-  - [ ] 8.2 STOP gate: confirm the `heartbeat` Build_HEX before any emulator test
+  - [x] 8.2 STOP gate: confirm the `heartbeat` Build_HEX before any emulator test
     - Same check as 4.2 for `examples/heartbeat/`, with the sketch pair against Appendix A.9. Missing HEX or a changed sketch: STOP, the user runs `npm run examples:build` and commits.
     - _Requirements: 1.4, 15.7, 16.7, 19.4, 20.8_
 
-  - [ ] 8.3 Write `tests/examples/examples.heartbeat.test.ts`: Buggy_Sketch campaign and span
+  - [x] 8.3 Write `tests/examples/examples.heartbeat.test.ts`: Buggy_Sketch campaign and span
     - As 4.3 for `heartbeat`.
     - _Requirements: 15.2, 15.4, 15.7, 15.8, 15.9, 15.15, 21.1, 21.3, 21.4, 21.5, 21.6, 21.7_
 
-  - [ ] 8.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.heartbeat.test.ts`
+  - [x] 8.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.heartbeat.test.ts`
     - Expect `HELD` with `heldText(24)`, 24 Runs requested and completed; Campaign_Duration line; no CannotCheck (including `run shorter than the rule window`), no Floating_Diagnostic, no `skipped` entry for `stuck`; both Rules triggered under Requirement 12.2 by a Run with a `stuck` event below `runCycles`; `untriggeredRules` over all 24 empty; Requirement 12.7 with the 12.8 message.
     - _Requirements: 3.5, 3.7, 10.6, 12.2, 12.3, 12.4, 12.6, 12.7, 12.8, 13.1, 13.2, 13.3, 13.4, 13.5, 13.7, 15.3, 15.10, 15.11, 21.8_
 
-  - [ ] 8.5 Add the shared `heartbeat` Scripted_Run tests to `tests/examples/examples.heartbeat.test.ts`
+  - [x] 8.5 Add the shared `heartbeat` Scripted_Run tests to `tests/examples/examples.heartbeat.test.ts`
     - Single_Input on the Buggy_Sketch (PULSE Press at 4,000,000, Release at 5,600,000): no Violation.
     - Minimal_Bug_Input (PULSE Press at 4,000,000, no Release) on the Buggy_Sketch to the Replay_End: a Violation of `HEARTBEAT is 1 must never last 600 ms or longer.` with v below `runCycles`; span at least 16,000 cycles; span line; same Rule and cycle on a fresh bridge. Fixed_Sketch to `runCycles`: no Violation, no CannotCheck.
     - Every Scripted_Run: no Floating_Diagnostic.
     - _Requirements: 3.6, 3.7, 10.5, 14.1, 14.3, 14.4, 14.5, 14.6, 16.1, 16.2, 16.3, 16.5, 16.6, 21.2, 21.6, 21.7_
 
-  - [ ] 8.6 Add the `heartbeat` behaviour Scripted_Runs to `tests/examples/examples.heartbeat.test.ts`
+  - [x] 8.6 Add the `heartbeat` behaviour Scripted_Runs to `tests/examples/examples.heartbeat.test.ts`
     - Empty event list, both builds: every HEARTBEAT level span between two consecutive changes lies from 3,184,000 to 3,232,000 cycles; the span from cycle 0 is not checked (Requirement 10.3).
     - Single_Input on the Buggy_Sketch: every level span, the open one at `runCycles` included, is below 9,600,000 cycles (Requirement 10.9). Both builds: HEARTBEAT changes within 3,232,000 cycles after the Release (Requirement 10.7).
     - Fixed_Sketch with PULSE held from 4,000,000 to the run end, and with a 150 ms hold (Release at 6,400,000): every level span, the open one included, is below 9,600,000 cycles (Requirement 10.6).
     - _Requirements: 10.3, 10.6, 10.7, 10.9, 16.1, 16.5_
 
-  - [ ] 8.7 Run the `heartbeat` tests and record the acceptance values
+  - [x] 8.7 Run the `heartbeat` tests and record the acceptance values
     - As 4.6 for `heartbeat`, noting any S9 edit for the CP5 report. The stop is CP5 (task 9).
     - _Requirements: 1.11, 15.5, 15.6, 15.12, 15.13, 15.14, 15.16, 15.17, 19.5, 19.6, 19.7, 19.8, 19.9_
 
-  - [ ] 8.8 Add the `heartbeat` Fixed_Sketch campaign to the campaign bench (D28)
+  - [x] 8.8 Add the `heartbeat` Fixed_Sketch campaign to the campaign bench (D28)
     - Add the `heartbeat` Fixed_Sketch campaign as a case in `bench/example-campaign-bench.ts`, run `npm run bench:examples`, and report the time against D24 (report above 12,000 ms, S4 above 30,000 ms).
     - _Requirements: 15.10, 15.12, 15.13, 15.14, 15.17_
 
-- [ ] 9. CHECKPOINT CP5, after task 8 (`heartbeat`)
+- [-] 9. CHECKPOINT CP5, after task 8 (`heartbeat`)
   - Follow the checkpoint procedure with the acceptance values of all three Core_Examples (`heartbeat` seed 20261103). The user commits the `heartbeat` data files and `tests/examples/examples.heartbeat.test.ts`. STOP.
   - _Requirements: 1.12, 15.5, 15.6, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 

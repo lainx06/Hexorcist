@@ -194,6 +194,16 @@ for (let repeat = 1; repeat <= REPEATS; repeat++) {
   summarise('(e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build', repeat, seconds, out.runs, null);
 }
 
+// (f) heartbeat Fixed_Sketch campaign, built the same way as (b) and (e): runExampleCampaign on loadExample, fixed build (D28).
+const heartbeat = loadExample('heartbeat');
+console.log(`heartbeat meta: N ${heartbeat.meta.runs}, runCycles ${fmt(heartbeat.meta.runCycles)}, seed ${heartbeat.meta.campaignSeed}, gremlins ${heartbeat.meta.gremlinSet.map((g) => g.id).join(', ')}`);
+for (let repeat = 1; repeat <= REPEATS; repeat++) {
+  const t0 = performance.now();
+  const out = runExampleCampaign(heartbeat, 'fixed');
+  const seconds = (performance.now() - t0) / 1000; // includes buildCampaignConfig + compile, as in (b)
+  summarise('(f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build', repeat, seconds, out.runs, null);
+}
+
 console.log('\n| Case | Repeat | Total cycles | Seconds | Cycles/s | Steps/run (min / avg / max) | Out edges/run (min / avg / max) | Checker calls | Events applied/run (min / avg / max) |');
 console.log('|---|---|---|---|---|---|---|---|---|');
 for (const r of rows) {
