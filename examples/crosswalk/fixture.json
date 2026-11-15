@@ -1,0 +1,10 @@
+{
+  "pins": [
+    { "signal": "REQUEST", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" },
+    { "signal": "CAR_GREEN", "port": "B", "bit": 0, "direction": "output" },
+    { "signal": "CAR_YELLOW", "port": "B", "bit": 1, "direction": "output" },
+    { "signal": "CAR_RED", "port": "B", "bit": 2, "direction": "output" },
+    { "signal": "WALK", "port": "B", "bit": 3, "direction": "output" },
+    { "signal": "DONT_WALK", "port": "B", "bit": 4, "direction": "output" }
+  ]
+}

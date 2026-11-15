@@ -13,6 +13,7 @@
     "guard": "node scripts/guard.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
     "bench:campaign": "tsx bench/campaign-bench.ts",
+    "bench:examples": "tsx bench/example-campaign-bench.ts",
     "examples:build": "node scripts/build-examples.mjs"
   },
   "dependencies": {

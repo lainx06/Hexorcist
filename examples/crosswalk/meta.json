@@ -1,0 +1,11 @@
+{
+  "title": "Crosswalk",
+  "story": "A crossing button. One press gives the cars yellow, then red, then WALK. Two quick presses can leave WALK on while the cars get green.",
+  "timingNote": "Demo timing: yellow 150 ms, all-red 50 ms, WALK 200 ms (a real crossing takes many seconds).",
+  "gremlinSet": [{ "id": "masher" }],
+  "runCycles": 16000000,
+  "campaignSeed": 20261101,
+  "runs": 24,
+  "doublePressWindowStartMs": 60,
+  "doublePressWindowEndMs": 240
+}

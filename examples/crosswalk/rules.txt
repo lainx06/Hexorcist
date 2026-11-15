@@ -1,0 +1,1 @@
+all of (CAR_GREEN is 1, WALK is 1) must never happen.

@@ -55,6 +55,205 @@
         "chatSessionId": "sess_098dd558-50e5-4137-89a7-b4724e3f5558",
         "timestamp": 1794699189403
       }
+    ],
+    "2. CHECKPOINT CP1, after task 1: the user builds the Core_Example sketches": [
+      {
+        "executionId": "1c1c8820-d265-48c4-9074-08888d4a8ee7",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699488298
+      },
+      {
+        "executionId": "e87897ba-94ca-4f2a-a375-ab7de23de89b",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699565023
+      }
+    ],
+    "3.1 Create `tests/examples/examples-support.ts` with types, loaders and constants": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699600891
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699650968
+      }
+    ],
+    "3.2 Add the campaign runner and the campaign timing": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699651550
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699690010
+      }
+    ],
+    "3.3 Add the Scripted_Run, the event-list builder and the Replay_Run": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699691538
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699775564
+      }
+    ],
+    "3.4 Add the pure edge-list and coverage helpers": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699777086
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699890679
+      }
+    ],
+    "3.5 Add the Brand_Matcher": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699892206
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699913363
+      }
+    ],
+    "3.10 Write the helper unit tests in `tests/examples/examples.helpers.property.test.ts`": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794699914958
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700056815
+      },
+      {
+        "executionId": "1fa6254a-6fef-4ac9-92ac-79fda9e9ed74",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700277527
+      },
+      {
+        "executionId": "1fa6254a-6fef-4ac9-92ac-79fda9e9ed74",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700405744
+      }
+    ],
+    "3.11 Add `\"tests\"` to `tsconfig.node.json` (D20) and run `npm run typecheck`": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700058504
+      },
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700073574
+      }
+    ],
+    "3. Shared test helpers": [
+      {
+        "executionId": "f167f6df-4a4a-4785-a3d2-28dfa257713a",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700073626
+      }
+    ],
+    "4.1 Write the `crosswalk` data files": [
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700524516
+      },
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700571912
+      }
+    ],
+    "4.2 STOP gate: confirm the `crosswalk` Build_HEX before any emulator test": [
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700524579
+      },
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700572493
+      }
+    ],
+    "4.3 Write `tests/examples/examples.crosswalk.test.ts`: Buggy_Sketch campaign and span": [
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700574153
+      },
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700633700
+      }
+    ],
+    "4.4 Add the Fixed_Sketch campaign tests to `tests/examples/examples.crosswalk.test.ts`": [
+      {
+        "executionId": "de09c40a-75cf-4b1d-9a68-8554aa7a5e53",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794700635579
+      },
+      {
+        "executionId": "d0f13b50-e276-438c-99ac-af920f229f19",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794701984596
+      }
+    ],
+    "4.5 Add the `crosswalk` Scripted_Run tests to `tests/examples/examples.crosswalk.test.ts`": [
+      {
+        "executionId": "d0f13b50-e276-438c-99ac-af920f229f19",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794701987472
+      },
+      {
+        "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794702317538
+      }
+    ],
+    "4.6 Run the `crosswalk` tests and record the acceptance values": [
+      {
+        "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794702320278
+      },
+      {
+        "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794702903102
+      }
+    ],
+    "4. `crosswalk` (hero example)": [
+      {
+        "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794702903159
+      }
+    ],
+    "5. CHECKPOINT CP3, after task 4 (`crosswalk`; also reports the task 3 helper tests)": [
+      {
+        "executionId": "b45b82d8-2e32-41c1-b9bc-ce4aa0cf5451",
+        "chatSessionId": "sess_c0e1a6c1-4433-4137-aa25-8bf35eeacdbc",
+        "timestamp": 1794702906069
+      }
     ]
   }
 }
