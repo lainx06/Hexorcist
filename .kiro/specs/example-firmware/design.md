@@ -232,21 +232,39 @@ Per-Example upper bound of `runs` (Requirement 6, criterion 7): the largest N wh
 
 Three small ATmega328P programs at 16 MHz, each written twice: `buggy/` has one planted bug and
 `fixed/` has the same program with that bug removed. Each folder also has the pin map
-(`fixture.json`), the rules in plain English (`rules.txt`) and the campaign settings (`meta.json`).
+(`fixture.json`), the rules (`rules.txt`, written in Hexorcist's five fixed English sentence
+patterns) and the campaign settings (`meta.json`).
 
 | Example | What goes wrong in the buggy build |
 |---|---|
 | crosswalk | Two quick presses can leave WALK on while the cars get green. |
-| garage | A cat breaking the beam twice in a few milliseconds is taken as noise, so the door keeps closing. |
-| heartbeat | A stuck pulse input freezes the heartbeat LED. |
+| garage | Two short beam breaks in quick succession are taken as noise, so the door keeps closing. |
+| heartbeat | A stuck pulse input stops the HEARTBEAT output from toggling. |
 
-Timings are shorter than on a real device so a run fits in a second of simulated time.
-Each `meta.json` has a `timingNote` that says where.
+## Results at the committed seeds
+
+| Example | Gremlins | Buggy build | Fixed build |
+|---|---|---|---|
+| crosswalk | masher | BROKE (run index 3, seed 20261101) | HELD: no violation found in 24 runs of this gremlin set, not a proof |
+| garage | bouncer, masher | BROKE (run index 7, seed 20261102) | HELD: no violation found in 40 runs of this gremlin set, not a proof |
+| heartbeat | stuck | BROKE (run index 1, seed 20261103) | HELD: no violation found in 24 runs of this gremlin set, not a proof |
+
+In the tests, one ordinary input on its own (a single press, beam break or pulse) does not break
+any buggy build. The bugs need the gremlins' timing.
+
+## Demo timings
+
+Timings are shorter than on a real device, so each campaign run lasts at most one second of
+simulated time. Each `meta.json` has a `timingNote` that says where:
+
+- crosswalk: Demo timing: yellow 150 ms, all-red 50 ms, WALK 200 ms (a real crossing takes many seconds).
+- garage: Demo timing: the door closes by itself after 300 ms open and takes 300 ms to close (a real door waits and moves for several seconds).
+- heartbeat: Demo timing: HEARTBEAT toggles every 200 ms and a pulse wait gives up after 100 ms (a real monitor beats about once a second).
 
 ## Glitch-tolerant rules
 
-A `must never happen.` rule breaks on a single cycle of overlap. If a short glitch should not
-count, write the glitch-tolerant form instead:
+A `must never happen.` rule breaks if its condition is true for even one CPU cycle. If a short
+glitch should not count, write the glitch-tolerant form instead:
 
     <C> must never last 1 ms or longer.
 
@@ -258,7 +276,7 @@ sketch and deletes the `build/` folder. The tests read the committed HEX files a
 A passing test is evidence, not proof.
 ```
 
-The README text above is the one written in task 10 for the three Core_Examples: it says "Three" and has no `heater` row (D22). Task 12.3 edits it only if `heater` is kept: it changes "Three" to "Four" and adds this row at the end of the table, and nothing else changes. If `heater` is cut, the README stays as written (Requirement 1, criterion 13).
+The README text above is the one written in task 10 for the three Core_Examples: it says "Three" and has no `heater` row (D22). Task 12.3 edits it only if `heater` is kept: it changes "Three" to "Four" and adds this row at the end of the first table (D30: and a heater row to the results table too), and nothing else changes. If `heater` is cut, the README stays as written (Requirement 1, criterion 13).
 
 ```markdown
 | heater | A reading of 1023 reads past the end of a 10-entry table. |
@@ -1077,6 +1095,9 @@ Recorded_Acceptance_Values: each buggy campaign test asserts `BROKE`, a non-null
 | D21 (optional `clock` argument supplied by the test files; the helper never names a clock) | section 7 (wall clock); section 9 (`runExampleCampaign`); Data Models (`durationMs`); coverage row for 15.10, 15.11 |
 | D22 (README says "Three", becomes "Four" with the `heater` row in task 12.3 only if `heater` is kept) | section 2 (README text and the heater addition) |
 | D23 (the `git ls-files` check is a checkpoint report item, not a test) | Test files table (`examples.files.test.ts` row); coverage row for 1.5 |
+| D30 (README text replaced: results table, demo timings, five sentence patterns; heater row goes in both tables in 12.3) | section 2 (README text) |
+| D31 (brand test asserts 0 banned-word matches in `.ino`, `.json`, `.txt` under `examples/`) | brand test |
+| D32 (test, scan and build results are reported as "N passed, M failed", never with verdict strings) | none; process rule |
 
 ## Appendix A: Sketch sources and diffs
 

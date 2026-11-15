@@ -106,6 +106,9 @@ Design-review decisions (user):
 - D27. Ruling (helper fix under D17): `tests/examples/examples-support.ts` gets its own folder from `fileURLToPath(new URL(".", import.meta.url))` instead of `__dirname`. The `globalThis.__dirname` workaround and the dynamic import in `bench/example-campaign-bench.ts` are removed, and the bench imports the helper normally. This is a helper bug fix, not a loosened assertion, and changes no criterion.
 - D28. Ruling: tasks 6 and 8 each get a sub-task that adds that example's Fixed_Sketch campaign as a case in `bench/example-campaign-bench.ts`, runs `npm run bench:examples` and reports the time against D24. Applied in `tasks.md` (sub-tasks 6.8 and 8.8); no criterion changes.
 - D29. Ruling: Requirement 8, criterion 4 uses option B. The first Press is at 4,800,000 and its Release at 5,600,000. The second Press is at 4,800,000 plus the offset (5,760,000 for 60 ms, 7,200,000 for 150 ms, 8,640,000 for 240 ms), and a second Release follows 800,000 cycles after the second Press (6,560,000, 8,000,000 and 9,440,000). Both presses are 50 ms Ordinary_Holds. Applied in Requirement 8, criterion 4, `design.md` section 4.1 and `tasks.md` sub-task 4.5.
+- D30. Ruling: `examples/README.md` text is replaced by the user's text (results at the committed seeds, demo timings, five sentence patterns). The same text is in `design.md` section 2. Task 12.3 adds a heater row to both tables only if heater is kept. No criterion changes.
+- D31. Ruling (D17 added check): the brand test asserts 0 banned-word matches over the `.ino`, `.json` and `.txt` files under `examples/`; a failure lists every path:line and word. No criterion changes.
+- D32. Ruling: the verdict strings (BROKE, HELD, COULDN'T TELL, the HELD sentence) are never used to describe test, scan or build results, in files or reports. Those are reported as "N passed, M failed". Campaign verdict output is unchanged. Process rule; no criterion changes.
 
 ## Glossary
 

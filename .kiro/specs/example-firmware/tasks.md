@@ -56,6 +56,7 @@ When one of these happens, the agent stops, reports, changes no file and runs no
 - S7 Heater cut: the `heater` Buggy_Sketch reads 0 past the table (Requirements 1.10, 11.10).
 - S8 Missing Build_HEX: the test fails naming `examples/<id>/<variant>/<variant>.hex` and `npm run examples:build`; the agent asks the user to build and commit (Requirements 15.7, 16.7, 19.4).
 - S9 Edits to earlier files (D17). This is a reporting rule, not a stop by itself. When a task edits a file created earlier in this spec, the edit is allowed only to add checks or to fix a helper bug. The agent names the file, the edit and the reason in that task's checkpoint report, and lists "none" when there is none. The agent stops and reports instead of editing when a change would loosen an assertion, a tolerance or an acceptance value, or would touch a file committed before Phase F, any file under `src/engine/`, a file under `fixtures/` or a baseline (Requirements 19.5, 19.7).
+- S10 Result words (D32). Never use the verdict strings (`BROKE`, `HELD`, `COULDN'T TELL`, or the HELD sentence) to describe test, scan or build results, in files or in reports. Report test results as "N passed, M failed". Campaign verdict output is unaffected. (D31, a D17 added check: the brand test asserts 0 banned-word matches under `examples/`. D30: README replaced with the user's text.)
 
 ### Checkpoint procedure
 
@@ -310,26 +311,26 @@ At every CHECKPOINT the agent:
     - Add the `heartbeat` Fixed_Sketch campaign as a case in `bench/example-campaign-bench.ts`, run `npm run bench:examples`, and report the time against D24 (report above 12,000 ms, S4 above 30,000 ms).
     - _Requirements: 15.10, 15.12, 15.13, 15.14, 15.17_
 
-- [-] 9. CHECKPOINT CP5, after task 8 (`heartbeat`)
+- [x] 9. CHECKPOINT CP5, after task 8 (`heartbeat`)
   - Follow the checkpoint procedure with the acceptance values of all three Core_Examples (`heartbeat` seed 20261103). The user commits the `heartbeat` data files and `tests/examples/examples.heartbeat.test.ts`. STOP.
   - _Requirements: 1.12, 15.5, 15.6, 15.14, 19.2, 19.3, 19.5, 19.8, 19.9, 19.10, 19.11_
 
-- [ ] 10. `examples/README.md`, brand-word tests and file validation tests (timingNote included)
+- [x] 10. `examples/README.md`, brand-word tests and file validation tests (timingNote included)
   - These tests run over the Examples that exist, so they pass or fail the same way with or without `examples/heater/`. Checks that apply only to `heater` run only when `examples/heater/` exists. They are written in this task so that task 12 needs no change to them. If a later task finds that a check is missing, it may add it under the edit rule (D17, S9), but it never loosens one.
   - _Requirements: 1.13, 17.7, 19.5_
 
-  - [ ] 10.1 Write `examples/README.md`
+  - [x] 10.1 Write `examples/README.md`
     - The text of `design.md` section 2 for the three Core_Examples: "Three small ATmega328P programs" and no `heater` row (task 12 adds both). It holds the line `<C> must never last 1 ms or longer.`, no Board_Brand_Name and no banned copy word.
     - _Requirements: 1.5, 21.13_
 
-  - [ ] 10.2 Write `tests/examples/examples.brand.test.ts`
+  - [x] 10.2 Write `tests/examples/examples.brand.test.ts`
     - The Brand_Check reads every `.ino`, `.json`, `.txt` and `.hex` file under `examples/`, and nothing else, and lists every match with its workspace-relative path and line; it fails with a "no files to scan" message when there are none.
     - `BOARD_BRAND_NAMES` equals the eight words of Requirement 18.3.
     - A separate in-memory test with no file read: string A `Target: ATmega328P at 16 MHz, port B bit 5.` gives zero matches; string B `Mega and ATmega328P, then MEGA.` gives exactly two `Mega` matches, at offsets 0 and 26, both on line 1.
     - The Examples_README test: the file exists, holds `<C> must never last 1 ms or longer.`, and has no Board_Brand_Name and no word of `BANNED_WORDS` as whole words in any case.
     - _Requirements: 7.5, 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.8, 18.9, 18.10, 21.13, 21.14_
 
-  - [ ] 10.3 Write `tests/examples/examples.files.test.ts`: layout, Fixture, rules and meta checks
+  - [x] 10.3 Write `tests/examples/examples.files.test.ts`: layout, Fixture, rules and meta checks
     - Layout: the three Core_Example directories exist; no directory under `examples/` other than the four ids; the five data and sketch files per Example; the test walks `examples/` with the filesystem (no git command) and checks the allowed set on disk only: no `build/` folder, no `.elf`, `.map` or `.eep` file, and every file under `examples/` is one of the allowed names (per Example: `buggy/buggy.ino`, `fixed/fixed.ino`, `buggy/buggy.hex`, `fixed/fixed.hex`, `fixture.json`, `rules.txt`, `meta.json`; plus `examples/README.md`). Build_HEX existence is not required here, but a `.hex` file at an allowed path is accepted. The comparison with `git ls-files` (whether every allowed file is committed, and that no other file is) is a checkpoint report item, not a test (D23), because new files are uncommitted when the tests run.
     - Fixture: valid JSON, `validateFixture` returns `null`, every Rules signal mapped once, no `clockHz` or 16,000,000, exact signal set per Example, allowed keys per pin kind (no `kind` on a digital pin, no `direction` on an analog pin), no shared port and bit, general I/O pins only, `activeLevel` low or absent.
     - Rules: `readRulesFile` ok with one Rule per line in order; `render` round trip; `compileRuleSet` ok; `analyzeRuleSet` all active with no marks; UTF-8, no BOM, LF, the exact lines, only the five templates; failure messages show every Reason with its line or Rule index.
@@ -338,13 +339,13 @@ At every CHECKPOINT the agent:
     - A missing or broken file fails that Example with its id and file, and the other Examples are still checked.
     - _Requirements: 1.1, 1.2, 1.3, 1.5, 1.9, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 8.1, 8.2, 8.3, 8.7, 8.8, 9.1, 9.2, 9.3, 9.7, 9.11, 9.12, 10.1, 10.2, 10.4, 10.8, 11.1, 11.2, 11.3, 12.1, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.8, 22.1, 22.2, 22.3, 22.4, 22.5, 22.6_
 
-  - [ ] 10.4 Add the sketch, diff and repository checks to `tests/examples/examples.files.test.ts`
+  - [x] 10.4 Add the sketch, diff and repository checks to `tests/examples/examples.files.test.ts`
     - Sketch text: no `#include`, no `Serial`, no USART register name; header comment shape (Example id, exactly one of `buggy` or `fixed`, one line per Fixture signal); Phase_Constants (named per `design.md` section 4, including `AUTO_CLOSE_MS`) from 50 to 300 ms at file scope and equal in both builds; pin numbers only from the Fixture through the map PD0..PD7 = 0..7, PB0..PB5 = 8..13, ADC0..ADC5 = A0..A5; `INPUT_PULLUP` on every Digital_Input before its earliest read.
     - The line diff of each Buggy_Sketch and Fixed_Sketch pair equals the lines listed in `design.md` Appendix A (A.12 only when `heater` exists), with every line outside the Bug fix the same in both builds.
     - Repository: no Core_Example test file mentions `heater`; `package.json` has `"examples:build": "node scripts/build-examples.mjs"` and its `dependencies` and `devDependencies` equal the entries present before task 1; every new example test file that runs an emulator uses `TEST_TIMEOUT_MS` (120,000 ms, D25) with no literal timeout value.
     - _Requirements: 1.13, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 3.1, 3.2, 7.1, 9.10, 15.1, 19.12, 20.8, 21.12_
 
-  - [ ] 10.5 Run the README, brand and file tests
+  - [x] 10.5 Run the README, brand and file tests
     - Run `npx vitest --run tests/examples`. A brand match is S6 (Requirement 18.7): report every file and line, change nothing. A file or diff check failure is S6.
     - Note any S9 edit for the CP6 report. Delete any debug script. The stop is CP6 (task 11).
     - _Requirements: 5.6, 18.7, 19.5, 19.6, 19.7, 19.8, 20.8_
@@ -366,7 +367,7 @@ At every CHECKPOINT the agent:
     - _Requirements: 1.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.5, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.9, 11.1, 11.2, 11.3, 12.1, 22.1, 22.2, 22.3, 22.6_
 
   - [ ]* 12.3 Add `heater` to `examples/README.md`
-    - Add the `heater` row from `design.md` section 2 and change "Three" to "Four". Nothing else changes. This is an edit to a file created in task 10, allowed under D17 as an addition, and it is named in the CP7 report (S9).
+    - Add the `heater` row from `design.md` section 2 to BOTH README tables (first table and results table) and change "Three" to "Four", only if heater is kept (D30). Nothing else changes. This is an edit to a file created in task 10, allowed under D17 as an addition, and it is named in the CP7 report (S9).
     - _Requirements: 19.5, 21.13_
 
   - [ ]* 12.4 STOP: the user runs `npm run examples:build` for all examples
