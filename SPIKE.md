@@ -94,3 +94,69 @@ Heartbeat case (D28, sub-task 8.8; same machine and Node version, standalone via
 
 Edits to the bench path: the section had no text about the `__dirname` workaround, so nothing was removed from it. The workaround itself (a `globalThis.__dirname` assignment and a dynamic import in the bench script) is gone from the code.
 <!-- bench:examples:end -->
+
+## Output scan fix
+
+Kept: Option B (spec bridge-output-scan). `EmulatorBridge.advance()` resolves the digital output pins once in `_build` (Option A). It also skips the per-instruction output scan unless, since the last scan, a listener on a port that holds an output pin fired, an input was applied, or a watched DDRx byte changed (Option B). The preservation test replays 41 recorded cases, and they match the baseline recorded on the unchanged bridge. That is evidence, not proof.
+
+All figures were measured on one machine, standalone under `tsx`, not under Vitest and not in a browser. Before and after were taken in one session on 2026-11-15.
+
+- Node: v26.13.1 (before), v26.13.1 (after)
+- OS and CPU: Windows_NT 10.0.26200 (x64), AMD Ryzen 7 7800X3D 8-Core Processor            x16 (before), Windows_NT 10.0.26200 (x64), AMD Ryzen 7 7800X3D 8-Core Processor            x16 (after)
+
+### Raw cycles/s
+
+Method: a fresh bridge per run, no input events, 160,000-cycle steps to 16,000,000 cycles. Each figure is the median of 3 runs, with the 3 runs in brackets. avr8js alone is the same HEX on `CPU` (2048 bytes SRAM) with ports B/C/D, Timer0/1/2 and the ADC, looping `avrInstruction` and `tick` to 16,000,000 cycles. It was measured in both sessions for reference. Those runs are noisy on this machine (heartbeat/fixed ranged from 67 to 114 million cycles/s), so the after pwm_out bridge median lands above that session's avr8js-alone median.
+
+| HEX | Fixture | Bridge before | Bridge after | After / before | avr8js alone (before session) | avr8js alone (after session) |
+|---|---|---|---|---|---|---|
+| `examples/crosswalk/fixed/fixed.hex` | `examples/crosswalk/fixture.json` | 20,158,835 (20,608,148 / 19,432,419 / 20,158,835) | 80,796,252 (80,796,252 / 85,919,701 / 72,480,317) | 4.01 | 107,125,384 (105,404,906 / 108,371,355 / 107,125,384) | 107,868,836 (102,023,971 / 107,868,836 / 108,622,014) |
+| `examples/heartbeat/fixed/fixed.hex` | `examples/heartbeat/fixture.json` | 47,944,054 (46,195,444 / 47,944,054 / 48,014,251) | 84,860,243 (64,243,896 / 84,860,243 / 85,894,050) | 1.77 | 76,524,675 (67,410,745 / 76,524,675 / 97,153,824) | 113,005,371 (113,722,713 / 113,005,371 / 110,696,697) |
+| `fixtures/blink_button/build/blink_button.ino.hex` | BUTTON PD2 input, LED PB5 output (choice C9) | 40,651,439 (39,029,835 / 40,651,439 / 42,434,510) | 78,506,261 (76,345,093 / 78,506,261 / 79,069,705) | 1.93 | 89,880,975 (88,271,138 / 90,136,275 / 89,880,975) | 89,153,278 (99,262,049 / 88,204,714 / 89,153,278) |
+| `fixtures/pwm_out/build/pwm_out.ino.hex` | `fixtures/pwm_out/fixture.json` | 24,583,324 (24,278,566 / 24,583,324 / 24,800,895) | 66,416,801 (57,866,519 / 66,940,089 / 66,416,801) | 2.70 | 79,355,632 (82,549,543 / 79,355,632 / 75,639,210) | 58,386,702 (58,386,702 / 52,007,574 / 69,678,490) |
+
+### `npm run bench:examples`, before (unchanged bridge)
+
+Copied unchanged from the script output. 2 repeats per case. Each raw row is 3 runs of 16,000,000 cycles. Each campaign row is the Example's `meta.runs` runs (crosswalk 24, garage 40, heartbeat 24). The crosswalk raw rows apply Rest_Events, so they are not the same measurement as the raw table above, which applies no input events.
+
+| Case | Repeat | Total cycles | Seconds | Cycles/s | Steps/run (min / avg / max) | Out edges/run (min / avg / max) | Checker calls | Events applied/run (min / avg / max) |
+|---|---|---|---|---|---|---|---|---|
+| (a) raw, crosswalk fixed.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,003 | 2.479 | 19,360,289 | n/a | n/a | n/a | n/a |
+| (a) raw, crosswalk fixed.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,003 | 2.771 | 17,320,349 | n/a | n/a | n/a | n/a |
+| (b) campaign, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 384,000,014 | 23.150 | 16,587,517 | n/a (checker not wrapped in this case) | 12 / 18.7 / 22 | n/a (checker not wrapped in this case) | 2 / 6.0 / 12 |
+| (b) campaign, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 384,000,014 | 23.009 | 16,688,821 | n/a (checker not wrapped in this case) | 12 / 18.7 / 22 | n/a (checker not wrapped in this case) | 2 / 6.0 / 12 |
+| (b+) campaign, compiled Rule_Checker wrapped to count calls | 1 | 384,000,014 | 22.876 | 16,786,270 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (b+) campaign, compiled Rule_Checker wrapped to count calls | 2 | 384,000,014 | 22.834 | 16,817,317 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (c) campaign, checker never reports | 1 | 384,000,014 | 23.018 | 16,682,696 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (c) campaign, checker never reports | 2 | 384,000,014 | 22.964 | 16,721,973 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (d1) raw, crosswalk buggy.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,003 | 2.806 | 17,105,085 | n/a | n/a | n/a | n/a |
+| (d1) raw, crosswalk buggy.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,003 | 2.931 | 16,377,339 | n/a | n/a | n/a | n/a |
+| (d2) raw, blink_button HEX (E9b), no events, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,000 | 1.220 | 39,357,721 | n/a | n/a | n/a | n/a |
+| (d2) raw, blink_button HEX (E9b), no events, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,000 | 1.185 | 40,505,273 | n/a | n/a | n/a | n/a |
+| (e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 400,000,018 | 18.723 | 21,363,545 | n/a (checker not wrapped in this case) | 8 / 10.7 / 14 | n/a (checker not wrapped in this case) | 3 / 10.1 / 17 |
+| (e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 400,000,018 | 18.872 | 21,195,298 | n/a (checker not wrapped in this case) | 8 / 10.7 / 14 | n/a (checker not wrapped in this case) | 3 / 10.1 / 17 |
+| (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 384,000,010 | 9.225 | 41,624,039 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |
+| (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 384,000,010 | 8.871 | 43,286,349 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |
+
+### `npm run bench:examples`, after (Option B)
+
+Same script, same machine, same session. Out edges per run and events applied per run match the before table.
+
+| Case | Repeat | Total cycles | Seconds | Cycles/s | Steps/run (min / avg / max) | Out edges/run (min / avg / max) | Checker calls | Events applied/run (min / avg / max) |
+|---|---|---|---|---|---|---|---|---|
+| (a) raw, crosswalk fixed.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,003 | 0.718 | 66,848,033 | n/a | n/a | n/a | n/a |
+| (a) raw, crosswalk fixed.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,003 | 0.569 | 84,316,430 | n/a | n/a | n/a | n/a |
+| (b) campaign, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 384,000,014 | 5.333 | 72,002,980 | n/a (checker not wrapped in this case) | 12 / 18.7 / 22 | n/a (checker not wrapped in this case) | 2 / 6.0 / 12 |
+| (b) campaign, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 384,000,014 | 5.545 | 69,257,516 | n/a (checker not wrapped in this case) | 12 / 18.7 / 22 | n/a (checker not wrapped in this case) | 2 / 6.0 / 12 |
+| (b+) campaign, compiled Rule_Checker wrapped to count calls | 1 | 384,000,014 | 5.281 | 72,712,524 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (b+) campaign, compiled Rule_Checker wrapped to count calls | 2 | 384,000,014 | 5.318 | 72,206,922 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (c) campaign, checker never reports | 1 | 384,000,014 | 5.545 | 69,246,626 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (c) campaign, checker never reports | 2 | 384,000,014 | 5.449 | 70,471,728 | 101 / 103.3 / 107 | 12 / 18.7 / 22 | 2,503 | 2 / 6.0 / 12 |
+| (d1) raw, crosswalk buggy.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,003 | 0.699 | 68,707,002 | n/a | n/a | n/a | n/a |
+| (d1) raw, crosswalk buggy.hex, Rest_Events only, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,003 | 0.650 | 73,832,891 | n/a | n/a | n/a | n/a |
+| (d2) raw, blink_button HEX (E9b), no events, 3 x 16,000,000 in 160,000 steps | 1 | 48,000,000 | 0.712 | 67,379,731 | n/a | n/a | n/a | n/a |
+| (d2) raw, blink_button HEX (E9b), no events, 3 x 16,000,000 in 160,000 steps | 2 | 48,000,000 | 0.715 | 67,130,933 | n/a | n/a | n/a | n/a |
+| (e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 400,000,018 | 6.578 | 60,807,054 | n/a (checker not wrapped in this case) | 8 / 10.7 / 14 | n/a (checker not wrapped in this case) | 3 / 10.1 / 17 |
+| (e) campaign, garage fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 400,000,018 | 6.423 | 62,277,046 | n/a (checker not wrapped in this case) | 8 / 10.7 / 14 | n/a (checker not wrapped in this case) | 3 / 10.1 / 17 |
+| (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 1 | 384,000,010 | 5.286 | 72,647,253 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |
+| (f) campaign, heartbeat fixed, runExampleCampaign (compiled Rule_Checker); seconds include config build | 2 | 384,000,010 | 5.603 | 68,540,167 | n/a (checker not wrapped in this case) | 6 / 6.0 / 6 | n/a (checker not wrapped in this case) | 2 / 2.0 / 2 |

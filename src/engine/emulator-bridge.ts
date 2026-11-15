@@ -83,6 +83,14 @@ export interface AdcResult {
   admux: number;
 }
 
+/** One digital output pin, resolved once in _build. Kept in ascending fixture pin-index order. */
+interface OutPin {
+  readonly idx: number;
+  readonly port: AVRIOPort;
+  readonly bit: number;
+  readonly signal: string;
+}
+
 // â”€â”€ Type guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function isBridgeError(x: unknown): x is BridgeError {
@@ -114,6 +122,14 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   private readonly _pinShadow: Array<PinValue>;
   private readonly _sortedInputs: ScheduledInput[];
   private readonly _adc: AVRADC;
+  // Digital output pins in ascending fixture pin-index order (built in _build step 9).
+  private readonly _outPins: ReadonlyArray<OutPin>;
+  // Output scan skip (see advance() step 5). Set by a listener on every port that holds an
+  // output pin and by every applied input; cleared by the scan.
+  private _outDirty: boolean = true;
+  // DDRx address of each port that holds an output pin, and its byte at the last scan.
+  private readonly _watchDdrAddr: number[] = [];
+  private readonly _watchDdrSeen: number[] = [];
   private _nextInputIdx: number = 0;
   private _initialSnapshot: OutputEvent[];
   private _firstAdvance: boolean = true;
@@ -133,8 +149,10 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     initialSnapshot: OutputEvent[],
     clockHz: number,
     extState: Array<'released' | 0 | 1>,
+    outPins: ReadonlyArray<OutPin>,
   ) {
     this._extState = extState;
+    this._outPins = outPins;
     this._cpu = cpu;
     this._portMap = portMap;
     this._fixture = fixture;
@@ -264,11 +282,13 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     // 9. Build initial snapshot (cycle-0 events for every output pin, including "input" state)
     const pinShadow: Array<PinValue> = new Array(fixture.pins.length).fill('input' as PinValue);
     const initialSnapshot: OutputEvent[] = [];
+    const outPins: OutPin[] = [];
     for (let i = 0; i < fixture.pins.length; i++) {
       const pin = fixture.pins[i];
       if (isAnalogPin(pin)) continue;
       if (pin.direction !== 'output') continue;
       const port = portMap.get(pin.port)!;
+      outPins.push(Object.freeze({ idx: i, port, bit: pin.bit, signal: pin.signal }));
       const raw = port.pinState(pin.bit);
       const value = mapPinState(raw);
       pinShadow[i] = value;
@@ -278,7 +298,9 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
 
     // 10. Return bridge instance
     const clockHz = fixture.clockHz ?? 16_000_000;
-    const bridge = new EmulatorBridge(cpu, portMap, fixture, pinShadow, sortedInputs, adc, initialSnapshot, clockHz, extState);
+    const bridge = new EmulatorBridge(
+      cpu, portMap, fixture, pinShadow, sortedInputs, adc, initialSnapshot, clockHz, extState, Object.freeze(outPins),
+    );
 
     // 11. Track DDR/PORT changes. Listeners are additive, so no existing hook is displaced.
     //     Runs after the AVRIOPort constructors. Driven pins are skipped.
@@ -338,12 +360,35 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       };
     }
 
+    // 11c. Output scan skip. In avr8js 0.21.1 an output pin's mapped state depends only on
+    //      its DDRx bit, the port's output latch (lastValue) and openCollector. The latch is
+    //      written only in AVRIOPort.writeGpio, which calls every port listener when it
+    //      changes; DDR/PORT/PIN writes and timer compare-output overrides all go through
+    //      it. openCollector is set only by the USI peripheral, which is not built here.
+    //      Direct cpu.data writes (stack pushes, XCH) can change a DDRx byte with no
+    //      listener call, so the scan also runs whenever a watched DDRx byte moved.
+    //      Added after every other listener, so their order is unchanged.
+    const watched: AVRIOPort[] = [];
+    for (const o of bridge._outPins) {
+      if (watched.includes(o.port)) continue;
+      watched.push(o.port);
+      bridge._watchDdrAddr.push(
+        o.port === portB ? portBConfig.DDR : o.port === portC ? portCConfig.DDR : portDConfig.DDR,
+      );
+      o.port.addListener(() => {
+        bridge._outDirty = true;
+      });
+    }
+
     // 12. Make the initial presented level of every input pin consistent.
     for (let i = 0; i < fixture.pins.length; i++) {
       const fp = fixture.pins[i];
       if (isAnalogPin(fp)) continue;
       if (fp.direction === 'input') bridge._presentReleased(i);
     }
+
+    // 12b. DDRx bytes as of the snapshot, for the step 5 check.
+    for (const addr of bridge._watchDdrAddr) bridge._watchDdrSeen.push(cpu.data[addr]);
 
     return bridge;
   }
@@ -382,6 +427,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
           this._applyInput(this._fixture.pins.indexOf(pin), ev.value);
           appliedInputs.push({ ...ev, appliedCycle: this._cpu.cycles });
         }
+        this._outDirty = true;
       }
 
       // 2. Execute one instruction
@@ -399,18 +445,36 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
         };
       }
 
-      // 5. Detect output pin changes in ascending fixture pin-index order
-      for (let i = 0; i < this._fixture.pins.length; i++) {
-        const pin = this._fixture.pins[i];
-        if (isAnalogPin(pin)) continue;
-        if (pin.direction !== 'output') continue;
-        const port = this._portMap.get(pin.port)!;
-        const raw = port.pinState(pin.bit);
-        const newValue = mapPinState(raw);
-        if (newValue !== this._pinShadow[i]) {
-          this._pinShadow[i] = newValue;
-          outputEvents.push({ signal: pin.signal, value: newValue, cycle: this._cpu.cycles });
+      // 5. Detect output pin changes in ascending fixture pin-index order.
+      //    The pins were resolved once in _build, so no per-pin lookups happen here.
+      //    The scan is skipped when no listener fired, no input was applied and no watched
+      //    DDRx byte moved since the last scan: then no output pin's mapped state changed
+      //    (see _build step 11c), so the scan would emit nothing.
+      const ddr = this._cpu.data;
+      const ddrAddr = this._watchDdrAddr;
+      const ddrSeen = this._watchDdrSeen;
+      let scan = this._outDirty;
+      if (!scan) {
+        for (let k = 0; k < ddrAddr.length; k++) {
+          if (ddr[ddrAddr[k]] !== ddrSeen[k]) {
+            scan = true;
+            break;
+          }
         }
+      }
+      if (scan) {
+        const outs = this._outPins;
+        const shadow = this._pinShadow;
+        for (let k = 0; k < outs.length; k++) {
+          const o = outs[k];
+          const newValue = mapPinState(o.port.pinState(o.bit));
+          if (newValue !== shadow[o.idx]) {
+            shadow[o.idx] = newValue;
+            outputEvents.push({ signal: o.signal, value: newValue, cycle: this._cpu.cycles });
+          }
+        }
+        this._outDirty = false;
+        for (let k = 0; k < ddrAddr.length; k++) ddrSeen[k] = ddr[ddrAddr[k]];
       }
     }
 
