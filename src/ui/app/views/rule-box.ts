@@ -1,11 +1,13 @@
 // Rule_Area: Rule_Headline, Canonical_Sentence lines, "Edit rule", Rule_Box, Rule_Errors and
 // Sentence_Pattern insert buttons. Callbacks and state setters only.
 import type { RuleError } from "../model/rule-box";
-import { techOnly } from "./details";
+import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
 
 export const RULE_TEXT = {
   title: "Rule area",
+  plainTitle: "Rule",
+  plainError: "this doesn't look like a rule yet. Start from one of the patterns below.",
   edit: "Edit rule",
   close: "Close editor",
   reset: "Reset to the example rule",
@@ -38,6 +40,12 @@ export interface RuleAreaCallbacks {
   onReset(): void;
 }
 
+/** Plain text of a rule error: the line number and a short hint. Errors without a line number keep their text. */
+export function plainRuleError(e: RuleError): string {
+  const m = /^Line (\d+)/.exec(e.text);
+  return m === null ? e.text : `Line ${m[1] as string}: ${RULE_TEXT.plainError}`;
+}
+
 /** Adds the sentence as a new last line, with a line break before it only when the text lacks one. */
 export function appendSentence(text: string, sentence: string): string {
   if (text === "" || text.endsWith("\n")) return text + sentence;
@@ -47,7 +55,7 @@ export function appendSentence(text: string, sentence: string): string {
 export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
   const headline = el("p", { class: "rule-headline" });
   const lines = el("div", { class: "rule-lines" });
-  const edit = el("button", { type: "button", class: "btn", "aria-expanded": "false", "aria-controls": "rule-editor" }, [
+  const edit = el("button", { type: "button", class: "secondary", "aria-expanded": "false", "aria-controls": "rule-editor" }, [
     RULE_TEXT.edit,
   ]);
   const area = el("textarea", { id: "rule-box", class: "rule-box mono", rows: 5, spellcheck: "false", "aria-label": RULE_TEXT.boxLabel });
@@ -79,7 +87,10 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
   });
 
   const node = el("section", { class: "panel", "aria-labelledby": "rule-area-title" }, [
-    el("h2", { class: "region-title", id: "rule-area-title" }, [RULE_TEXT.title]),
+    el("h2", { class: "region-title", id: "rule-area-title" }, [
+      techOnly(el("span", {}, [RULE_TEXT.title])),
+      plainOnly(el("span", {}, [RULE_TEXT.plainTitle])),
+    ]),
     headline,
     lines,
     edit,
@@ -106,7 +117,12 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
     setErrors(list) {
       setChildren(
         errors,
-        list.map((e) => el("li", { class: "rule-error" }, [e.text])),
+        list.map((e) =>
+          el("li", { class: "rule-error" }, [
+            techOnly(el("span", {}, [e.text])),
+            plainOnly(el("span", {}, [plainRuleError(e)])),
+          ]),
+        ),
       );
     },
     setPatterns(items) {

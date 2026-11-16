@@ -1,4 +1,4 @@
-// Gremlin_Picker: six toggle tiles in catalogue order, 3 x 2. Callbacks and state setters only.
+// Gremlin_Picker: six toggle tiles in catalogue order, one per row. Callbacks and state setters only.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { Fixture } from "../../../engine/types";
 import { pickerTile } from "../model/gremlin-picker";
@@ -6,7 +6,6 @@ import type { PickerTile } from "../model/gremlin-picker";
 import { friendlyLabel } from "../model/labels";
 import { signalLabel, techOnly } from "./details";
 import { el, setChildren } from "./dom";
-import { gremlinIcon } from "./icons";
 
 export const PICKER_COPY = {
   title: "Gremlins",
@@ -54,14 +53,16 @@ export function picker(onToggle: (id: string) => void): PickerView {
         const tile = pickerTile(def, fixture);
         const signals = fixture.pins.map((p) => p.signal).filter((s) => tile.targets.includes(friendlyLabel(s).text));
         const mark = el("span", { class: "pick-mark", "aria-hidden": "true" }, [PICKER_COPY.mark]);
-        const icon = gremlinIcon(`gremlin-${tile.id}`);
-        const btn = el("button", { type: "button", class: "pick-tile", "aria-pressed": "false", "data-gremlin": tile.id }, [
-          el("span", { class: "tile-head" }, [icon, el("span", { class: "tile-name" }, [tile.name]), mark]),
-          el("span", { class: "meta pick-line" }, [tile.behaviour]),
+        const btn = el(
+          "button",
+          { type: "button", class: tile.compatible ? "pick-tile" : "pick-tile is-incompatible", "aria-pressed": "false", "data-gremlin": tile.id },
+          [
+          el("span", { class: "tile-head" }, [el("span", { class: "tile-name" }, [tile.name]), mark]),
+          tile.compatible ? el("span", { class: "meta pick-line" }, [tile.behaviour]) : null,
           tile.compatible
             ? el("span", { class: "meta pick-line pick-targets" }, signals.map((s) => signalLabel(s)))
             : el("span", { class: "pick-reason" }, [tile.reason ?? ""]),
-          tile.ranges.length > 0
+          tile.compatible && tile.ranges.length > 0
             ? techOnly(
                 el("span", { class: "meta mono pick-ranges" }, [
                   el("span", { class: "pick-ranges-title" }, [PICKER_COPY.ranges]),
@@ -69,7 +70,8 @@ export function picker(onToggle: (id: string) => void): PickerView {
                 ]),
               )
             : null,
-        ]);
+          ],
+        );
         btn.addEventListener("click", () => {
           if (tile.compatible && !busy) onToggle(tile.id);
         });

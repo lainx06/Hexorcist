@@ -10,7 +10,28 @@ import { el, setChildren } from "./dom";
 import { gremlinIcon } from "./icons";
 
 export const UI_COPY = {
-  switchLabel: "Show technical details",
+  switchLabel: "Technical details",
+  switchOff: "Off",
+  switchOn: "On",
+  pitch: "Flashing AI-written firmware? Let the gremlins break it before your board does.",
+  plainPitch: "AI wrote your gadget's code? Let gremlins break it here before it breaks for real.",
+  campaignHeading: "Campaign",
+  plainCampaignHeading: "Tries",
+  emptyTech: "Run a campaign to inspect the result.",
+  emptyPlain: "Press Unleash gremlins to start.",
+  unleash: "Unleash gremlins",
+  sendsMany: "Sends {n} gremlin tries at this program.",
+  sendsOne: "Sends 1 gremlin try at this program.",
+  sendsInvalid: "Fix the number of tries to continue.",
+  plainRunning: "Try {n} of {m}",
+  plainBroke: "Broke on try {n} of {m}, stopped early.",
+  plainBrokeLast: "Broke on try {n} of {m}.",
+  plainDone: "All {m} tries done.",
+  plainDoneOne: "All 1 try done.",
+  plainStopped: "Stopped after {k} of {m} tries.",
+  tryHeading: "Events in the reduced replay",
+  plainTryHeading: "Try removing a move",
+  waiting: "waiting for a run",
   subtitle: "Runs in your browser",
   chip: "ATmega328P \u00b7 Browser only",
   whatHeading: "What is this?",
@@ -31,13 +52,26 @@ export const UI_COPY = {
   pickOne: "Pick at least one gremlin.",
 } as const;
 
+/** Fills {name} slots of a copy template. */
+export function fill(template: string, vars: Readonly<Record<string, number>>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+}
+
+/** "Sends N gremlin tries at this program." for a valid tries field. */
+export function sendsText(n: number): string {
+  return n === 1 ? UI_COPY.sendsOne : fill(UI_COPY.sendsMany, { n });
+}
+
 function detailsSwitch(): HTMLButtonElement {
+  const state = el("span", { class: "switch-state" }, [currentDetails() ? UI_COPY.switchOn : UI_COPY.switchOff]);
   const btn = el("button", { type: "button", class: "switch", role: "switch", "aria-checked": currentDetails() ? "true" : "false" }, [
-    UI_COPY.switchLabel,
+    el("span", { class: "switch-label" }, [UI_COPY.switchLabel]),
+    state,
   ]);
   btn.addEventListener("click", () => {
     const on = btn.getAttribute("aria-checked") !== "true";
     btn.setAttribute("aria-checked", on ? "true" : "false");
+    state.textContent = on ? UI_COPY.switchOn : UI_COPY.switchOff;
     applyDetails(btn.closest(".page") ?? document, on);
     writeDetails(on);
   });
@@ -52,7 +86,10 @@ export function header(): HTMLElement {
       techOnly(el("p", { class: "chip-line meta mono" }, [UI_COPY.chip])),
       detailsSwitch(),
     ]),
-    el("p", { class: "pitch" }, ["Flashing AI-written firmware? Let the gremlins break it before your board does."]),
+    el("p", { class: "pitch" }, [
+      techOnly(el("span", {}, [UI_COPY.pitch])),
+      plainOnly(el("span", {}, [UI_COPY.plainPitch])),
+    ]),
     el("section", { class: "what-is-this", "aria-labelledby": "what-title" }, [
       el("h2", { class: "region-title", id: "what-title" }, [UI_COPY.whatHeading]),
       el("p", { class: "what-text" }, [UI_COPY.whatText]),
@@ -96,6 +133,8 @@ export interface ControlsView {
   values(): { runsOk: boolean; seedOk: boolean; runs: number; seed: number };
   onFieldChange(fn: () => void): void;
   setProgress(k: number, n: number): void;
+  /** After a campaign: brokeTry is the 1-based try that broke, or null when nothing broke. */
+  setFinished(k: number, n: number, brokeTry: number | null): void;
   startTimer(): void;
   stopTimer(): void;
   showViewResult(show: boolean): void;
@@ -124,8 +163,9 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
   });
   const runsMsg = el("p", { id: "runs-msg", class: "field-msg meta" }, [""]);
   const seedMsg = el("p", { id: "seed-msg", class: "field-msg meta" }, [""]);
-  const unleash = el("button", { type: "button", class: "primary" }, ["Unleash gremlins"]);
-  const progress = el("p", { class: "progress mono" }, [""]);
+  const unleash = el("button", { type: "button", class: "primary" }, [UI_COPY.unleash]);
+  const progressTech = techOnly(el("p", { class: "progress mono" }, [""]));
+  const progressPlain = plainOnly(el("p", { class: "progress mono" }, [""]));
   const elapsed = el("p", { class: "elapsed mono meta" }, [""]);
   const viewResult = el("button", { type: "button", class: "secondary view-result", hidden: true }, ["View result"]);
   let listeners: (() => void)[] = [];
@@ -142,7 +182,10 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
   for (const f of [runs, seed]) f.addEventListener("input", () => listeners.forEach((fn) => fn()));
 
   const node = el("section", { class: "panel", "aria-labelledby": "campaign-title" }, [
-    el("h2", { class: "region-title", id: "campaign-title" }, ["Campaign"]),
+    el("h2", { class: "region-title", id: "campaign-title" }, [
+      techOnly(el("span", {}, [UI_COPY.campaignHeading])),
+      plainOnly(el("span", {}, [UI_COPY.plainCampaignHeading])),
+    ]),
     el("div", { class: "field-row" }, [
       el("label", { for: "runs-field" }, [UI_COPY.runsLabel]),
       runs,
@@ -150,7 +193,8 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
     ]),
     techOnly(el("div", { class: "field-row" }, [el("label", { for: "seed-field" }, [UI_COPY.seedLabel]), seed, seedMsg])),
     unleash,
-    progress,
+    progressTech,
+    progressPlain,
     elapsed,
     viewResult,
   ]);
@@ -164,7 +208,16 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
       listeners = [...listeners, fn];
     },
     setProgress(k, n) {
-      progress.textContent = progressText(k, n);
+      progressTech.textContent = progressText(k, n);
+      progressPlain.textContent = fill(UI_COPY.plainRunning, { n: Math.min(k + 1, n), m: n });
+    },
+    setFinished(k, n, brokeTry) {
+      progressTech.textContent = progressText(k, n);
+      let text: string;
+      if (brokeTry !== null) text = fill(brokeTry < n ? UI_COPY.plainBroke : UI_COPY.plainBrokeLast, { n: brokeTry, m: n });
+      else if (k >= n) text = n === 1 ? UI_COPY.plainDoneOne : fill(UI_COPY.plainDone, { m: n });
+      else text = fill(UI_COPY.plainStopped, { k, m: n });
+      progressPlain.textContent = text;
     },
     startTimer() {
       if (timer !== 0) clearInterval(timer);
@@ -194,7 +247,8 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
         clearInterval(timer);
         timer = 0;
       }
-      progress.textContent = "";
+      progressTech.textContent = "";
+      progressPlain.textContent = "";
       elapsed.textContent = "";
     },
   };

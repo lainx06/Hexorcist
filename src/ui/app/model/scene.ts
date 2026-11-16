@@ -14,6 +14,8 @@ export interface SceneState {
   lit: Record<SceneSignal, boolean>;
   labels: { carGreen: string; walk: string };
   bracket: boolean;
+  /** True before any replay is shown. */
+  waiting: boolean;
   /** Plain text of the four levels, for assistive technology. */
   summary: string;
 }
@@ -36,6 +38,7 @@ export function sceneAt(
     lit,
     labels: { carGreen: `CAR_GREEN = ${levels.CAR_GREEN}`, walk: `WALK = ${levels.WALK}` },
     bracket,
+    waiting: replay === null,
     summary: SCENE_SIGNALS.map((s) => `${s} = ${levels[s]}`).join(", "),
   };
 }

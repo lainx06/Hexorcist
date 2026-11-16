@@ -5,6 +5,7 @@ import { SCENE_NOTE } from "../model/scene";
 import { friendlyLabel } from "../model/labels";
 import { markDetail } from "./details";
 import { el, svg } from "./dom";
+import { UI_COPY } from "./panels";
 
 export interface SceneView {
   node: HTMLElement;
@@ -33,7 +34,8 @@ export function createScene(): SceneView {
   const walkLabel = markDetail(svg("text", { x: 816, y: 84, "text-anchor": "middle", class: "scene-label" }, [""]), "tech");
   const greenPlain = markDetail(svg("text", { x: 480, y: 132, "text-anchor": "end", class: "scene-label scene-label--plain" }, [""]), "plain");
   const walkPlain = markDetail(svg("text", { x: 816, y: 84, "text-anchor": "middle", class: "scene-label scene-label--plain" }, [""]), "plain");
-  const word = (level: "0" | "1" | "not driven"): string => (level === "1" ? "on" : level === "0" ? "off" : "not driven");
+  const word = (level: "0" | "1" | "not driven", waiting: boolean): string =>
+    level === "1" ? "on" : level === "0" ? "off" : waiting ? UI_COPY.waiting : "not driven";
   const bracket = svg("path", { d: "M400 116 V20 H816 V66", class: "scene-bracket", visibility: "hidden" });
 
   const ghost = svg("g", { class: "ghost" }, [
@@ -97,8 +99,8 @@ export function createScene(): SceneView {
       figure.setAttribute("class", state.lit.WALK ? "walk-figure is-lit" : "walk-figure");
       greenLabel.textContent = state.labels.carGreen;
       walkLabel.textContent = state.labels.walk;
-      greenPlain.textContent = `${friendlyLabel("CAR_GREEN").text} is ${word(state.levels.CAR_GREEN)}`;
-      walkPlain.textContent = `${friendlyLabel("WALK").text} is ${word(state.levels.WALK)}`;
+      greenPlain.textContent = `${friendlyLabel("CAR_GREEN").text} is ${word(state.levels.CAR_GREEN, state.waiting)}`;
+      walkPlain.textContent = `${friendlyLabel("WALK").text} is ${word(state.levels.WALK, state.waiting)}`;
       // The ghost steps onto the crossing while WALK is 1 and goes back to the curb otherwise. No collision.
       ghost.setAttribute("transform", state.lit.WALK ? GHOST_ON_CROSSING : "");
       ghost.setAttribute("class", state.lit.WALK ? "ghost is-crossing" : "ghost");

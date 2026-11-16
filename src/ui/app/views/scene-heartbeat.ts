@@ -11,7 +11,7 @@ export interface HeartbeatSceneView {
   render(state: HeartbeatScene): void;
 }
 
-export const HEARTBEAT_TEXT = { frozen: "frozen" } as const;
+export const HEARTBEAT_TEXT = { frozen: "frozen", program: "Program" } as const;
 
 export function createHeartbeatScene(): HeartbeatSceneView {
   const lever = svg("line", { x1: 180, y1: 240, x2: 150, y2: 262, class: "switch-lever" });
@@ -39,6 +39,7 @@ export function createHeartbeatScene(): HeartbeatSceneView {
       // wires and chip block
       svg("line", { x1: 220, y1: 268, x2: 400, y2: 268, class: "wire" }),
       svg("rect", { x: 400, y: 196, width: 160, height: 144, rx: 10, class: "chip-body" }),
+      svg("text", { x: 480, y: 276, "text-anchor": "middle", class: "scene-label" }, [HEARTBEAT_TEXT.program]),
       svg("line", { x1: 560, y1: 268, x2: 740, y2: 268, class: "wire" }),
       lampGlow,
       lamp,

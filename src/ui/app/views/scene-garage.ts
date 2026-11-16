@@ -29,16 +29,15 @@ export function createGarageScene(): GarageSceneView {
   const slats = Array.from({ length: SLATS }, (_, i) =>
     svg("rect", { x: DOOR_X, y: DOOR_Y + i * SLAT_H, width: DOOR_W, height: 0, class: "door-slat" }),
   );
-  const cat = svg("g", { class: "cat", visibility: "hidden" }, [
-    svg("path", { d: "M522 372 q34 -6 40 -34 q4 -16 -8 -22", class: "cat-tail" }),
-    svg("ellipse", { cx: 490, cy: 350, rx: 36, ry: 22, class: "cat-body" }),
-    svg("circle", { cx: 450, cy: 332, r: 16, class: "cat-body" }),
-    svg("polygon", { points: "438,322 440,300 452,317", class: "cat-body" }),
-    svg("polygon", { points: "452,317 464,300 462,324", class: "cat-body" }),
-    svg("circle", { cx: 445, cy: 331, r: 2.5, class: "cat-eye" }),
-    svg("circle", { cx: 457, cy: 331, r: 2.5, class: "cat-eye" }),
-    svg("rect", { x: 466, y: 366, width: 8, height: 14, rx: 3, class: "cat-body" }),
-    svg("rect", { x: 502, y: 366, width: 8, height: 14, rx: 3, class: "cat-body" }),
+  // Pumpkin on the ground in the beam path. The door may come down onto it; nothing living is under the door.
+  const pumpkin = svg("g", { class: "pumpkin", visibility: "hidden" }, [
+    svg("ellipse", { cx: 458, cy: 352, rx: 22, ry: 26, class: "pumpkin-body" }),
+    svg("ellipse", { cx: 502, cy: 352, rx: 22, ry: 26, class: "pumpkin-body" }),
+    svg("ellipse", { cx: 480, cy: 352, rx: 24, ry: 27, class: "pumpkin-body" }),
+    svg("path", { d: "M480 325 q2 -12 12 -16", class: "pumpkin-stem" }),
+    svg("polygon", { points: "467,349 473,339 479,349", class: "pumpkin-face" }),
+    svg("polygon", { points: "481,349 487,339 493,349", class: "pumpkin-face" }),
+    svg("path", { d: "M468 360 l6 6 l6 -6 l6 6 l6 -6", class: "pumpkin-mouth" }),
   ]);
   const beamLabel = svg("text", { x: 480, y: 396, "text-anchor": "middle", class: "scene-label", visibility: "hidden" }, [
     GARAGE_TEXT.beamBlocked,
@@ -70,7 +69,7 @@ export function createGarageScene(): GarageSceneView {
       svg("rect", { x: 236, y: BEAM_Y - 16, width: 40, height: 32, rx: 4, class: "beam-block" }),
       svg("rect", { x: 684, y: BEAM_Y - 16, width: 40, height: 32, rx: 4, class: "beam-block" }),
       svg("line", { x1: 276, y1: BEAM_Y, x2: 684, y2: BEAM_Y, class: "beam-line" }),
-      cat,
+      pumpkin,
       beamLabel,
       marker,
       svg("text", { x: 480, y: 428, "text-anchor": "middle", class: "scene-label scene-label--note" }, [GARAGE_TEXT.doorNote]),
@@ -88,7 +87,7 @@ export function createGarageScene(): GarageSceneView {
         const h = Math.min(SLAT_H, Math.max(0, px - i * SLAT_H));
         s.setAttribute("height", String(h));
       });
-      cat.setAttribute("visibility", state.beamBlocked ? "visible" : "hidden");
+      pumpkin.setAttribute("visibility", state.beamBlocked ? "visible" : "hidden");
       beamLabel.setAttribute("visibility", state.beamBlocked ? "visible" : "hidden");
       marker.setAttribute("visibility", state.deadlineMissed ? "visible" : "hidden");
       summary.textContent = state.summary;

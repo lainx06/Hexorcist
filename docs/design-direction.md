@@ -99,8 +99,8 @@ monochrome. Names and behaviour labels stay visible; no idle animation.
   - No collision or injury: stop on the conflicting outputs.
   - Always show "Illustrative scene · firmware outputs shown".
 - **Garage:** straight-on elevation.
-  - Elements: frame, slatted door moving vertically, emitter/receiver blocks with an amber dashed beam, cat (oval
-    body, round head, triangle ears, curved tail).
+  - Elements: frame, slatted door moving vertically, emitter/receiver blocks with an amber dashed beam, pumpkin (three
+    overlapping ribbed ovals, curved stem, carved face; the door may close down onto it).
   - "Beam blocked" label when relevant.
   - Door position labelled illustrative.
   - Deadline highlighted only when the monitor reaches it.

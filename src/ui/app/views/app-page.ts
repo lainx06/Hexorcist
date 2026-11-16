@@ -16,6 +16,7 @@ import type { FlowState } from "../model/flow";
 import { canApplyFix, canReplayAgain, canTryRemoving, canUnleash, initialFlow } from "../model/flow";
 import { inputValueText, ms, runCountText } from "../model/format";
 import { defaultSelection } from "../model/gremlin-picker";
+import { movePhrase } from "../model/moves";
 import { plainStory } from "../model/plain-story";
 import { checkRuleBox, sentencePatterns } from "../model/rule-box";
 import type { RuleError } from "../model/rule-box";
@@ -31,8 +32,9 @@ import { announcement, findingText } from "../model/verdict-text";
 import type { CampaignDoneMsg, ReplayDoneMsg } from "../worker/messages";
 import { el, setChildren } from "./dom";
 import { gallery } from "./gallery";
+import { plainOnly, techOnly } from "./details";
 import { createLiveRegion } from "./live";
-import { controls, counter, header, SHRINK_LABEL, UI_COPY } from "./panels";
+import { controls, counter, header, SHRINK_LABEL, sendsText, UI_COPY } from "./panels";
 import { picker } from "./picker";
 import { appendSentence, ruleArea } from "./rule-box";
 import { createScene } from "./scene";
@@ -128,7 +130,16 @@ export function mountApp(root: HTMLElement): void {
   const replayAgainBtn = el("button", { type: "button", class: "secondary" }, ["Replay again"]);
   const replayAgainOut = el("p", { class: "mono meta replay-again-out" }, [""]);
   const replayAgainRow = el("div", { class: "replay-again", hidden: true }, [replayAgainBtn, replayAgainOut]);
-  const placeholder = (): HTMLElement => el("p", { class: "placeholder meta" }, ["Run a campaign to inspect the result."]);
+  // The result area before any result: a large copy of the sidebar button and the line under it.
+  const bigUnleash = el("button", { type: "button", class: "primary primary-large" }, [UI_COPY.unleash]);
+  const sendsLine = el("p", { class: "sends-line meta" }, [""]);
+  const placeholderNode = el("div", { class: "placeholder" }, [
+    techOnly(el("p", { class: "meta" }, [UI_COPY.emptyTech])),
+    plainOnly(el("p", { class: "meta" }, [UI_COPY.emptyPlain])),
+    bigUnleash,
+    sendsLine,
+  ]);
+  const placeholder = (): HTMLElement => placeholderNode;
 
   // Example state.
   let currentId: ExampleId = EXAMPLE_IDS[0];
@@ -157,7 +168,10 @@ export function mountApp(root: HTMLElement): void {
   const refresh = (): void => {
     const vals = ctl.values();
     flow = { ...flow, dataOk: loadedOk, runsOk: vals.runsOk, seedOk: vals.seedOk };
-    ctl.unleash.disabled = !(canUnleash(flow) && ruleErrors.length === 0 && selectedIds.length > 0);
+    const unleashOff = !(canUnleash(flow) && ruleErrors.length === 0 && selectedIds.length > 0);
+    ctl.unleash.disabled = unleashOff;
+    bigUnleash.disabled = unleashOff;
+    sendsLine.textContent = vals.runsOk ? sendsText(vals.runs) : UI_COPY.sendsInvalid;
     if (applyFixBtn !== null) applyFixBtn.disabled = !canApplyFix(flow);
     replayAgainBtn.disabled = !canReplayAgain(flow);
     for (const b of removeButtons) b.disabled = !canTryRemoving(flow);
@@ -356,9 +370,9 @@ export function mountApp(root: HTMLElement): void {
       return null;
     }
     const done = (o as { message: CampaignDoneMsg }).message;
-    ctl.setProgress(done.runsCompleted, rec.runs);
     rec.done = done;
     const v: Verdict = done.result.verdict;
+    ctl.setFinished(done.runsCompleted, rec.runs, v.verdict === "BROKE" ? v.trace.runIndex + 1 : null);
     live.announce(announcement(rec.build, v, findingText(v, violatedRule(c.ruleSet, v))));
     ctl.showViewResult(true);
     return done;
@@ -370,11 +384,12 @@ export function mountApp(root: HTMLElement): void {
     const rows = list.map((e, i) => {
       const result = el("span", { class: "try-result meta" }, [""]);
       const cells: (HTMLElement | string)[] = [
-        el("span", { class: "mono" }, [`${ms(e.cycle)} \u00b7 ${e.signal} = ${inputValueText(eventValue(e))}`]),
+        techOnly(el("span", { class: "mono" }, [`${ms(e.cycle)} \u00b7 ${e.signal} = ${inputValueText(eventValue(e))}`])),
       ];
       if (e.gremlinId === "rest") {
         cells.push(el("span", { class: "meta" }, ["rest state"]));
       } else {
+        cells.push(plainOnly(el("span", {}, [`${ms(e.cycle)}: ${movePhrase(list, i, c.example.fixture)}`])));
         const b = el("button", { type: "button", class: "secondary" }, ["Try removing"]);
         removeButtons.push(b);
         b.addEventListener("click", () => {
@@ -387,10 +402,15 @@ export function mountApp(root: HTMLElement): void {
         cells.push(b);
       }
       cells.push(result);
-      return el("li", { class: "try-row" }, cells);
+      // A rest state is not a gremlin move, so the plain view leaves its row out.
+      const row = el("li", { class: "try-row" }, cells);
+      return e.gremlinId === "rest" ? techOnly(row) : row;
     });
     setChildren(removeList, [
-      el("h2", { class: "region-title", id: "try-title" }, ["Events in the reduced replay"]),
+      el("h2", { class: "region-title", id: "try-title" }, [
+        techOnly(el("span", {}, [UI_COPY.tryHeading])),
+        plainOnly(el("span", {}, [UI_COPY.plainTryHeading])),
+      ]),
       el("ul", { class: "try-list" }, rows),
     ]);
     removeList.hidden = false;
@@ -571,6 +591,7 @@ export function mountApp(root: HTMLElement): void {
     refresh();
   };
   ctl.unleash.addEventListener("click", () => void unleash());
+  bigUnleash.addEventListener("click", () => void unleash());
 
   ctl.viewResult.addEventListener("click", () => {
     const cards = verdictArea.querySelectorAll<HTMLElement>(".verdict");
@@ -666,7 +687,7 @@ export function mountApp(root: HTMLElement): void {
       header(),
       gal.node,
       el("main", { class: "workspace" }, [
-        el("div", { class: "config" }, [rules.node, pick.node, ctl.node]),
+        el("div", { class: "config" }, [rules.node, ctl.node, pick.node]),
         el("div", { class: "evidence" }, [verdictArea, errors, sceneRegion, counterRow, timeline.node, removeList, fixPanel]),
       ]),
       live.node,

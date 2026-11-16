@@ -145,8 +145,25 @@ ul {
   border: 1px solid var(--c-outline);
 }
 
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.switch-state {
+  min-width: 2.2em;
+  text-align: center;
+  font-weight: 600;
+  color: var(--c-text-2);
+}
+
 .switch[aria-checked="true"] {
   border: 2px solid var(--c-gremlin);
+}
+
+.switch[aria-checked="true"] .switch-state {
+  color: var(--c-gremlin);
 }
 
 .what-is-this {
@@ -159,13 +176,11 @@ ul {
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-3);
+  gap: var(--s-1) var(--s-5);
 }
 
 .step {
-  padding: var(--s-2) var(--s-3);
-  background: var(--c-raised);
-  border-radius: var(--r-control);
+  color: var(--c-text-2);
 }
 
 .signal-name {
@@ -298,6 +313,14 @@ button {
   border: 2px solid var(--c-signal);
 }
 
+.primary-large {
+  width: auto;
+  min-width: 280px;
+  min-height: 64px;
+  padding: var(--s-4) var(--s-6);
+  font-size: 24px;
+}
+
 .primary:hover:not(:disabled) {
   background: #99F5ACD9;
 }
@@ -360,9 +383,13 @@ button:disabled {
 .placeholder {
   flex: 1;
   min-height: 160px;
+  padding: var(--s-5);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--s-3);
+  text-align: center;
   border: 1px dashed var(--c-outline);
   border-radius: var(--r-panel);
 }
@@ -997,7 +1024,7 @@ button.example-card:disabled {
 
 .pick-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-3);
 }
 
@@ -1023,6 +1050,26 @@ button.example-card:disabled {
 .pick-tile:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.pick-tile,
+.pick-tile * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pick-tile {
+  width: 100%;
+}
+
+.pick-tile.is-incompatible {
+  gap: 0;
+  padding: var(--s-2) var(--s-3);
+}
+
+.pick-tile.is-incompatible .pick-reason {
+  font-size: 14px;
+  line-height: 1.3;
 }
 
 .pick-mark {
@@ -1148,21 +1195,28 @@ button.example-card:disabled {
   stroke-dasharray: 10 8;
 }
 
-.cat-body {
-  fill: var(--c-panel);
-  stroke: var(--c-text-2);
+.pumpkin-body {
+  fill: #F3C98233;
+  stroke: var(--c-gremlin);
   stroke-width: 2.5;
 }
 
-.cat-tail {
+.pumpkin-stem {
   fill: none;
-  stroke: var(--c-text-2);
+  stroke: var(--c-signal);
   stroke-width: 5;
   stroke-linecap: round;
 }
 
-.cat-eye {
-  fill: var(--c-text);
+.pumpkin-face {
+  fill: var(--c-gremlin);
+}
+
+.pumpkin-mouth {
+  fill: none;
+  stroke: var(--c-gremlin);
+  stroke-width: 3;
+  stroke-linejoin: round;
 }
 
 .deadline-frame {
