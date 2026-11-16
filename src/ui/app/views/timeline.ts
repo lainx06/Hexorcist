@@ -6,7 +6,22 @@ import { friendlyLabel } from "../model/labels";
 import type { ExampleLane } from "../model/lanes";
 import { exampleLanes, inputLaneWord, outputLaneWord, plainSelectedText, releaseRanges } from "../model/lanes";
 import type { PlayerState, Speed } from "../model/player";
-import { DEFAULT_SPEED, home, pause, play, setSpeed, showReplay, stepNext, stepPrev, tick, toEnd } from "../model/player";
+import {
+  cycleFromPlotX,
+  DEFAULT_SPEED,
+  home,
+  jumpNext,
+  jumpPrev,
+  navEvents,
+  nudge,
+  pause,
+  play,
+  seek,
+  setSpeed,
+  showReplay,
+  SPEEDS,
+  tick,
+} from "../model/player";
 import type { Span } from "../model/span";
 import type { LaneLevel, Marker, TimelineEvent } from "../model/timeline";
 import {
@@ -19,13 +34,14 @@ import {
   selectedEventText,
   timelineEvents,
 } from "../model/timeline";
-import { inputValueText, ms } from "../model/format";
+import { cycles, inputValueText, ms } from "../model/format";
 import { originalRunNote } from "../model/verdict-plain";
 import { plainOnly, signalLabel, techOnly } from "./details";
 import { el, prefersReducedMotion, setChildren, svg } from "./dom";
 import { nextIcon, pauseIcon, playIcon, prevIcon } from "./icons";
+import { UI_COPY } from "./panels";
 
-export type RunLabel = "Original run" | "Reduced replay";
+export type RunLabel = "Original run" | "Reduced replay" | typeof UI_COPY.trialRun;
 
 export interface ReplayView {
   label: RunLabel;
@@ -125,29 +141,46 @@ export function createTimeline(): TimelineView {
     [labels, plot],
   );
 
-  const playBtn = el("button", { type: "button", class: "icon-button", "aria-label": "Play" }, [playIcon()]);
-  const pauseBtn = el("button", { type: "button", class: "icon-button", "aria-label": "Pause" }, [pauseIcon()]);
-  const prevBtn = el("button", { type: "button", class: "icon-button", "aria-label": "Previous event" }, [prevIcon()]);
-  const nextBtn = el("button", { type: "button", class: "icon-button", "aria-label": "Next event" }, [nextIcon()]);
-  const slowBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "false" }, ["0.1x"]);
-  const fastBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "true" }, ["1x"]);
+  const scrub = el("input", {
+    type: "range",
+    class: "scrubber",
+    min: 0,
+    max: 0,
+    step: 1,
+    value: 0,
+    disabled: true,
+    "aria-label": UI_COPY.scrubLabel,
+  });
+  const playBtn = el("button", { type: "button", class: "icon-button" }, [playIcon(), UI_COPY.playLabel]);
+  const prevBtn = el("button", { type: "button", class: "icon-button" }, [prevIcon(), UI_COPY.prevEvent]);
+  const nextBtn = el("button", { type: "button", class: "icon-button" }, [nextIcon(), UI_COPY.nextEvent]);
+  const breakBtn = el("button", { type: "button", class: "icon-button", hidden: true }, [UI_COPY.jumpBreak]);
+  const startBtn = el("button", { type: "button", class: "icon-button" }, [UI_COPY.backToStart]);
+  const speedBtns = SPEEDS.map((s) => el("button", { type: "button", class: "toggle", "aria-pressed": "false" }, [s]));
   const noEvent = "No event selected.";
   const selectedPlain = plainOnly(el("p", { class: "selected-event" }, [noEvent]));
   const selectedTech = techOnly(el("p", { class: "selected-event mono" }, [noEvent]));
   const legend = el("p", { class: "timeline-legend meta" }, [TIMELINE_LEGEND]);
   const runNote = el("p", { class: "run-note meta", hidden: true }, [""]);
-  const cursorText = el("p", { class: "cursor-text meta mono" }, [""]);
-  const controls = el("div", { class: "timeline-controls" }, [playBtn, pauseBtn, prevBtn, nextBtn, slowBtn, fastBtn]);
+  const cursorTech = techOnly(el("p", { class: "cursor-text meta mono" }, [""]));
+  const cursorPlain = plainOnly(el("p", { class: "cursor-text meta" }, [""]));
+  const scrubRow = el("div", { class: "scrub-row" }, [scrub, cursorPlain, cursorTech]);
+  const controls = el("div", { class: "timeline-controls" }, [playBtn, prevBtn, nextBtn, breakBtn, startBtn]);
+  const speedRow = el("div", { class: "speed-row" }, [
+    el("span", { class: "speed-label meta" }, [UI_COPY.speedLabel]),
+    el("div", { class: "toggle-row", role: "group", "aria-label": UI_COPY.speedLabel }, speedBtns),
+  ]);
 
   const node = el("section", { class: "panel timeline-region", "aria-label": "Timeline" }, [
     el("div", { class: "timeline-head" }, [runLabel, el("div", { class: "toggle-row" }, [originalBtn, reducedBtn])]),
     timeline,
     legend,
     runNote,
+    scrubRow,
     controls,
+    speedRow,
     selectedPlain,
     selectedTech,
-    cursorText,
   ]);
 
   function refreshNote(): void {
@@ -164,9 +197,12 @@ export function createTimeline(): TimelineView {
 
   function setButtons(): void {
     const has = view !== null;
-    for (const b of [playBtn, pauseBtn, prevBtn, nextBtn, slowBtn, fastBtn]) b.disabled = !has;
-    slowBtn.setAttribute("aria-pressed", String(state.speed === "0.1x"));
-    fastBtn.setAttribute("aria-pressed", String(state.speed === "1x"));
+    for (const b of [playBtn, prevBtn, nextBtn, breakBtn, startBtn, ...speedBtns]) b.disabled = !has;
+    scrub.disabled = !has;
+    breakBtn.hidden = view === null || view.violation === null;
+    const playText = state.playing ? UI_COPY.pauseLabel : UI_COPY.playLabel;
+    if (playBtn.textContent !== playText) setChildren(playBtn, [state.playing ? pauseIcon() : playIcon(), playText]);
+    speedBtns.forEach((b, i) => b.setAttribute("aria-pressed", String(SPEEDS[i] === state.speed)));
   }
 
   function drawStatic(): void {
@@ -292,7 +328,11 @@ export function createTimeline(): TimelineView {
     const ev = state.selected === null ? undefined : events[state.selected];
     selectedTech.textContent = ev === undefined ? noEvent : selectedEventText(ev);
     selectedPlain.textContent = ev === undefined || view === null ? noEvent : plainSelectedText(ev, friendlyLabel(ev.signal).text, wordFor(view, ev));
-    cursorText.textContent = view === null ? "" : `Cursor: ${ms(state.cursor)}`;
+    scrub.max = String(view === null ? 0 : view.windowEnd);
+    scrub.value = String(state.cursor);
+    scrub.setAttribute("aria-valuetext", ms(state.cursor));
+    cursorPlain.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(state.cursor)}`;
+    cursorTech.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(state.cursor)} \u00b7 ${cycles(state.cursor)} cycles`;
     cursorFn(state.cursor, view);
   }
 
@@ -316,32 +356,61 @@ export function createTimeline(): TimelineView {
     }
   }
 
-  playBtn.addEventListener("click", () => update(play(state, now())));
-  pauseBtn.addEventListener("click", () => update(pause(state)));
-  prevBtn.addEventListener("click", () => update(stepPrev(state, events, now())));
-  nextBtn.addEventListener("click", () => update(stepNext(state, events, now())));
+  const togglePlay = (): void => update(state.playing ? pause(state) : play(state, now()));
+  playBtn.addEventListener("click", togglePlay);
+  prevBtn.addEventListener("click", () => update(jumpPrev(state, events, now())));
+  nextBtn.addEventListener("click", () => update(jumpNext(state, events, now())));
+  breakBtn.addEventListener("click", () => {
+    if (view !== null && view.violation !== null) update(seek(state, view.violation.cycle, now()));
+  });
+  startBtn.addEventListener("click", () => update(home(state, now())));
   const speed = (s: Speed) => update(setSpeed(state, s, now()));
-  slowBtn.addEventListener("click", () => speed("0.1x"));
-  fastBtn.addEventListener("click", () => speed("1x"));
+  speedBtns.forEach((b, i) => b.addEventListener("click", () => speed(SPEEDS[i] as Speed)));
 
+  // Scrubber: dragging moves the Cursor; the arrow keys move it by 1 ms, with Shift by 10 ms.
+  scrub.addEventListener("input", () => {
+    if (view !== null) update(seek(state, Number(scrub.value), now()));
+  });
+  scrub.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (view === null) return;
+    const step = e.shiftKey ? 10 : 1;
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      update(nudge(state, e.key === "ArrowLeft" ? -step : step, now()));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      update(seek(state, 0, now()));
+    } else if (e.key === "End") {
+      e.preventDefault();
+      update(seek(state, state.end, now()));
+    }
+  });
+
+  // A click anywhere on the plot moves the Cursor there.
+  plotSvg.addEventListener("click", (e: MouseEvent) => {
+    if (view === null) return;
+    const box = plotSvg.getBoundingClientRect();
+    const px = (e.clientX - box.left) * (box.width > 0 ? width / box.width : 1);
+    update(seek(state, cycleFromPlotX(px, width, view.windowEnd), now()));
+  });
   timeline.addEventListener("keydown", (e: KeyboardEvent) => {
     if (view === null) return;
     if (e.key === " " || e.code === "Space") {
       e.preventDefault();
       if (e.repeat) return;
-      update(state.playing ? pause(state) : play(state, now()));
+      togglePlay();
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
-      update(stepPrev(state, events, now()));
+      update(jumpPrev(state, events, now()));
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      update(stepNext(state, events, now()));
+      update(jumpNext(state, events, now()));
     } else if (e.key === "Home") {
       e.preventDefault();
       update(home(state, now()));
     } else if (e.key === "End") {
       e.preventDefault();
-      update(toEnd(state, now()));
+      update(seek(state, view.violation === null ? state.end : view.violation.cycle, now()));
     }
   });
 
@@ -356,7 +425,7 @@ export function createTimeline(): TimelineView {
       if (frame !== 0) cancelAnimationFrame(frame);
       frame = 0;
       runLabel.textContent = v === null ? "No replay yet." : v.label;
-      events = v === null ? [] : timelineEvents(v.events, v.outputEdges, v.windowEnd);
+      events = v === null ? [] : navEvents(timelineEvents(v.events, v.outputEdges, v.windowEnd));
       const vc = v === null || v.violation === null ? 0 : v.violation.cycle;
       state = showReplay(v === null ? 0 : v.windowEnd, vc, state.speed);
       drawStatic();

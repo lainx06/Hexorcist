@@ -61,7 +61,7 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
   const area = el("textarea", { id: "rule-box", class: "rule-box mono", rows: 5, spellcheck: "false", "aria-label": RULE_TEXT.boxLabel });
   const errors = el("ul", { class: "rule-errors", "aria-live": "polite" });
   const patterns = el("ul", { class: "pattern-list", "aria-label": RULE_TEXT.patterns });
-  const reset = el("button", { type: "button", class: "btn" }, [RULE_TEXT.reset]);
+  const reset = el("button", { type: "button", class: "secondary" }, [RULE_TEXT.reset]);
   const editor = el("div", { id: "rule-editor", class: "rule-editor" }, [area, errors, patterns, reset]);
   editor.hidden = true;
   let busy = false;
@@ -129,7 +129,7 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
       setChildren(
         patterns,
         items.map((p) => {
-          const b = el("button", { type: "button", class: "btn", "aria-label": `${RULE_TEXT.insert}: ${p.label}` }, [RULE_TEXT.insert]);
+          const b = el("button", { type: "button", class: "secondary", "aria-label": `${RULE_TEXT.insert}: ${p.label}` }, [RULE_TEXT.insert]);
           b.addEventListener("click", () => {
             if (!busy) cb.onInsert(p.sentence);
           });

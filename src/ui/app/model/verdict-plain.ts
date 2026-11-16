@@ -11,12 +11,18 @@ export const VERDICT_PLAIN = {
   modelGap: "This program can't be judged here: it uses a part this emulator does not model.",
   otherGap: "This program can't be judged here with these settings.",
   reduceMade: "The gremlins made",
+  brokeOnTry: "Broke on try {n} of {m}.",
 } as const;
 
 export type HeldBuild = "buggy" | "fixed";
 
 export function runOfText(trace: BrokeTrace, n: number): string {
   return `run ${String(trace.runIndex + 1)} of ${String(n)}`;
+}
+
+/** Plain view of the run line: "Broke on try N of M." */
+export function plainRunText(trace: BrokeTrace, n: number): string {
+  return VERDICT_PLAIN.brokeOnTry.replace("{n}", String(trace.runIndex + 1)).replace("{m}", String(n));
 }
 
 /** "Show the full gremlin log (N moves)"; Rest_Events are not counted. */

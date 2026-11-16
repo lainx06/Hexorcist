@@ -224,6 +224,18 @@ export function mountApp(root: HTMLElement): void {
   };
 
   /**
+   * Puts a replay of `events` on the timeline and scene. The Cursor starts at the violation cycle (or 0
+   * when the replay has none), paused. The same callback serves the core view and the later display view.
+   */
+  const showReplayView = (label: RunLabel, events: ReducerEvent[]) => (r: ReplayDoneMsg, d: ReplayDoneMsg | null): void => {
+    const v = viewOf(label, events, r, d);
+    if (label === "Reduced replay") reduced = v;
+    shown = label;
+    timeline.setToggle(shown, reduced !== null);
+    timeline.show(v);
+  };
+
+  /**
    * One Replay, then, when it has a violation, one Display_Replay of the same list. The Replay result is
    * the one the caller uses for fingerprints and texts; onView gets the core view at once and the display view later.
    */
@@ -394,7 +406,8 @@ export function mountApp(root: HTMLElement): void {
         removeButtons.push(b);
         b.addEventListener("click", () => {
           void (async () => {
-            const r = await doReplay(c.example.buggyHex, withoutEvent(list, i));
+            const without = withoutEvent(list, i);
+            const r = await doReplay(c.example.buggyHex, without, showReplayView(UI_COPY.trialRun, without));
             result.textContent = typeof r === "string" ? r : tryRemovingText(target, r.replay.violation);
             result.classList.toggle("error-text", typeof r === "string");
           })();
@@ -463,7 +476,7 @@ export function mountApp(root: HTMLElement): void {
 
   const replayAgain = async (): Promise<void> => {
     if (reduction === null || ctx === null) return;
-    const r = await doReplay(ctx.example.buggyHex, reduction.reducedList);
+    const r = await doReplay(ctx.example.buggyHex, reduction.reducedList, showReplayView("Reduced replay", reduction.reducedList));
     if (typeof r === "string") {
       replayAgainOut.textContent = r;
       return;

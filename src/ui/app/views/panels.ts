@@ -50,6 +50,16 @@ export const UI_COPY = {
   fixRegion: "Code changes",
   sketchLine: "buggy \u2192 fixed",
   pickOne: "Pick at least one gremlin.",
+  playLabel: "Play",
+  pauseLabel: "Pause",
+  prevEvent: "Previous event",
+  nextEvent: "Next event",
+  jumpBreak: "Jump to the break",
+  backToStart: "Back to start",
+  scrubLabel: "Replay position",
+  speedLabel: "Speed",
+  cursorLabel: "Cursor",
+  trialRun: "One move removed",
 } as const;
 
 /** Fills {name} slots of a copy template. */
@@ -165,8 +175,13 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
   const seedMsg = el("p", { id: "seed-msg", class: "field-msg meta" }, [""]);
   const unleash = el("button", { type: "button", class: "primary" }, [UI_COPY.unleash]);
   const progressTech = techOnly(el("p", { class: "progress mono" }, [""]));
-  const progressPlain = plainOnly(el("p", { class: "progress mono" }, [""]));
-  const elapsed = el("p", { class: "elapsed mono meta" }, [""]);
+  const progressPlain = plainOnly(el("p", { class: "progress" }, [""]));
+  const elapsedTech = techOnly(el("p", { class: "elapsed mono meta" }, [""]));
+  const elapsedPlain = plainOnly(el("p", { class: "elapsed meta" }, [""]));
+  const setElapsed = (text: string): void => {
+    elapsedTech.textContent = text;
+    elapsedPlain.textContent = text;
+  };
   const viewResult = el("button", { type: "button", class: "secondary view-result", hidden: true }, ["View result"]);
   let listeners: (() => void)[] = [];
   let timer = 0;
@@ -195,7 +210,8 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
     unleash,
     progressTech,
     progressPlain,
-    elapsed,
+    elapsedTech,
+    elapsedPlain,
     viewResult,
   ]);
 
@@ -222,16 +238,16 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
     startTimer() {
       if (timer !== 0) clearInterval(timer);
       t0 = performance.now();
-      elapsed.textContent = elapsedSecondsText(0);
+      setElapsed(elapsedSecondsText(0));
       timer = window.setInterval(() => {
-        elapsed.textContent = elapsedSecondsText(performance.now() - t0);
+        setElapsed(elapsedSecondsText(performance.now() - t0));
       }, 250);
     },
     stopTimer() {
       if (timer !== 0) {
         clearInterval(timer);
         timer = 0;
-        elapsed.textContent = elapsedSecondsText(performance.now() - t0);
+        setElapsed(elapsedSecondsText(performance.now() - t0));
       }
     },
     showViewResult(show) {
@@ -249,7 +265,7 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
       }
       progressTech.textContent = "";
       progressPlain.textContent = "";
-      elapsed.textContent = "";
+      setElapsed("");
     },
   };
 }

@@ -15,13 +15,14 @@ import {
   gremlinLogSummary,
   heldCardText,
   plainCoverageParts,
+  plainRunText,
   reducedReplayNote,
   runOfText,
   storyHeading,
 } from "../model/verdict-plain";
 import type { BuildLabel } from "../model/verdict-text";
 import { cardTitle, couldntTellLines, EMPTY_TRACE_TEXT, observedText, traceRows, uncheckedRows } from "../model/verdict-text";
-import { techOnly } from "./details";
+import { plainOnly, techOnly } from "./details";
 import type { Child } from "./dom";
 import { el } from "./dom";
 import { boundedTraceIcon, brokenLinkIcon, openBracketIcon } from "./icons";
@@ -145,7 +146,8 @@ export function verdictCard(input: VerdictCardInput): HTMLElement {
           : null;
       finding = [
         el("p", { class: "plain-broke" }, [input.plainBroke ?? EXAMPLE_COPY.crosswalk.broke]),
-        el("p", { class: "run-text" }, [runOfText(v.trace, input.runCount)]),
+        plainOnly(el("p", { class: "run-text" }, [plainRunText(v.trace, input.runCount)])),
+        techOnly(el("p", { class: "run-text" }, [runOfText(v.trace, input.runCount)])),
         techOnly(el("p", { class: "mono finding-rule" }, [v.trace.violation.rule])),
         techOnly(el("p", { class: "mono" }, [observedText(rule, v.trace.violation.cycle, v.trace.outputEvents)])),
         techOnly(el("p", { class: "meta mono" }, [`${cycleText(v.trace.violation.cycle)} cycles`])),
