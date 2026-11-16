@@ -1,0 +1,225 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add the Example data modules": [
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794844632041
+      },
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794844790967
+      }
+    ],
+    "1.2 Add the display model, the Checker_Wrapper and the display-replay protocol": [
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794844791748
+      },
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794844959872
+      }
+    ],
+    "1.3 Add the text tables, verdict texts and gremlin compatibility models": [
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794844960754
+      },
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794845097052
+      }
+    ],
+    "1.4 Add the Plain_Story_Builder and the new format and story-input functions": [
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794845097452
+      },
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794845195720
+      }
+    ],
+    "1.5 Write `tests/ui/examples-host.acceptance.test.ts`": [
+      {
+        "executionId": "aa3d23dd-0311-498d-8b04-1dfd1ffd86a8",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794845196605
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846604098
+      }
+    ],
+    "1. Example data, Display_Replay and the Node acceptance test": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846604136
+      }
+    ],
+    "2. Checkpoint - Ensure the acceptance test passes": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846711603
+      }
+    ],
+    "3.1 Add the lanes, scenes and details models": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846712616
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846856140
+      }
+    ],
+    "3.2 Add the Rule_Box_Check model": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794846857034
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847018231
+      }
+    ],
+    "3.3 Write property test for the Plain_Story_Builder": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847019155
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847087621
+      }
+    ],
+    "3.4 Write property test for the Rule_Box reason mapping": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847088212
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847161454
+      }
+    ],
+    "3.5 Write the table, verdict-text and gremlin compatibility tests": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847162510
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847357526
+      }
+    ],
+    "3. Remaining model modules and model tests": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847357575
+      }
+    ],
+    "4.1 Add the Details_Switch, header and panel texts": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847459696
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847746881
+      }
+    ],
+    "4.2 Add the gallery, Rule_Area / Rule_Box and Gremlin_Picker views": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847747878
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847925895
+      }
+    ],
+    "4.3 Update the verdict card, timeline and scene views": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794847926656
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848312823
+      }
+    ],
+    "4.4 Wire the App page": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848313046
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848691407
+      }
+    ],
+    "4.5 Write `tests/ui/copy-scan.test.ts`": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848691596
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848894257
+      }
+    ],
+    "4. Views and page wiring": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848894299
+      }
+    ],
+    "5. Final checkpoint - Global_Checks, report and stop for the user's browser check": [
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794848894474
+      },
+      {
+        "executionId": "2fc24662-94f4-497c-b659-293599a88d0d",
+        "chatSessionId": "sess_8975c615-43ab-490e-b8dd-3462b3c52e48",
+        "timestamp": 1794849009647
+      }
+    ]
+  }
+}

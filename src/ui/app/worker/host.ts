@@ -2,7 +2,7 @@
 // no random source, no network, no DOM or worker global, no dynamic import. Node can call them.
 import { createCampaign, DEFAULT_MAX_STEP_CYCLES, runEventList } from "../../../engine/campaign";
 import type { BridgeFactory } from "../../../engine/campaign";
-import type { Violation } from "../../../engine/checker";
+import type { Checker, Violation } from "../../../engine/checker";
 import { EmulatorBridge, isBridgeError } from "../../../engine/emulator-bridge";
 import type { EmulatorBridgeInterface } from "../../../engine/emulator-bridge";
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
@@ -17,6 +17,7 @@ import { buildCampaignConfig } from "../../../engine/rules/config-builder";
 import type { RuleSet } from "../../../engine/rules/ir";
 import type { Fixture, OutputEvent, ScheduledInput } from "../../../engine/types";
 import { coverageCounts } from "../model/coverage";
+import { displayRunCycles } from "../model/display";
 import type { CompactCampaignResult, JobError } from "./messages";
 
 export const SLICE_RUNS = 1;
@@ -196,6 +197,54 @@ function invalid(message: string): ReplayJobResult {
  * the cycle the replay stopped at.
  */
 export function runReplayJob(input: ReplayJobInput): ReplayJobResult {
+  return replayCore(input, () => input.runCycles, false);
+}
+
+export interface WrappedChecker {
+  checker: Checker;
+  recorded(): Violation | null;
+}
+
+/** Records the lowest-cycle violation of `inner` and reports none, so a run never stops early. */
+export function wrapChecker(inner: Checker): WrappedChecker {
+  let rec: Violation | null = null;
+  const checker: Checker = (obs) => {
+    const out = inner(obs);
+    const v = out.violation;
+    if (v !== null && (rec === null || v.cycle < rec.cycle)) rec = { rule: v.rule, cycle: v.cycle };
+    return out.cannotCheck === undefined ? { violation: null } : { violation: null, cannotCheck: out.cannotCheck };
+  };
+  return { checker, recorded: () => rec };
+}
+
+export interface DisplayReplayJobInput {
+  hex: string;
+  fixture: Fixture;
+  ruleSet: RuleSet;
+  events: ReducerEvent[];
+  violationCycle: number;
+}
+
+/** A replay that runs on past the violation, up to displayRunCycles(violationCycle). */
+export function runDisplayReplayJob(input: DisplayReplayJobInput): ReplayJobResult {
+  return replayCore(
+    input,
+    () => {
+      const v = input.violationCycle;
+      if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0) {
+        return "Field violationCycle: must be a whole number of 0 or more.";
+      }
+      return displayRunCycles(v);
+    },
+    true,
+  );
+}
+
+function replayCore(
+  input: { hex: string; fixture: Fixture; ruleSet: RuleSet; events: ReducerEvent[] },
+  runCyclesOf: () => unknown,
+  wrapped: boolean,
+): ReplayJobResult {
   try {
     if (typeof input.hex !== "string") return invalid("Field hex: must be a string.");
     let fixture: Fixture;
@@ -206,7 +255,8 @@ export function runReplayJob(input: ReplayJobInput): ReplayJobResult {
     } catch {
       return invalid("Field fixture: must be an object with a pins array.");
     }
-    const rc = input.runCycles;
+    const rc = runCyclesOf();
+    if (typeof rc === "string") return invalid(rc);
     if (typeof rc !== "number" || !Number.isInteger(rc) || rc < 1 || rc > MAX_RUN_CYCLES) {
       return invalid(`Field runCycles: must be an integer from 1 to ${String(MAX_RUN_CYCLES)}.`);
     }
@@ -221,11 +271,12 @@ export function runReplayJob(input: ReplayJobInput): ReplayJobResult {
     if (!Array.isArray(input.events)) return invalid("Field events: must be an array.");
     const bad = checkEventList(input.events as unknown[], fixture, { runCycles: rc });
     if (bad !== null) return invalid(bad.message);
+    const wrap = wrapped ? wrapChecker(compiled.compiled.checker) : null;
     const path = runEventList(
       {
         hex: input.hex,
         fixture,
-        checker: compiled.compiled.checker,
+        checker: wrap === null ? compiled.compiled.checker : wrap.checker,
         runCycles: rc,
         maxStepCycles: DEFAULT_MAX_STEP_CYCLES,
       },
@@ -243,7 +294,12 @@ export function runReplayJob(input: ReplayJobInput): ReplayJobResult {
     if (typeof fp !== "string") return { ok: false, error: jobError(fp) };
     return {
       ok: true,
-      violation: path.violation === null ? null : { rule: path.violation.rule, cycle: path.violation.cycle },
+      violation:
+        wrap !== null
+          ? wrap.recorded()
+          : path.violation === null
+            ? null
+            : { rule: path.violation.rule, cycle: path.violation.cycle },
       outputEdges,
       reachedEnd: path.endCycle,
       fingerprint: fp,

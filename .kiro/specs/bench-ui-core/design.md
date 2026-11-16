@@ -810,6 +810,7 @@ src/ui/app/
   app.css                        the only stylesheet of the App and the Speed_Page
   data/
     crosswalk.ts                 ?raw imports of the seven Crosswalk files + parsing
+    example.ts                   shared parsing of fixture.json, rules.txt and meta.json (parseExample)
     garage.ts                    ?raw imports of the Garage fixed.hex, fixture.json, rules.txt, meta.json + parsing
   model/                         pure modules (Requirement 25.1, 25.6)
     timeline.ts                  levels, Timeline_Events, window, markers, axis ticks
@@ -835,19 +836,13 @@ src/ui/app/
   views/                         DOM code; may read the UI_Clock
     dom.ts                       element helpers (createElement + textContent only)
     worker-client.ts             creates the Engine_Worker, decodes replies, routes them by jobId
-    app-page.ts                  App controller: wiring, flow, announcements
-    header.ts                    wordmark, pitch line, chip line, Crosswalk card
-    rule-panel.ts                Canonical_Sentence
-    gremlin-tiles.ts             gremlin tiles
-    controls.ts                  Run_Count, Campaign_Seed, Unleash, progress, elapsed, View result
+    app-page.ts                  App controller: wiring, flow, announcements, plus (merged) Reduced_List rows with
+                                 "Try removing", "Sketch source" diff and Apply_Fix results,
+                                 "Replay again" with fingerprint and matches/differs
+    panels.ts                    header, rule panel, gremlin tiles, controls, counter, Failure_Story card (merged)
     verdict-card.ts              the three Verdict_Cards
-    story-card.ts                Failure_Story card
     scene.ts                     crosswalk SVG
-    counter.ts                   "X events -> Y events", "Candidates tried: k", Shrink_Label
     timeline.ts                  lanes, axis, cursor, markers, playback controls, toggle
-    try-removing.ts              Reduced_List rows with "Try removing"
-    sketch-diff.ts               "Sketch source" diff and Apply_Fix results
-    replay-again.ts              "Replay again" with fingerprint and matches/differs
     live.ts                      the single aria-live="polite" region
     icons.ts                     original inline SVG icons (verdicts, masher, card motif)
     speed-page.ts                Speed_Page
@@ -1380,7 +1375,7 @@ Controller rules that the diagram does not show:
 - Starting a Buggy_Build Campaign clears the verdict area, story, scene and timeline (no Replay shown), counter, "Try removing" list, "Replay again" result, diff and Apply_Fix state (Choices I made, item 6). The Run_Count and Campaign_Seed used are stored with the Campaign, so the BROKE card, the Fixed_Build rerun and "run k of N" use them even after the fields change (Requirements 6.2, 8.5, 16.13).
 - If the "Original run" Replay ends with an error, the controller shows the error and still starts the reduction; the timeline then stays empty until the reduced Replay arrives (Choices I made, item 7).
 - A Fixed_Build BROKE starts no reduction and leaves the Buggy_Build reduction results unchanged (Requirements 11.13, 16.18).
-- The elapsed timer is a `setInterval` of 250 ms in `views/controls.ts` that writes `elapsedText(performance.now() - t0)`. It stops on a verdict, an Engine error or a worker stop, and the last texts stay (Requirements 6.3 to 6.5).
+- The elapsed timer is a `setInterval` of 250 ms in `views/panels.ts` that writes `elapsedText(performance.now() - t0)`. It stops on a verdict, an Engine error or a worker stop, and the last texts stay (Requirements 6.3 to 6.5).
 - Activity labels "Replaying" and "Reducing" sit in one line inside the scene region's replay controls, outside every Verdict_Card, with no rail or icon (Requirements 6.7 to 6.9). The App shows no "Loading" label (the word is allowed only as an activity label; the flow has no loading step).
 
 Live announcements (Requirements 7.8, 21.15 to 21.20) are written by `views/live.ts`, which sets the text of the single region:
@@ -1823,7 +1818,7 @@ Every error is shown as plain text (`textContent`) in an error line styled apart
 | `createReducer` or `step` returns a `ReducerError`, or a `StepReport` has `error` | host | `<kind>: <message>`; announced in the live region | BROKE card and its trace list kept; no Shrink_Label, no tooltip, no reduced Replay; "Reduced replay" disabled (Requirements 11.10, 15.23, 21.19) |
 | Replay input check fails or `runEventList` returns an EngineError | host (`invalid-input` or `replay-error`, as `replayEventList` would) | `<kind>: <message>` next to the action that started it ("Original run", "Replay again", the "Try removing" row, or the Apply_Fix section) | other results unchanged; a Fixed_Build Replay error starts no Fixed_Build Campaign (Requirements 16.19, 18.8) |
 | Fixed_Build Campaign error | host | `<kind>: <message>` in place of the Fixed_Build card | BROKE card kept; Apply_Fix disabled until the next Buggy_Build Campaign (Requirements 16.20, 16.21) |
-| `failureStory` returns a `ReducerError` | `views/story-card.ts` | the error `message` in the story card | Timeline and Scene of that Replay kept (Requirement 12.11) |
+| `failureStory` returns a `ReducerError` | `views/panels.ts` | the error `message` in the story card | Timeline and Scene of that Replay kept (Requirement 12.11) |
 | Codec error on a received message | `views/worker-client.ts` | `Message from the engine worker could not be read: <path>: <message>` | no card for that message; cards on screen unchanged (Requirement 5.10) |
 | Codec error on a request inside the worker | Worker_Entry | `job-error` with `job: "message"`, shown as `message-error: <path>: <message>` | the waiting job ends with that error |
 | Worker `error` event | `views/worker-client.ts` | `The engine worker stopped: <event message>` | Unleash enabled; the client terminates that worker and creates a new one for the next job (Requirements 4.21, 4.22) |

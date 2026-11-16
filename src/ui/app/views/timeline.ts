@@ -1,7 +1,10 @@
 // Signal timeline: one lane per mapped signal plus GREMLINS, a shared cursor, playback and keys.
 import type { Violation } from "../../../engine/checker";
 import type { ReducerEvent } from "../../../engine/reducer/types";
-import type { OutputEvent } from "../../../engine/types";
+import type { Fixture, FixturePin, OutputEvent } from "../../../engine/types";
+import { friendlyLabel } from "../model/labels";
+import type { ExampleLane } from "../model/lanes";
+import { exampleLanes, inputLaneWord, outputLaneWord, plainSelectedText, releaseRanges } from "../model/lanes";
 import type { PlayerState, Speed } from "../model/player";
 import { DEFAULT_SPEED, home, pause, play, setSpeed, showReplay, stepNext, stepPrev, tick, toEnd } from "../model/player";
 import type { Span } from "../model/span";
@@ -16,7 +19,9 @@ import {
   selectedEventText,
   timelineEvents,
 } from "../model/timeline";
-import { ms } from "../model/format";
+import { inputValueText, ms } from "../model/format";
+import { originalRunNote } from "../model/verdict-plain";
+import { plainOnly, signalLabel, techOnly } from "./details";
 import { el, prefersReducedMotion, setChildren, svg } from "./dom";
 import { nextIcon, pauseIcon, playIcon, prevIcon } from "./icons";
 
@@ -38,6 +43,10 @@ export interface TimelineView {
   /** Removes GREMLINS markers that a smaller best list no longer holds. */
   dropMarkers(bestGremlinCount: number, bestList: readonly ReducerEvent[]): void;
   setToggle(selected: RunLabel, reducedEnabled: boolean): void;
+  /** Lanes, labels and Lane_Words for the Current_Example fixture. Call before show(). */
+  setFixture(fixture: Fixture): void;
+  /** Gremlin_Event counts for the note under the Timeline while "Original run" is selected; null clears it. */
+  setRunNote(counts: { original: number; reduced: number } | null): void;
   onCursor(fn: (cursor: number, view: ReplayView | null) => void): void;
   onToggle(fn: (label: RunLabel) => void): void;
 }
@@ -45,7 +54,15 @@ export interface TimelineView {
 const LANE_H = 40;
 const AXIS_H = 32;
 const MIN_W = 720;
-const SIGNAL_LANES = LANES.filter((l) => l !== "GREMLINS");
+
+export const TIMELINE_LEGEND = "Solid line: on or off. Dotted: input released (not driven by a gremlin).";
+
+// Used until setFixture is called: the crosswalk lanes.
+const DEFAULT_LANES: ExampleLane[] = LANES.map((signal) => ({
+  signal,
+  direction: signal === "GREMLINS" ? "gremlins" : signal === "REQUEST" ? "input" : "output",
+}));
+const DEFAULT_PINS: FixturePin[] = [{ signal: "REQUEST", port: "D", bit: 2, direction: "input", activeLevel: "low" }];
 
 function yFor(level: LaneLevel, top: number): number | null {
   if (level === 1) return top + 8;
@@ -59,6 +76,10 @@ export function createTimeline(): TimelineView {
   let markers: { m: Marker; node: SVGElement }[] = [];
   let state: PlayerState = showReplay(0, 0, DEFAULT_SPEED);
   let width = MIN_W;
+  let lanes: ExampleLane[] = DEFAULT_LANES;
+  let pins: readonly FixturePin[] = DEFAULT_PINS;
+  let selection: RunLabel = "Original run";
+  let runCounts: { original: number; reduced: number } | null = null;
   let frame = 0;
   let cursorFn: (c: number, v: ReplayView | null) => void = () => undefined;
   let toggleFn: (l: RunLabel) => void = () => undefined;
@@ -71,12 +92,14 @@ export function createTimeline(): TimelineView {
   originalBtn.addEventListener("click", () => toggleFn("Original run"));
   reducedBtn.addEventListener("click", () => toggleFn("Reduced replay"));
 
-  const labels = el(
-    "div",
-    { class: "lane-labels mono", "aria-hidden": "true" },
-    LANES.map((l) => el("div", { class: "lane-label" }, [l])),
-  );
-  const plotSvg = svg("svg", { class: "plot-svg", height: LANE_H * LANES.length + AXIS_H, width: MIN_W });
+  const labels = el("div", { class: "lane-labels", "aria-hidden": "true" }, []);
+  const drawLabels = (): void =>
+    setChildren(
+      labels,
+      lanes.map((l) => el("div", { class: "lane-label" }, [signalLabel(l.signal)])),
+    );
+  drawLabels();
+  const plotSvg = svg("svg", { class: "plot-svg", height: LANE_H * lanes.length + AXIS_H, width: MIN_W });
   const staticLayer = svg("g", {});
   const markerLayer = svg("g", {});
   const dynamicLayer = svg("g", {});
@@ -108,17 +131,30 @@ export function createTimeline(): TimelineView {
   const nextBtn = el("button", { type: "button", class: "icon-button", "aria-label": "Next event" }, [nextIcon()]);
   const slowBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "false" }, ["0.1x"]);
   const fastBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "true" }, ["1x"]);
-  const selected = el("p", { class: "selected-event mono" }, ["No event selected."]);
+  const noEvent = "No event selected.";
+  const selectedPlain = plainOnly(el("p", { class: "selected-event" }, [noEvent]));
+  const selectedTech = techOnly(el("p", { class: "selected-event mono" }, [noEvent]));
+  const legend = el("p", { class: "timeline-legend meta" }, [TIMELINE_LEGEND]);
+  const runNote = el("p", { class: "run-note meta", hidden: true }, [""]);
   const cursorText = el("p", { class: "cursor-text meta mono" }, [""]);
   const controls = el("div", { class: "timeline-controls" }, [playBtn, pauseBtn, prevBtn, nextBtn, slowBtn, fastBtn]);
 
   const node = el("section", { class: "panel timeline-region", "aria-label": "Timeline" }, [
     el("div", { class: "timeline-head" }, [runLabel, el("div", { class: "toggle-row" }, [originalBtn, reducedBtn])]),
     timeline,
+    legend,
+    runNote,
     controls,
-    selected,
+    selectedPlain,
+    selectedTech,
     cursorText,
   ]);
+
+  function refreshNote(): void {
+    const show = view !== null && selection === "Original run" && runCounts !== null;
+    runNote.hidden = !show;
+    runNote.textContent = show && runCounts !== null ? originalRunNote(runCounts.original, runCounts.reduced) : "";
+  }
 
   const now = (): number => performance.now();
   const x = (c: number): number => {
@@ -140,10 +176,11 @@ export function createTimeline(): TimelineView {
     const w = Math.max(MIN_W, plot.clientWidth || MIN_W);
     width = w;
     plotSvg.setAttribute("width", String(w));
-    LANES.forEach((_, i) => {
+    plotSvg.setAttribute("height", String(LANE_H * lanes.length + AXIS_H));
+    lanes.forEach((_, i) => {
       staticLayer.appendChild(svg("line", { x1: 0, x2: w, y1: (i + 1) * LANE_H, y2: (i + 1) * LANE_H, class: "lane-rule" }));
     });
-    const axisTop = LANE_H * LANES.length;
+    const axisTop = LANE_H * lanes.length;
     if (view === null) return;
     const v = view;
     // span (hatched) and violation marker
@@ -161,21 +198,27 @@ export function createTimeline(): TimelineView {
       );
     }
     // signal lanes
-    SIGNAL_LANES.forEach((signal, i) => {
+    lanes.forEach((lane, i) => {
+      if (lane.direction === "gremlins") return;
+      const signal = lane.signal;
       const top = i * LANE_H;
-      const points =
-        signal === "REQUEST"
-          ? v.events.filter((e) => e.signal === signal).map((e) => ({ cycle: e.cycle, value: eventValue(e) }))
-          : v.outputEdges.filter((e) => e.signal === signal).map((e) => ({ cycle: e.cycle, value: e.value as LaneLevel }));
+      const isInput = lane.direction === "input";
+      const points = isInput
+        ? v.events.filter((e) => e.signal === signal).map((e) => ({ cycle: e.cycle, value: eventValue(e) }))
+        : v.outputEdges.filter((e) => e.signal === signal).map((e) => ({ cycle: e.cycle, value: e.value as LaneLevel }));
       const segs = laneSegments(points, v.windowEnd);
       let prevY: number | null = null;
       for (const s of segs) {
+        // Released parts of an input are drawn dotted from releaseRanges below.
+        if (isInput && s.level === "release") {
+          prevY = null;
+          continue;
+        }
         const y = yFor(s.level, top);
         const x1 = x(s.from);
         const x2 = x(s.to);
         if (y === null) {
-          const cls = s.level === "release" ? "lane-released" : "lane-undriven";
-          staticLayer.appendChild(svg("line", { x1, x2, y1: top + 20, y2: top + 20, class: cls }));
+          staticLayer.appendChild(svg("line", { x1, x2, y1: top + 20, y2: top + 20, class: "lane-undriven" }));
           prevY = null;
         } else {
           if (prevY !== null && prevY !== y) {
@@ -183,6 +226,13 @@ export function createTimeline(): TimelineView {
           }
           staticLayer.appendChild(svg("line", { x1, x2, y1: y, y2: y, class: "lane-step" }));
           prevY = y;
+        }
+      }
+      if (isInput) {
+        for (const r of releaseRanges(v.events, signal, v.windowEnd)) {
+          if (r.from > v.windowEnd) continue;
+          const to = Math.min(r.to, v.windowEnd);
+          staticLayer.appendChild(svg("line", { x1: x(r.from), x2: x(to), y1: top + 20, y2: top + 20, class: "lane-released" }));
         }
       }
     });
@@ -201,7 +251,7 @@ export function createTimeline(): TimelineView {
       staticLayer.appendChild(svg("text", { x: tx, y: axisTop + 26, "text-anchor": anchor, class: "axis-label" }, [t.label]));
     }
     // gremlin markers
-    const gTop = (LANES.length - 1) * LANE_H;
+    const gTop = (lanes.length - 1) * LANE_H;
     for (const m of gremlinMarkers(v.events, v.windowEnd)) {
       const g = svg("g", { class: "marker" }, [
         svg("circle", { cx: x(m.cycle), cy: gTop + 20, r: 9, class: "marker-dot" }),
@@ -214,16 +264,25 @@ export function createTimeline(): TimelineView {
     }
   }
 
+  function wordFor(v: ReplayView, ev: TimelineEvent): string {
+    if (ev.source === "output") return outputLaneWord(v.outputEdges, ev.signal, ev.cycle);
+    const pin = pins.find((p) => p.signal === ev.signal);
+    return pin === undefined ? inputValueText(ev.value) : inputLaneWord(v.events, pin, ev.cycle);
+  }
+
   function drawDynamic(): void {
     setChildren(dynamicLayer, []);
-    const axisTop = LANE_H * LANES.length;
+    const axisTop = LANE_H * lanes.length;
     if (view !== null) {
       const cx = x(state.cursor);
       dynamicLayer.appendChild(svg("line", { x1: cx, x2: cx, y1: 0, y2: axisTop, class: "cursor-line" }));
       if (state.selected !== null) {
         const ev = events[state.selected];
         if (ev !== undefined) {
-          const lane = ev.source === "input" && ev.gremlinId !== "rest" ? LANES.length - 1 : Math.max(0, LANES.indexOf(ev.signal as (typeof LANES)[number]));
+          const lane =
+            ev.source === "input" && ev.gremlinId !== "rest"
+              ? lanes.length - 1
+              : Math.max(0, lanes.findIndex((l) => l.signal === ev.signal));
           dynamicLayer.appendChild(
             svg("rect", { x: x(ev.cycle) - 11, y: lane * LANE_H + 9, width: 22, height: 22, class: "selected-box" }),
           );
@@ -231,7 +290,8 @@ export function createTimeline(): TimelineView {
       }
     }
     const ev = state.selected === null ? undefined : events[state.selected];
-    selected.textContent = ev === undefined ? "No event selected." : selectedEventText(ev);
+    selectedTech.textContent = ev === undefined ? noEvent : selectedEventText(ev);
+    selectedPlain.textContent = ev === undefined || view === null ? noEvent : plainSelectedText(ev, friendlyLabel(ev.signal).text, wordFor(view, ev));
     cursorText.textContent = view === null ? "" : `Cursor: ${ms(state.cursor)}`;
     cursorFn(state.cursor, view);
   }
@@ -302,6 +362,16 @@ export function createTimeline(): TimelineView {
       drawStatic();
       drawDynamic();
       setButtons();
+      refreshNote();
+    },
+    setFixture(fixture) {
+      lanes = exampleLanes(fixture);
+      pins = fixture.pins;
+      drawLabels();
+    },
+    setRunNote(counts) {
+      runCounts = counts;
+      refreshNote();
     },
     dropMarkers(bestGremlinCount, bestList) {
       const gone = markersToRemove(
@@ -328,6 +398,8 @@ export function createTimeline(): TimelineView {
       originalBtn.setAttribute("aria-pressed", String(sel === "Original run"));
       reducedBtn.setAttribute("aria-pressed", String(sel === "Reduced replay"));
       reducedBtn.disabled = !reducedEnabled;
+      selection = sel;
+      refreshNote();
     },
     onCursor(fn) {
       cursorFn = fn;

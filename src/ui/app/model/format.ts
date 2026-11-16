@@ -27,6 +27,17 @@ export function shrinkText(x: number, y: number): string {
   return `${eventsText(x)} -> ${eventsText(y)}`;
 }
 
+/** "Elapsed 1.2 s" from UI_Clock milliseconds, tenths of a second. */
+export function elapsedSecondsText(elapsedMs: number): string {
+  const t = Math.max(0, Math.floor(elapsedMs / 100));
+  return `Elapsed ${String(Math.floor(t / 10))}.${String(t % 10)} s`;
+}
+
+/** "X events → Y events". */
+export function shrinkArrowText(x: number, y: number): string {
+  return shrinkText(x, y).replace("->", "→");
+}
+
 export function candidatesText(k: number): string {
   return `Candidates tried: ${String(k)}`;
 }

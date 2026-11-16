@@ -134,6 +134,53 @@ ul {
   font-weight: 600;
 }
 
+.subtitle {
+  color: var(--c-text-2);
+}
+
+.switch {
+  padding: var(--s-2) var(--s-3);
+  color: var(--c-text);
+  background: var(--c-raised);
+  border: 1px solid var(--c-outline);
+}
+
+.switch[aria-checked="true"] {
+  border: 2px solid var(--c-gremlin);
+}
+
+.what-is-this {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  max-width: 960px;
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.step {
+  padding: var(--s-2) var(--s-3);
+  background: var(--c-raised);
+  border-radius: var(--r-control);
+}
+
+.signal-name {
+  margin-left: var(--s-2);
+  color: var(--c-text-2);
+}
+
+.reducing {
+  font-style: italic;
+}
+
+.reduction-sentence:empty {
+  display: none;
+}
+
 /* Workspace */
 .workspace {
   display: grid;
@@ -305,13 +352,14 @@ button:disabled {
 /* Verdicts */
 .verdict-area {
   display: flex;
+  align-items: flex-start;
   gap: var(--s-4);
-  height: 440px;
   min-width: 0;
 }
 
 .placeholder {
   flex: 1;
+  min-height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,7 +377,6 @@ button:disabled {
   padding: var(--s-5);
   background: var(--c-raised);
   border-radius: var(--r-panel);
-  overflow: auto;
 }
 
 .verdict-title {
@@ -394,8 +441,7 @@ button:disabled {
 }
 
 .trace-scroll {
-  max-height: 176px;
-  overflow: auto;
+  overflow-wrap: anywhere;
 }
 
 .trace-table,
@@ -859,10 +905,6 @@ button:disabled {
     display: none;
   }
 
-  .verdict-area {
-    height: 360px;
-  }
-
   .scene-region {
     min-height: 400px;
     justify-content: center;
@@ -881,4 +923,296 @@ button:disabled {
   .verdict--broke {
     animation-name: none;
   }
+}
+/* Gallery, rule area and gremlin picker */
+.gallery-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+button.example-card {
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-color: var(--c-outline);
+}
+
+button.example-card.is-selected {
+  border-color: var(--c-gremlin);
+}
+
+button.example-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.file-problem-reason {
+  color: var(--c-broke);
+  overflow-wrap: anywhere;
+}
+
+.rule-headline {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.rule-lines,
+.rule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.rule-box {
+  width: 100%;
+  min-height: 96px;
+  padding: var(--s-2) var(--s-3);
+  font-size: 16px;
+  color: var(--c-text);
+  background: var(--c-raised);
+  border: 1px solid var(--c-outline);
+  border-radius: var(--r-control);
+  resize: vertical;
+}
+
+.rule-error {
+  color: var(--c-broke);
+  overflow-wrap: anywhere;
+}
+
+.pattern {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+}
+
+.pattern code {
+  flex: 1 1 240px;
+  overflow-wrap: anywhere;
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--s-3);
+}
+
+.pick-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-height: 44px;
+  padding: var(--s-3);
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  background: var(--c-raised);
+  border: 2px solid var(--c-outline);
+  border-radius: var(--r-control);
+  cursor: pointer;
+}
+
+.pick-tile.is-selected {
+  border-color: var(--c-gremlin);
+}
+
+.pick-tile:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pick-mark {
+  margin-left: auto;
+  color: var(--c-gremlin);
+  font-weight: 700;
+}
+
+.pick-reason {
+  color: var(--c-text-2);
+}
+
+.pick-ranges,
+.pick-targets {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Verdict card story, moves and gremlin log. Nothing in a card scrolls; the opened log grows the card. */
+.plain-broke,
+.held-sentence,
+.tell-headline,
+.run-text {
+  font-size: 16px;
+}
+
+.plain-broke {
+  font-weight: 600;
+}
+
+.card-story,
+.reduced-moves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.card-story .story-text {
+  overflow-wrap: anywhere;
+}
+
+.legend-lines,
+.moves-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.moves-list li {
+  overflow-wrap: anywhere;
+}
+
+.gremlin-log {
+  display: block;
+}
+
+.gremlin-log-summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--c-gremlin);
+}
+
+.gremlin-log .trace-table {
+  max-width: 100%;
+}
+
+/* Timeline: wider label column, legend and notes */
+.timeline {
+  grid-template-columns: 248px 1fr;
+}
+
+.lane-label {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.lane-label .signal-name {
+  font-size: 12px;
+}
+
+.timeline-legend,
+.run-note {
+  overflow-wrap: anywhere;
+}
+
+/* Scenes */
+.scene-label--broke {
+  fill: var(--c-broke);
+}
+
+.scene-label--note {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  fill: var(--c-text-2);
+}
+
+.frame {
+  fill: var(--c-outline);
+}
+
+.door-opening {
+  fill: var(--c-page);
+}
+
+.door-slat {
+  fill: var(--c-raised);
+  stroke: var(--c-text-2);
+  stroke-width: 2;
+}
+
+.beam-block {
+  fill: var(--c-raised);
+  stroke: var(--c-outline);
+  stroke-width: 2;
+}
+
+.beam-line {
+  stroke: var(--c-gremlin);
+  stroke-width: 3;
+  stroke-dasharray: 10 8;
+}
+
+.cat-body {
+  fill: var(--c-panel);
+  stroke: var(--c-text-2);
+  stroke-width: 2.5;
+}
+
+.cat-tail {
+  fill: none;
+  stroke: var(--c-text-2);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.cat-eye {
+  fill: var(--c-text);
+}
+
+.deadline-frame {
+  fill: none;
+  stroke: var(--c-broke);
+  stroke-width: 4;
+}
+
+.switch-lever {
+  stroke: var(--c-outline);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.switch-lever.is-on {
+  stroke: var(--c-signal);
+}
+
+.switch-pivot {
+  fill: var(--c-text-2);
+}
+
+.wire {
+  stroke: var(--c-outline);
+  stroke-width: 4;
+}
+
+.chip-body {
+  fill: var(--c-raised);
+  stroke: var(--c-outline);
+  stroke-width: 3;
+}
+
+.status-lamp {
+  fill: var(--c-raised);
+  stroke: var(--c-outline);
+  stroke-width: 3;
+}
+
+.status-lamp.is-lit {
+  fill: var(--c-signal);
+  stroke: var(--c-signal);
+}
+
+.lamp-glow {
+  fill: none;
+  stroke: none;
+}
+
+.lamp-glow.is-lit {
+  stroke: #99F5AC66;
+  stroke-width: 8;
 }

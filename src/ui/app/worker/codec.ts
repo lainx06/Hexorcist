@@ -1,6 +1,6 @@
 // Message_Codec: encode and decode Worker_Messages field by field. Pure. Decoding never throws.
-import type { WorkerMessage, WorkerReply, WorkerRequest } from "./messages";
-import { REPLY_KINDS, REQUEST_KINDS } from "./messages";
+import type { DisplayReplayRequest, WorkerMessage, WorkerReply, WorkerRequest } from "./messages";
+import { DISPLAY_REPLAY_KIND, REPLY_KINDS, REQUEST_KINDS } from "./messages";
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
@@ -248,6 +248,14 @@ const SCHEMAS: Readonly<Record<string, Readonly<Record<string, Schema>>>> = {
     measure: bool,
   },
   replay: { jobId: nat, hex: str, fixture, ruleSet, events: arr(inputEvent), runCycles: nat },
+  [DISPLAY_REPLAY_KIND]: {
+    jobId: nat,
+    hex: str,
+    fixture,
+    ruleSet,
+    events: arr(inputEvent),
+    violationCycle: nat,
+  },
   "campaign-progress": { jobId: nat, runsCompleted: nat, total: nat, finished: literal(false) },
   "campaign-done": {
     jobId: nat,
@@ -303,6 +311,16 @@ export function decodeMessage(v: unknown): Decoded<WorkerMessage> {
 
 export function decodeRequest(v: unknown): Decoded<WorkerRequest> {
   return decodeWith<WorkerRequest>(v, REQUEST_KINDS);
+}
+
+export function decodeDisplayRequest(v: unknown): Decoded<DisplayReplayRequest> {
+  return decodeWith<DisplayReplayRequest>(v, [DISPLAY_REPLAY_KIND]);
+}
+
+export function encodeDisplayRequest(m: DisplayReplayRequest): JsonValue {
+  const d = decodeDisplayRequest(m);
+  if (!d.ok) throw new Error(`The message could not be encoded: ${d.error.path}: ${d.error.message}`);
+  return d.message as unknown as JsonValue;
 }
 
 export function decodeReply(v: unknown): Decoded<WorkerReply> {

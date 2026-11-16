@@ -1,9 +1,11 @@
 // Creates the Engine_Worker, decodes every reply and routes it to the job that waits for it.
 import type { CodecError } from "../worker/codec";
-import { decodeReply, encodeMessage } from "../worker/codec";
+import { decodeReply, encodeDisplayRequest, encodeMessage } from "../worker/codec";
+import { DISPLAY_REPLAY_KIND } from "../worker/messages";
 import type {
   CampaignDoneMsg,
   CampaignProgressMsg,
+  DisplayReplayRequest,
   JobError,
   ReduceDoneMsg,
   ReduceProgressMsg,
@@ -23,6 +25,7 @@ type Request = { [K in WorkerRequest["kind"]]: Omit<Extract<WorkerRequest, { kin
 
 export interface EngineClient {
   run(req: Request, onProgress?: (m: ProgressMsg) => void): Promise<JobOutcome>;
+  runDisplay(req: Omit<DisplayReplayRequest, "jobId" | "kind">): Promise<JobOutcome>;
 }
 
 interface Waiting {
@@ -76,18 +79,21 @@ export function createEngineClient(): EngineClient {
     return wk;
   };
 
+  const send = (onProgress: ((m: ProgressMsg) => void) | undefined, encode: (jobId: number) => unknown): Promise<JobOutcome> =>
+    new Promise<JobOutcome>((resolve) => {
+      const jobId = nextId++;
+      waiting = { jobId, onProgress, settle: resolve };
+      if (worker === null) worker = start();
+      try {
+        worker.postMessage(encode(jobId));
+      } catch (e) {
+        settle({ kind: "codec-error", error: { path: "$", message: e instanceof Error ? e.message : String(e) } });
+      }
+    });
+
   return {
-    run(req, onProgress) {
-      return new Promise<JobOutcome>((resolve) => {
-        const jobId = nextId++;
-        waiting = { jobId, onProgress, settle: resolve };
-        if (worker === null) worker = start();
-        try {
-          worker.postMessage(encodeMessage({ ...req, jobId } as WorkerRequest));
-        } catch (e) {
-          settle({ kind: "codec-error", error: { path: "$", message: e instanceof Error ? e.message : String(e) } });
-        }
-      });
-    },
+    run: (req, onProgress) => send(onProgress, (jobId) => encodeMessage({ ...req, jobId } as WorkerRequest)),
+    runDisplay: (req) =>
+      send(undefined, (jobId) => encodeDisplayRequest({ ...req, kind: DISPLAY_REPLAY_KIND, jobId })),
   };
 }

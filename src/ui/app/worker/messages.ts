@@ -62,6 +62,19 @@ export interface ReplayRequest {
   runCycles: number;
 }
 
+/** Not part of REQUEST_KINDS or WORKER_MESSAGE_KINDS. The reply is an ordinary replay-done. */
+export const DISPLAY_REPLAY_KIND = "display-replay";
+
+export interface DisplayReplayRequest {
+  kind: typeof DISPLAY_REPLAY_KIND;
+  jobId: number;
+  hex: string;
+  fixture: Fixture;
+  ruleSet: RuleSet;
+  events: ReducerEvent[];
+  violationCycle: number;
+}
+
 export type WorkerRequest = CampaignRequest | ReduceRequest | ReplayRequest;
 
 export interface CampaignProgressMsg {

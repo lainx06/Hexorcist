@@ -4,6 +4,7 @@ import type { RuleSet } from "../../../engine/rules/ir";
 import type { StoryInput, StoryLabel } from "../../../engine/reducer/story";
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent } from "../../../engine/types";
+import { storyLabelsFor } from "./labels";
 import { ruleBySentence } from "./rules";
 import { spanFor } from "./span";
 
@@ -14,6 +15,25 @@ export const STORY_LABELS: Readonly<Record<string, StoryLabel>> = {
     held: "pressed and held the walk button",
   },
 };
+
+/** Story input with the fixture's Story_Labels; the span is passed in, set only when not null. */
+export function exampleStoryInput(args: {
+  reducedList: readonly ReducerEvent[];
+  fixture: Fixture;
+  violation: Violation;
+  outputEdges: readonly OutputEvent[];
+  span: { lengthCycles: number; cut: boolean } | null;
+}): StoryInput {
+  const input: StoryInput = {
+    reducedList: args.reducedList,
+    fixture: args.fixture,
+    violation: args.violation,
+    outputEdges: args.outputEdges,
+    labels: storyLabelsFor(args.fixture),
+  };
+  if (args.span !== null) input.violationSpan = { lengthCycles: args.span.lengthCycles, cut: args.span.cut };
+  return input;
+}
 
 export function buildStoryInput(args: {
   reducedList: readonly ReducerEvent[];

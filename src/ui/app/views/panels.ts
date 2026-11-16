@@ -2,24 +2,66 @@
 import type { Fixture } from "../../../engine/types";
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import { gremlinTile } from "../model/gremlin-tile";
-import { candidatesText, elapsedText, progressText, shrinkText } from "../model/format";
+import { candidatesText, elapsedSecondsText, progressText, shrinkArrowText } from "../model/format";
+import { reductionSentence } from "../model/verdict-plain";
 import { checkRuns, checkSeed } from "../model/fields";
+import { applyDetails, currentDetails, plainOnly, techOnly, writeDetails } from "./details";
 import { el, setChildren } from "./dom";
-import { crossingMotif, gremlinIcon } from "./icons";
+import { gremlinIcon } from "./icons";
+
+export const UI_COPY = {
+  switchLabel: "Show technical details",
+  subtitle: "Runs in your browser",
+  chip: "ATmega328P \u00b7 Browser only",
+  whatHeading: "What is this?",
+  whatText:
+    "Small devices like traffic lights and garage doors run tiny programs. Hexorcist runs the real compiled program in your browser, sends mischievous gremlins to press its buttons at awkward moments, and checks your rules. If a rule breaks, it shrinks the attack down to the few moves that matter and replays it.",
+  steps: [
+    "1. Pick a device and a rule.",
+    "2. Gremlins attack its inputs.",
+    "3. See where it broke, shrunk to the few moves that matter.",
+  ],
+  runsLabel: "How many tries",
+  seedLabel: "Seed (same number, same gremlins)",
+  reducing: "Reducing",
+  applyFix: "Try the fixed program",
+  fixTitle: "What changed in the code",
+  fixRegion: "Code changes",
+  sketchLine: "buggy \u2192 fixed",
+  pickOne: "Pick at least one gremlin.",
+} as const;
+
+function detailsSwitch(): HTMLButtonElement {
+  const btn = el("button", { type: "button", class: "switch", role: "switch", "aria-checked": currentDetails() ? "true" : "false" }, [
+    UI_COPY.switchLabel,
+  ]);
+  btn.addEventListener("click", () => {
+    const on = btn.getAttribute("aria-checked") !== "true";
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+    applyDetails(btn.closest(".page") ?? document, on);
+    writeDetails(on);
+  });
+  return btn;
+}
 
 export function header(): HTMLElement {
   return el("header", { class: "page-header" }, [
     el("div", { class: "brand-row" }, [
       el("h1", { class: "wordmark" }, ["Hexorcist"]),
-      el("p", { class: "chip-line meta mono" }, ["ATmega328P \u00b7 Browser only"]),
+      plainOnly(el("p", { class: "subtitle" }, [UI_COPY.subtitle])),
+      techOnly(el("p", { class: "chip-line meta mono" }, [UI_COPY.chip])),
+      detailsSwitch(),
     ]),
     el("p", { class: "pitch" }, ["Flashing AI-written firmware? Let the gremlins break it before your board does."]),
-    el("div", { class: "gallery" }, [
-      el("div", { class: "example-card is-selected" }, [
-        crossingMotif(),
-        el("div", {}, [el("p", { class: "card-title" }, ["Crosswalk"]), el("p", { class: "meta" }, ["Buggy example"])]),
-      ]),
+    el("section", { class: "what-is-this", "aria-labelledby": "what-title" }, [
+      el("h2", { class: "region-title", id: "what-title" }, [UI_COPY.whatHeading]),
+      el("p", { class: "what-text" }, [UI_COPY.whatText]),
     ]),
+    el(
+      "ul",
+      { class: "steps" },
+      UI_COPY.steps.map((s) => el("li", { class: "step" }, [s])),
+    ),
   ]);
 }
 
@@ -57,6 +99,10 @@ export interface ControlsView {
   startTimer(): void;
   stopTimer(): void;
   showViewResult(show: boolean): void;
+  /** Sets both fields to an Example's defaults and refreshes their messages. */
+  setValues(runs: number, seed: number): void;
+  /** Clears the progress and elapsed texts (Current_Example change). */
+  clearStatus(): void;
 }
 
 export function controls(defaultRuns: number, defaultSeed: number): ControlsView {
@@ -98,11 +144,11 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
   const node = el("section", { class: "panel", "aria-labelledby": "campaign-title" }, [
     el("h2", { class: "region-title", id: "campaign-title" }, ["Campaign"]),
     el("div", { class: "field-row" }, [
-      el("label", { for: "runs-field" }, ["Runs (N)"]),
+      el("label", { for: "runs-field" }, [UI_COPY.runsLabel]),
       runs,
       runsMsg,
     ]),
-    el("div", { class: "field-row" }, [el("label", { for: "seed-field" }, ["Seed"]), seed, seedMsg]),
+    techOnly(el("div", { class: "field-row" }, [el("label", { for: "seed-field" }, [UI_COPY.seedLabel]), seed, seedMsg])),
     unleash,
     progress,
     elapsed,
@@ -123,20 +169,33 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
     startTimer() {
       if (timer !== 0) clearInterval(timer);
       t0 = performance.now();
-      elapsed.textContent = elapsedText(0);
+      elapsed.textContent = elapsedSecondsText(0);
       timer = window.setInterval(() => {
-        elapsed.textContent = elapsedText(performance.now() - t0);
+        elapsed.textContent = elapsedSecondsText(performance.now() - t0);
       }, 250);
     },
     stopTimer() {
       if (timer !== 0) {
         clearInterval(timer);
         timer = 0;
-        elapsed.textContent = elapsedText(performance.now() - t0);
+        elapsed.textContent = elapsedSecondsText(performance.now() - t0);
       }
     },
     showViewResult(show) {
       viewResult.hidden = !show;
+    },
+    setValues(r, s) {
+      runs.value = String(r);
+      seed.value = String(s);
+      check();
+    },
+    clearStatus() {
+      if (timer !== 0) {
+        clearInterval(timer);
+        timer = 0;
+      }
+      progress.textContent = "";
+      elapsed.textContent = "";
     },
   };
 }
@@ -151,43 +210,67 @@ export interface CounterView {
   reset(): void;
   running(x: number, y: number, k: number): void;
   done(x: number, y: number, k: number, stoppedAtBudget: boolean): void;
+  /** A reduction error: the row shows no sentence, no Shrink_Label and no arrow text. */
+  fail(): void;
+  /** The plain sentence now shown, or "" when none. */
+  summary(): string;
 }
 
 export function counter(): CounterView {
-  const counts = el("span", { class: "counts mono" }, [""]);
-  const cand = el("span", { class: "cands mono meta" }, [""]);
-  const label = el("span", { class: "shrink-label" }, [""]);
+  const reducing = el("span", { class: "reducing" }, [UI_COPY.reducing]);
+  const sentence = el("p", { class: "reduction-sentence" }, [""]);
+  const counts = techOnly(el("span", { class: "counts mono" }, [""]));
+  const cand = techOnly(el("span", { class: "cands mono meta" }, [""]));
+  // Plain copy of the Shrink_Label; the technical copy below carries the Minimality_Tooltip.
+  const plainLabel = plainOnly(el("span", { class: "shrink-label" }, [""]));
+  const techLabel = techOnly(el("span", { class: "shrink-label" }, [""]));
   const tip = el("span", { class: "tooltip", role: "tooltip", id: "minimality-tip" }, [MINIMALITY_TOOLTIP]);
-  const note = el("span", { class: "meta budget-note" }, [""]);
+  const note = techOnly(el("span", { class: "meta budget-note" }, [""]));
   const activity = el("span", { class: "activity meta" }, [""]);
-  const node = el("div", { class: "counter" }, [counts, cand, label, note]);
+  reducing.hidden = true;
+  const node = el("div", { class: "counter" }, [reducing, sentence, counts, cand, plainLabel, techLabel, note]);
+
+  const clearLabels = (): void => {
+    setChildren(plainLabel, []);
+    setChildren(techLabel, []);
+    techLabel.removeAttribute("tabindex");
+    techLabel.removeAttribute("aria-describedby");
+    techLabel.classList.remove("has-tip");
+  };
+  const clearAll = (): void => {
+    reducing.hidden = true;
+    sentence.textContent = "";
+    counts.textContent = "";
+    cand.textContent = "";
+    note.textContent = "";
+    clearLabels();
+  };
   return {
     node,
     activity,
-    reset() {
-      counts.textContent = "";
-      cand.textContent = "";
-      setChildren(label, []);
-      label.removeAttribute("tabindex");
-      label.removeAttribute("aria-describedby");
-      label.classList.remove("has-tip");
-      note.textContent = "";
-    },
+    reset: clearAll,
+    fail: clearAll,
+    summary: () => sentence.textContent ?? "",
     running(x, y, k) {
-      counts.textContent = shrinkText(x, y);
+      reducing.hidden = false;
+      sentence.textContent = "";
+      counts.textContent = shrinkArrowText(x, y);
       cand.textContent = candidatesText(k);
     },
     done(x, y, k, stoppedAtBudget) {
-      counts.textContent = shrinkText(x, y);
+      reducing.hidden = true;
+      sentence.textContent = reductionSentence(x, y, stoppedAtBudget);
+      counts.textContent = shrinkArrowText(x, y);
       cand.textContent = candidatesText(k);
+      setChildren(plainLabel, [SHRINK_LABEL]);
       if (stoppedAtBudget) {
-        setChildren(label, [SHRINK_LABEL]);
+        setChildren(techLabel, [SHRINK_LABEL]);
         note.textContent = BUDGET_TEXT;
       } else {
-        setChildren(label, [SHRINK_LABEL, tip]);
-        label.setAttribute("tabindex", "0");
-        label.setAttribute("aria-describedby", "minimality-tip");
-        label.classList.add("has-tip");
+        setChildren(techLabel, [SHRINK_LABEL, tip]);
+        techLabel.setAttribute("tabindex", "0");
+        techLabel.setAttribute("aria-describedby", "minimality-tip");
+        techLabel.classList.add("has-tip");
       }
     },
   };

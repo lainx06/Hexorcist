@@ -1,7 +1,8 @@
 // Worker_Entry: decodes requests, runs them through the Worker_Host and posts compact replies.
 // The UI_Clock is read here only, to time the speed page. No dynamic import.
-import { decodeRequest, encodeMessage } from "./codec";
-import { createCountingFactory, runCampaignJob, runReductionJob, runReplayJob } from "./host";
+import { decodeDisplayRequest, decodeRequest, encodeMessage } from "./codec";
+import { createCountingFactory, runCampaignJob, runDisplayReplayJob, runReductionJob, runReplayJob } from "./host";
+import { DISPLAY_REPLAY_KIND } from "./messages";
 import type { JobErrorMsg, WorkerReply } from "./messages";
 
 interface WorkerScope {
@@ -25,7 +26,43 @@ function requestJobId(data: unknown): number {
 
 const INTERNAL = { kind: "internal-error", message: "The engine worker could not finish this job." };
 
+function handleDisplay(data: unknown): void {
+  const d = decodeDisplayRequest(data);
+  if (!d.ok) {
+    post({
+      kind: "job-error",
+      jobId: requestJobId(data),
+      job: "message",
+      error: { kind: "codec-error", message: `${d.error.path}: ${d.error.message}` },
+    });
+    return;
+  }
+  const req = d.message;
+  try {
+    const out = runDisplayReplayJob(req);
+    if (out.ok) {
+      post({
+        kind: "replay-done",
+        jobId: req.jobId,
+        violation: out.violation,
+        outputEdges: out.outputEdges,
+        reachedEnd: out.reachedEnd,
+        fingerprint: out.fingerprint,
+      });
+    } else {
+      post({ kind: "job-error", jobId: req.jobId, job: "replay", error: out.error });
+    }
+  } catch {
+    post({ kind: "job-error", jobId: req.jobId, job: "replay", error: INTERNAL });
+  }
+}
+
 scope.onmessage = (ev: MessageEvent) => {
+  const raw = ev.data as unknown;
+  if (typeof raw === "object" && raw !== null && (raw as { kind?: unknown }).kind === DISPLAY_REPLAY_KIND) {
+    handleDisplay(raw);
+    return;
+  }
   const decoded = decodeRequest(ev.data);
   if (!decoded.ok) {
     const msg: JobErrorMsg = {
