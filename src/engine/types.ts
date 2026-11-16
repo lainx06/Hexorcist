@@ -105,6 +105,20 @@ export interface FloatingInputDiagnostic {
 
 export type Diagnostic = FloatingInputDiagnostic;
 
+/**
+ * The earliest use of one unmodelled peripheral in one Run (honest-verdicts Part 1).
+ * Kept apart from Diagnostic so that Checkers never see it.
+ */
+export interface PeripheralDiagnostic {
+  /** Peripheral_ID, e.g. "USART0" or "CLKPR". */
+  peripheral: string;
+  /** Datasheet register name, e.g. "UCSR0A". */
+  register: string;
+  /** Integer CPU cycle of the access. */
+  cycle: number;
+  access: "read" | "write";
+}
+
 export interface AdvanceResult {
   cyclesConsumed: number;
   outputEvents: OutputEvent[];
@@ -114,6 +128,8 @@ export interface AdvanceResult {
   appliedAnalogInputs: AppliedAnalogInputEvent[];
   /** Always present, possibly empty. */
   diagnostics: Diagnostic[];
+  /** Unmodelled-peripheral uses recorded in this step. Present only when non-empty, ascending cycle. */
+  peripheralUses?: PeripheralDiagnostic[];
 }
 
 // Run and Campaign data. Plain JSON shapes: no undefined, NaN, BigInt, Date or
@@ -146,6 +162,8 @@ export interface RunResult {
   violation: Violation | null;
   /** Bridge cycleCount at the stop point. */
   endCycle: number;
+  /** At most one per unmodelled peripheral, ascending cycle. Present only when non-empty. */
+  peripheralUses?: PeripheralDiagnostic[];
 }
 
 export interface CampaignResult {

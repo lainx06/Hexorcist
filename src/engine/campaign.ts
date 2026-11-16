@@ -23,6 +23,7 @@ import type {
   Diagnostic,
   Fixture,
   OutputEvent,
+  PeripheralDiagnostic,
   RunResult,
   ScheduledInput,
   SliceProgress,
@@ -166,6 +167,8 @@ export interface RunPathResult {
   cannotCheck: CannotCheck[];
   violation: Violation | null;
   endCycle: number;
+  /** Unmodelled-peripheral uses, ascending cycle. Present only when non-empty. */
+  peripheralUses?: PeripheralDiagnostic[];
 }
 
 /**
@@ -189,6 +192,7 @@ export function runEventList(
   const outputEvents: OutputEvent[] = [];
   const diagnostics: Diagnostic[] = [];
   const cannotCheck: CannotCheck[] = [];
+  const peripheralUses: PeripheralDiagnostic[] = [];
   const seen = new Set<string>();
   let violation: Violation | null = null;
   let prevTarget = 0;
@@ -232,6 +236,7 @@ export function runEventList(
     appliedInputs.push(...merged);
     outputEvents.push(...r.outputEvents);
     diagnostics.push(...r.diagnostics);
+    if (r.peripheralUses !== undefined) peripheralUses.push(...r.peripheralUses);
 
     const res = callChecker(cfg.checker, {
       runIndex,
@@ -265,7 +270,9 @@ export function runEventList(
     violation = res.violation;
   }
 
-  return { appliedInputs, outputEvents, diagnostics, cannotCheck, violation, endCycle: bridge.cycleCount };
+  const out: RunPathResult = { appliedInputs, outputEvents, diagnostics, cannotCheck, violation, endCycle: bridge.cycleCount };
+  if (peripheralUses.length > 0) out.peripheralUses = peripheralUses;
+  return out;
 }
 
 /** Runs one Run on a fresh bridge. Returns plain data, or an error that stops the Campaign. */
@@ -293,6 +300,7 @@ export function runOne(cfg: RunConfig, runIndex: number): RunResult | EngineErro
     cannotCheck: path.cannotCheck,
     violation: path.violation,
     endCycle: path.endCycle,
+    ...(path.peripheralUses === undefined ? {} : { peripheralUses: path.peripheralUses.map((d) => ({ ...d })) }),
   };
 }
 

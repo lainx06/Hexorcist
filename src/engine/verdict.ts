@@ -1,7 +1,8 @@
 // Verdict selection. Pure: reads only its argument and never changes it.
 
 import type { CannotCheck } from "./checker";
-import type { BrokeTrace, RunResult, Verdict } from "./types";
+import { peripheralReason, peripheralRowIndex } from "./peripherals";
+import type { BrokeTrace, PeripheralDiagnostic, RunResult, Verdict } from "./types";
 
 export type { BrokeTrace, Verdict };
 
@@ -49,12 +50,8 @@ function buildReason(parts: readonly string[]): string {
   return truncateReason(joined === "" ? EMPTY_REASON_TEXT : joined);
 }
 
-export function computeVerdict(input: VerdictInput): Verdict | null {
-  if (!input.finished) return null;
-
-  const { runs } = input;
-
-  // 1. BROKE: lowest violating Run_Index, with every unchecked rule listed.
+/** The lowest violating Run_Index, and every CannotCheck of every Run (deduplicated, in order). */
+function collectUnchecked(runs: readonly RunResult[]): { lowest: RunResult | null; unchecked: CannotCheck[]; seen: Set<string> } {
   let lowest: RunResult | null = null;
   const unchecked: CannotCheck[] = [];
   const seen = new Set<string>();
@@ -69,26 +66,13 @@ export function computeVerdict(input: VerdictInput): Verdict | null {
       unchecked.push({ rule: c.rule, reason: c.reason });
     }
   }
-  const untriggered = input.untriggeredRules ?? [];
-  if (lowest !== null && lowest.violation !== null) {
-    const reason = triggerReason(runs.length);
-    for (const s of untriggered) {
-      const key = JSON.stringify([s, reason]);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      unchecked.push({ rule: s, reason });
-    }
-    const trace: BrokeTrace = {
-      runIndex: lowest.runIndex,
-      runSeed: lowest.runSeed,
-      eventList: lowest.eventList.map((e) => ({ ...e })),
-      outputEvents: lowest.outputEvents.map((e) => ({ ...e })),
-      violation: { ...lowest.violation },
-    };
-    return { verdict: VERDICT_BROKE, trace, unchecked };
-  }
+  return { lowest, unchecked, seen };
+}
 
-  // 2. COULDN'T TELL.
+/** The COULDN'T TELL reason parts of today's branch 2, in today's order. */
+function couldntTellParts(input: VerdictInput, unchecked: readonly CannotCheck[]): string[] {
+  const { runs } = input;
+  const untriggered = input.untriggeredRules ?? [];
   const parts: string[] = [];
   for (const c of unchecked) {
     parts.push(`Rule "${c.rule}" could not be checked: ${c.reason}`);
@@ -112,10 +96,93 @@ export function computeVerdict(input: VerdictInput): Verdict | null {
   if (!anyEvent) {
     parts.push("No gremlin produced an event in any run");
   }
+  return parts;
+}
+
+/**
+ * Unmodelled-peripheral uses that block a verdict (honest-verdicts Requirement 4):
+ * with a violating Run, its uses at or before its violation cycle; with no violating Run,
+ * every use of every Run.
+ */
+function blockingUses(runs: readonly RunResult[]): PeripheralDiagnostic[] {
+  let lowest: RunResult | null = null;
+  for (const run of runs) {
+    if (run.violation !== null && (lowest === null || run.runIndex < lowest.runIndex)) lowest = run;
+  }
+  if (lowest !== null && lowest.violation !== null) {
+    const v = lowest.violation.cycle;
+    return (lowest.peripheralUses ?? []).filter((d) => d.cycle <= v);
+  }
+  const out: PeripheralDiagnostic[] = [];
+  for (const run of runs) for (const d of run.peripheralUses ?? []) out.push(d);
+  return out;
+}
+
+/** One Peripheral_Reason per peripheral, by lowest blocking cycle, ties by table row order. */
+function peripheralReasons(blocking: readonly PeripheralDiagnostic[]): string[] {
+  const lowestCycle = new Map<string, number>();
+  for (const d of blocking) {
+    const c = lowestCycle.get(d.peripheral);
+    if (c === undefined || d.cycle < c) lowestCycle.set(d.peripheral, d.cycle);
+  }
+  const rank = (id: string): number => peripheralRowIndex(id) ?? Number.MAX_SAFE_INTEGER;
+  const ids = [...lowestCycle.keys()].sort((a, b) => {
+    const ca = lowestCycle.get(a) as number;
+    const cb = lowestCycle.get(b) as number;
+    if (ca !== cb) return ca - cb;
+    if (rank(a) !== rank(b)) return rank(a) - rank(b);
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+  return ids.map(peripheralReason);
+}
+
+/** Today's verdict selection, unchanged. */
+function verdictWithoutPeripherals(input: VerdictInput): Verdict {
+  const { runs } = input;
+
+  // 1. BROKE: lowest violating Run_Index, with every unchecked rule listed.
+  const { lowest, unchecked, seen } = collectUnchecked(runs);
+  const untriggered = input.untriggeredRules ?? [];
+  if (lowest !== null && lowest.violation !== null) {
+    const reason = triggerReason(runs.length);
+    for (const s of untriggered) {
+      const key = JSON.stringify([s, reason]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unchecked.push({ rule: s, reason });
+    }
+    const trace: BrokeTrace = {
+      runIndex: lowest.runIndex,
+      runSeed: lowest.runSeed,
+      eventList: lowest.eventList.map((e) => ({ ...e })),
+      outputEvents: lowest.outputEvents.map((e) => ({ ...e })),
+      violation: { ...lowest.violation },
+    };
+    return { verdict: VERDICT_BROKE, trace, unchecked };
+  }
+
+  // 2. COULDN'T TELL.
+  const parts = couldntTellParts(input, unchecked);
   if (parts.length > 0) {
     return { verdict: VERDICT_COULDNT_TELL, reason: buildReason(parts) };
   }
 
   // 3. HELD.
   return { verdict: "HELD", text: heldText(runs.length), runs: runs.length };
+}
+
+export function computeVerdict(input: VerdictInput): Verdict | null {
+  if (!input.finished) return null;
+
+  // 0. Unmodelled-peripheral use (honest-verdicts Requirement 4). A use in the violating Run at
+  //    or before its violation, or any use when no Run has a violation, gives COULDN'T TELL.
+  //    The Peripheral_Reasons lead; today's reason parts follow unchanged.
+  const blocking = blockingUses(input.runs);
+  if (blocking.length > 0) {
+    const { unchecked } = collectUnchecked(input.runs);
+    const parts = [...peripheralReasons(blocking), ...couldntTellParts(input, unchecked)];
+    return { verdict: VERDICT_COULDNT_TELL, reason: buildReason(parts) };
+  }
+
+  return verdictWithoutPeripherals(input);
 }

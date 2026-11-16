@@ -667,9 +667,19 @@ export const arbStoryCase: fc.Arbitrary<StoryCase> = arbFixture.chain((fixture) 
   });
 });
 
+/** Reference Cycle_Text: digits with a comma before each group of 3 from the right. */
+export function refCycleText(n: number): string {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 /** Reference renderer from the design's templates and packing rules. */
-export function refStory(c: StoryCase): { text: string; form: "detailed" | "summary" | "none" } | "does-not-fit" {
+export function refStory(
+  c: StoryCase & { labels?: Readonly<Record<string, { active: string; inactive: string }>> },
+): { text: string; form: "detailed" | "summary" | "none" } | "does-not-fit" {
   const ms = refMsText;
+  const labelOf = (s: string) => (c.labels !== undefined && Object.prototype.hasOwnProperty.call(c.labels, s) ? c.labels[s] : undefined);
+  const heldAt = (i: number) =>
+    !c.reducedList.some((x, j) => j > i && x.signal === c.reducedList[i].signal && analogOf(x) === undefined && (x as { value: InputValue }).value === "release");
   const g = c.reducedList.filter((e) => e.gremlinId !== "rest");
   const lead = "In the smallest replay this reducer found, ";
   const list = (xs: string[]) =>
@@ -701,14 +711,20 @@ export function refStory(c: StoryCase): { text: string; form: "detailed" | "summ
     evSentences = ["In the smallest replay this reducer found, no gremlin event was needed."];
     form = "none";
   } else {
-    const detailed = g.map((e) => {
+    const detailed = c.reducedList.flatMap((e, i) => {
+      if (e.gremlinId === "rest") return [];
       const pin = c.fixture.pins.find((p) => p.signal === e.signal) as FixturePin;
       const a = analogOf(e);
-      if (a !== undefined) return `${e.gremlinId} set ${e.signal} to ${a} at ${ms(e.cycle)}`;
+      if (a !== undefined) return [`${e.gremlinId} set ${e.signal} to ${a} at ${ms(e.cycle)}`];
       const v = (e as { value: InputValue }).value;
-      if (v === "release") return `${e.gremlinId} released ${e.signal} at ${ms(e.cycle)}`;
-      if (v === pressOf(pin)) return `${e.gremlinId} pressed ${e.signal} at ${ms(e.cycle)}`;
-      return `${e.gremlinId} drove ${e.signal} to ${v} at ${ms(e.cycle)}`;
+      const lab = labelOf(e.signal);
+      if (v === "release") return [lab ? `${e.gremlinId} ${lab.inactive} at ${ms(e.cycle)}` : `${e.gremlinId} released ${e.signal} at ${ms(e.cycle)}`];
+      if (v === pressOf(pin)) {
+        const held = heldAt(i);
+        if (lab) return [`${e.gremlinId} ${lab.active}${held ? " and held" : ""} at ${ms(e.cycle)}`];
+        return [`${e.gremlinId} pressed ${held ? "and held " : ""}${e.signal} at ${ms(e.cycle)}`];
+      }
+      return [lab ? `${e.gremlinId} ${lab.inactive} at ${ms(e.cycle)}` : `${e.gremlinId} drove ${e.signal} to ${v} at ${ms(e.cycle)}`];
     });
     const d = packAll(detailed, "Then ");
     if (d !== null && d.length <= maxEv) {
@@ -737,7 +753,7 @@ export function refStory(c: StoryCase): { text: string; form: "detailed" | "summ
       form = "summary";
     }
   }
-  const parts = [...evSentences, `At ${ms(c.violation.cycle)}, the chip broke this rule: ${c.violation.rule}`];
-  if (c.violationSpan !== undefined) parts.push(`The rule stayed broken for ${c.violationSpan.cut ? "at least " : ""}${ms(c.violationSpan.lengthCycles)}.`);
+  const parts = [...evSentences, `At ${ms(c.violation.cycle)} (cycle ${refCycleText(c.violation.cycle)}), the program broke this rule: ${c.violation.rule}`];
+  if (c.violationSpan !== undefined) parts.push(`The violation lasted ${c.violationSpan.cut ? "at least " : ""}${ms(c.violationSpan.lengthCycles)}.`);
   return { text: parts.join(" "), form };
 }

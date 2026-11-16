@@ -34,7 +34,7 @@ describe("trace-reducer failure story texts", () => {
       outputEdges: [],
     });
     expect(text).toBe(
-      "In the smallest replay this reducer found, masher pressed REQUEST at 766.4 ms and masher released REQUEST at 781.2 ms. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
+      "In the smallest replay this reducer found, masher pressed REQUEST at 766.4 ms and masher released REQUEST at 781.2 ms. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
     );
   });
 
@@ -50,24 +50,24 @@ describe("trace-reducer failure story texts", () => {
       outputEdges: [],
     });
     expect(text).toBe(
-      "In the smallest replay this reducer found, g0 drove REQUEST to 1 at 1.0 ms and g0 drove UP to 0 at 2.0 ms. Then noise set POT to 1023 at 3.0 ms. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
+      "In the smallest replay this reducer found, g0 drove REQUEST to 1 at 1.0 ms and g0 drove UP to 0 at 2.0 ms. Then noise set POT to 1023 at 3.0 ms. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
     );
   });
 
   it("no gremlin event, with a span that was not cut and one that was", () => {
     const base = { reducedList: [{ signal: "UP", value: 1, cycle: 0, gremlinId: "rest" }], fixture: F, violation: V, outputEdges: [] };
     expect(failureStory({ ...base, violationSpan: { lengthCycles: 9_600_000, cut: false } })).toBe(
-      "In the smallest replay this reducer found, no gremlin event was needed. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The rule stayed broken for 600.0 ms.",
+      "In the smallest replay this reducer found, no gremlin event was needed. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The violation lasted 600.0 ms.",
     );
     expect(failureStory({ ...base, violationSpan: { lengthCycles: 9_600_000, cut: true } })).toBe(
-      "In the smallest replay this reducer found, no gremlin event was needed. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The rule stayed broken for at least 600.0 ms.",
+      "In the smallest replay this reducer found, no gremlin event was needed. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The violation lasted at least 600.0 ms.",
     );
   });
 
   it("Detailed_Form over two sentences with Then", () => {
     const evs = [1, 2, 3, 4].map((i) => ({ signal: "REQUEST", value: i % 2 === 1 ? (0 as const) : ("release" as const), cycle: i * 16_000, gremlinId: "m" }));
     expect(failureStory({ reducedList: evs, fixture: F, violation: V, outputEdges: [] })).toBe(
-      "In the smallest replay this reducer found, m pressed REQUEST at 1.0 ms, m released REQUEST at 2.0 ms, and m pressed REQUEST at 3.0 ms. Then m released REQUEST at 4.0 ms. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
+      "In the smallest replay this reducer found, m pressed REQUEST at 1.0 ms, m released REQUEST at 2.0 ms, and m pressed REQUEST at 3.0 ms. Then m released REQUEST at 4.0 ms. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.",
     );
   });
 
@@ -75,7 +75,7 @@ describe("trace-reducer failure story texts", () => {
     const evs = Array.from({ length: 13 }, (_, i) => ({ signal: "REQUEST", value: 0 as const, cycle: (i + 1) * 16_000, gremlinId: "masher" }));
     evs.push({ signal: "UP", value: 1 as unknown as 0, cycle: 400_000, gremlinId: "stuck" });
     expect(failureStory({ reducedList: evs, fixture: F, violation: V, outputEdges: [], violationSpan: { lengthCycles: 16_000, cut: false } })).toBe(
-      "In the smallest replay this reducer found, masher acted on REQUEST 13 times from 1.0 ms to 13.0 ms and stuck acted on UP 1 time at 25.0 ms. At 978.0 ms, the chip broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The rule stayed broken for 1.0 ms.",
+      "In the smallest replay this reducer found, masher acted on REQUEST 13 times from 1.0 ms to 13.0 ms and stuck acted on UP 1 time at 25.0 ms. At 978.0 ms (cycle 15,648,000), the program broke this rule: all of (CAR_GREEN is 1, WALK is 1) must never happen. The violation lasted 1.0 ms.",
     );
   });
 

@@ -16,6 +16,18 @@ export interface StoryInput {
   violation: Violation;
   outputEdges: readonly OutputEvent[];
   violationSpan?: { lengthCycles: number; cut: boolean };
+  /** Optional plain action words per digital signal. */
+  labels?: Readonly<Record<string, StoryLabel>>;
+}
+
+/**
+ * Story words for a digital signal: `active` for a press, `inactive` for a release or the other
+ * level, and optional `held` for a press with no later release (default "<active> and held").
+ */
+export interface StoryLabel {
+  active: string;
+  inactive: string;
+  held?: string;
 }
 
 const MAX_WORDS = 30;
@@ -29,6 +41,17 @@ export function msText(cycles: number): string {
   return `${t / 10n}.${t % 10n} ms`;
 }
 
+/** Cycle_Text: base-10 digits with an ASCII comma between groups of 3 from the right. No locale. */
+export function cycleText(cycles: number): string {
+  const digits = String(cycles);
+  let out = "";
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 === 0) out += ",";
+    out += digits[i];
+  }
+  return out;
+}
+
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -40,6 +63,8 @@ const BANNED_RES: readonly RegExp[] = BANNED_WORDS.map(
 function holdsBannedWord(text: string): boolean {
   return BANNED_RES.some((re) => re.test(text));
 }
+
+const SMALLEST_RE = /(?<![A-Za-z0-9_-])smallest(?![A-Za-z0-9_-])/i;
 
 const LINE_BREAK = /[\n\r\u2028\u2029]/;
 
@@ -79,14 +104,37 @@ function pack(phrases: readonly string[], continuation: string): string[] | null
   return sentences;
 }
 
-function eventPhrase(e: ReducerEvent, fixture: Fixture): string {
+/**
+ * Detailed_Form phrase. `held`: a press with no later "release" of the same signal in the list.
+ * `label`: the Story_Label of the signal, if any; analog events never use one.
+ */
+function eventPhrase(e: ReducerEvent, fixture: Fixture, held: boolean, label: StoryLabel | undefined): string {
   const t = msText(e.cycle);
   if (isAnalogEvent(e)) return `${e.gremlinId} set ${e.signal} to ${e.analog} at ${t}`;
   const v = (e as { value: 0 | 1 | "release" }).value;
-  if (v === "release") return `${e.gremlinId} released ${e.signal} at ${t}`;
+  if (v === "release") return label ? `${e.gremlinId} ${label.inactive} at ${t}` : `${e.gremlinId} released ${e.signal} at ${t}`;
   const pin = pinOf(fixture, e.signal);
-  if (pin !== undefined && v === pressValue(pin)) return `${e.gremlinId} pressed ${e.signal} at ${t}`;
-  return `${e.gremlinId} drove ${e.signal} to ${v} at ${t}`;
+  if (pin !== undefined && v === pressValue(pin)) {
+    if (label) {
+      if (!held) return `${e.gremlinId} ${label.active} at ${t}`;
+      return label.held !== undefined ? `${e.gremlinId} ${label.held} at ${t}` : `${e.gremlinId} ${label.active} and held at ${t}`;
+    }
+    return held ? `${e.gremlinId} pressed and held ${e.signal} at ${t}` : `${e.gremlinId} pressed ${e.signal} at ${t}`;
+  }
+  return label ? `${e.gremlinId} ${label.inactive} at ${t}` : `${e.gremlinId} drove ${e.signal} to ${v} at ${t}`;
+}
+
+/** True when event i is a press of its pin and no later event in the list releases the same signal. */
+function isHeldPress(list: readonly ReducerEvent[], i: number, fixture: Fixture): boolean {
+  const e = list[i];
+  if (isAnalogEvent(e)) return false;
+  const pin = pinOf(fixture, e.signal);
+  if (pin === undefined || (e as { value: unknown }).value !== pressValue(pin)) return false;
+  for (let j = i + 1; j < list.length; j++) {
+    const x = list[j];
+    if (x.signal === e.signal && !isAnalogEvent(x) && (x as { value: unknown }).value === "release") return false;
+  }
+  return true;
 }
 
 function summaryPhrases(events: readonly ReducerEvent[]): string[] {
@@ -184,6 +232,39 @@ export function failureStory(input: unknown): string | ReducerError {
       });
     }
 
+    const lb = read(input, "labels");
+    const labels = new Map<string, StoryLabel>();
+    const badLabels = invalidInput(
+      "Field labels: must be absent or an object whose entries hold one-line active and inactive texts, and an optional held text, with no leading or trailing space.",
+      { field: "labels" },
+    );
+    try {
+      if (!lb.ok) return badLabels;
+      if (lb.value !== undefined) {
+        const o = lb.value;
+        if (typeof o !== "object" || o === null || Array.isArray(o)) return badLabels;
+        for (const key of Object.keys(o)) {
+          const entry = (o as Record<string, unknown>)[key];
+          if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return badLabels;
+          const active = (entry as { active?: unknown }).active;
+          const inactive = (entry as { inactive?: unknown }).inactive;
+          const heldText = (entry as { held?: unknown }).held;
+          if (typeof active !== "string" || typeof inactive !== "string") return badLabels;
+          if (heldText !== undefined && typeof heldText !== "string") return badLabels;
+          const texts = heldText === undefined ? [active, inactive] : [active, inactive, heldText];
+          if (texts.some(badName)) return badLabels;
+          for (const text of texts) {
+            if (holdsBannedWord(text) || SMALLEST_RE.test(text)) {
+              return invalidInput("Field labels: a label holds a word the story may not use.", { field: "labels" });
+            }
+          }
+          labels.set(key, heldText === undefined ? { active, inactive } : { active, inactive, held: heldText });
+        }
+      }
+    } catch {
+      return badLabels;
+    }
+
     const gremlins = list.filter((e) => !isRest(e));
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
@@ -210,10 +291,13 @@ export function failureStory(input: unknown): string | ReducerError {
     if (gremlins.length === 0) {
       eventSentences = [NO_EVENT];
     } else {
-      eventSentences = pack(
-        gremlins.map((e) => eventPhrase(e, fixture)),
-        "Then ",
-      );
+      const phrases: string[] = [];
+      for (let i = 0; i < list.length; i++) {
+        const e = list[i];
+        if (isRest(e)) continue;
+        phrases.push(eventPhrase(e, fixture, isHeldPress(list, i, fixture), labels.get(e.signal)));
+      }
+      eventSentences = pack(phrases, "Then ");
       if (eventSentences === null || eventSentences.length > maxEventSentences) {
         eventSentences = pack(summaryPhrases(gremlins), "Also, ");
         if (eventSentences === null || eventSentences.length > maxEventSentences) {
@@ -221,9 +305,9 @@ export function failureStory(input: unknown): string | ReducerError {
         }
       }
     }
-    const out = [...eventSentences, `At ${msText(vcycle)}, the chip broke this rule: ${rule}`];
+    const out = [...eventSentences, `At ${msText(vcycle)} (cycle ${cycleText(vcycle)}), the program broke this rule: ${rule}`];
     if (span !== null) {
-      out.push(`The rule stayed broken for ${span.cut ? "at least " : ""}${msText(span.lengthCycles)}.`);
+      out.push(`The violation lasted ${span.cut ? "at least " : ""}${msText(span.lengthCycles)}.`);
     }
     return out.join(" ");
   } catch {

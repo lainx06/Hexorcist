@@ -12,9 +12,9 @@ Rerun them with `npm run bench:evidence`. The bench reads the wall clock only fo
 | CPU | AMD Ryzen 7 7800X3D 8-Core Processor, 16 cores |
 | Node | v26.13.1 |
 | avr8js | 0.21.1 |
-| Date of run (UTC) | 2026-11-15 |
+| Date of run (UTC) | 2026-11-16 |
 | Seed ranges | campaignSeed 1 to 100 for buggy builds, 1 to 20 for fixed builds |
-| Wall-clock time | seed sweep 635.8 s, single-press sweep 97.1 s, whole bench 732.9 s |
+| Wall-clock time | seed sweep 618.8 s, single-press sweep 94.3 s, whole bench 713.1 s |
 
 ## Seed sweep
 

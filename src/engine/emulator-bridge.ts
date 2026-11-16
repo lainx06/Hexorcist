@@ -22,6 +22,7 @@ import {
 import { hexToProgMem } from './hex-parser.js';
 import { isAnalogInputEvent, isAnalogPin, validateEvents, validateFixture } from './fixture.js';
 import { analogCountToVolts } from './adc-scale.js';
+import { PeripheralRecorder, unmodelledRegisters } from './peripherals.js';
 import type {
   Fixture,
   FixturePin,
@@ -36,6 +37,7 @@ import type {
   Diagnostic,
   FloatingInputDiagnostic,
   InputValue,
+  PeripheralDiagnostic,
 } from './types.js';
 
 export type {
@@ -138,6 +140,8 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
   // Filled by the PIN read hook. One entry per signal per run.
   readonly _floatingReported: Set<string> = new Set();
   _pendingDiagnostics: Diagnostic[] = [];
+  // Unmodelled-peripheral uses, earliest per peripheral (step 11d).
+  readonly _peripherals: PeripheralRecorder = new PeripheralRecorder();
 
   private constructor(
     cpu: CPU,
@@ -380,6 +384,24 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       });
     }
 
+    // 11d. Unmodelled-peripheral detection (honest-verdicts Part 1). Wraps the read and write
+    //      hooks of every register in src/engine/peripherals.ts. Each wrapper returns what the
+    //      previous hook (or cpu.data) returns, so values, cycles and output are unchanged.
+    //      avr8js calls readHooks/writeHooks for every data-space access at addresses >= 32.
+    for (const reg of unmodelledRegisters()) {
+      const prevR = cpu.readHooks[reg.addr];
+      cpu.readHooks[reg.addr] = (addr: number): number => {
+        const v = prevR ? prevR(addr) : cpu.data[addr];
+        bridge._peripherals.access(addr, 'read', v, cpu.cycles);
+        return v;
+      };
+      const prevW = cpu.writeHooks[reg.addr];
+      cpu.writeHooks[reg.addr] = (value: number, oldValue: number, addr: number, mask: number): boolean => {
+        bridge._peripherals.access(addr, 'write', value, cpu.cycles);
+        return prevW ? Boolean(prevW(value, oldValue, addr, mask)) : false;
+      };
+    }
+
     // 12. Make the initial presented level of every input pin consistent.
     for (let i = 0; i < fixture.pins.length; i++) {
       const fp = fixture.pins[i];
@@ -407,7 +429,7 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
     }
 
     if (requestedCycles <= 0) {
-      return { cyclesConsumed: 0, outputEvents, appliedInputs, appliedAnalogInputs, diagnostics: this._takeDiagnostics() };
+      return this._withPeripheralUses({ cyclesConsumed: 0, outputEvents, appliedInputs, appliedAnalogInputs, diagnostics: this._takeDiagnostics() });
     }
 
     const startCycles = this._cpu.cycles;
@@ -478,13 +500,20 @@ export class EmulatorBridge implements EmulatorBridgeInterface {
       }
     }
 
-    return {
+    return this._withPeripheralUses({
       cyclesConsumed: this._cpu.cycles - startCycles,
       outputEvents,
       appliedInputs,
       appliedAnalogInputs,
       diagnostics: this._takeDiagnostics(),
-    };
+    });
+  }
+
+  /** Adds peripheralUses only when this step recorded one, so results without uses keep their shape. */
+  private _withPeripheralUses(r: AdvanceResult): AdvanceResult {
+    const uses: PeripheralDiagnostic[] = this._peripherals.take();
+    if (uses.length > 0) r.peripheralUses = uses;
+    return r;
   }
 
   private _takeDiagnostics(): Diagnostic[] {

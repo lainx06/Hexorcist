@@ -4,24 +4,23 @@
 
 Honest Verdicts has three parts (see `requirements.md`):
 
-- **Part 1, unmodelled peripheral detection** (Requirements 1 to 8). The design lists the modelled and unmodelled ATmega328P peripherals (the Peripheral_Table below), calibrates the detection on the committed programs, records a Peripheral_Diagnostic in the Emulator_Bridge, and turns the verdict into COULDN'T TELL when the program uses an Unmodelled_Peripheral before (or without) a Violation.
+- **Part 1, unmodelled peripheral detection** (Requirements 1 to 8). The design lists the modelled and unmodelled ATmega328P peripherals (the Peripheral_Table below), calibrates the detection on the committed programs, records a Peripheral_Diagnostic in the Emulator_Bridge, and turns the verdict into COULDN'T TELL under the round 2 precedence: when the Violating_Run used an Unmodelled_Peripheral at or before its Violation_Cycle, or when no Run has a Violation and any Run used one. Three new fixtures: `serial_hello` and `eeprom_boot` give COULDN'T TELL, `ext_interrupt` is a positive test of the modelled external interrupt.
 - **Part 2, failure story wording** (Requirements 9 to 15). New wording in `src/engine/reducer/story.ts`: Cycle_Text, "the program broke this rule", "The violation lasted ...", Story_Labels and "and held".
 - **Part 3, evidence bench** (Requirements 16 to 19). `bench/evidence.ts` sweeps seeds and single presses over the three Examples and writes `docs/evidence/EVIDENCE-NUMBERS.md`.
 
-### Status at design time
+### Status (round 2)
 
-Two STOP conditions fired while this design was written. They block the implementation of Parts 1 and 2. They do not block the Peripheral_Table, the calibration or Part 3.
+The two STOPs of round 1 (OI-1 at Requirement 23.8, OI-2 at Requirement 23.9) were resolved by the user in round 2 ("Decisions recorded (round 2)" in `requirements.md`). Nothing in this design is blocked now.
 
-| Work | Requirements | Status | Why |
+| Work | Requirements | Status | Notes |
 |---|---|---|---|
-| Peripheral_Table and CannotCheck_Path quotes | 1 | Done in this document | |
-| Calibration | 2 | Can run now | Runs with `src/` unchanged |
-| Peripheral detection, verdict, new fixtures, Part 1 tests | 3 to 8 | **BLOCKED** by STOP OI-1 (Requirement 23.8) | avr8js 0.21.1 models INT0, INT1 and the pin-change interrupts, so `fixtures/ext_interrupt` cannot give COULDN'T TELL as Requirement 8.2 expects |
-| Failure story wording and its tests | 9 to 15 | **BLOCKED** by STOP OI-2 (Requirement 23.9) | `reducer-story.property.test.ts` Property 11 and `refStory` in `reducer-arbitraries.ts` encode today's wording; neither file is a Pre_Approved_Edit |
-| Evidence bench and doc | 16 to 19 | Can run now | Uses only existing Campaign and Run code |
-| Global acceptance | 20 | Partly: only for unblocked work | Requirement 23.12 |
-
-The blocked sections are still designed in full, so that work can start as soon as the user decides. Each one is marked **BLOCKED** where it starts. The decision options are in "Decisions the user needs to make".
+| Peripheral_Table and CannotCheck_Path quotes | 1 | Done in this document | EXINT and PCINT stay Modelled rows (round 2 decision 1) |
+| Calibration | 2 | **Done** | 72 cases, 0 Use_Access. The only logged access to a table register is the Disable_Write `UCSR0B = 0x00` from `init()`, at cycles 152 to 300 depending on the program. Logged and unlogged runs gave identical results. |
+| Peripheral detection, verdict, new fixtures, Part 1 tests | 3 to 8 | Unblocked (OI-1 resolved) | Verdict follows the round 2 precedence (C4) |
+| Failure story wording and its tests | 9 to 15 | Unblocked (OI-2 resolved) | `refStory` and the Property 11 number check are now Pre_Approved_Edits (C7) |
+| Evidence bench and doc | 16 to 19 | **Done** | Re-run after Parts 1 and 2 (Requirement 24.2) |
+| Round 2 report additions | 24 | After Parts 1 and 2 | Cycle comparison and bench re-run |
+| Global acceptance | 20 | At the end | |
 
 ### Research summary
 
@@ -48,13 +47,13 @@ flowchart LR
   HEX[HEX + Fixture + event list] --> B[EmulatorBridge]
   subgraph B[EmulatorBridge, the only avr8js user]
     CPU[avr8js CPU + GPIO + timers + ADC]
-    DET["Peripheral detection hooks (Part 1, BLOCKED)"]
+    DET["Peripheral detection hooks (Part 1)"]
   end
   B -->|AdvanceResult + peripheralUses| RP[runEventList / runOne]
   RP -->|RunResult + peripheralUses| CV[computeVerdict]
   CV --> V{BROKE / HELD / COULDN'T TELL}
   RP --> RED[trace reducer]
-  RED --> FS["failureStory (Part 2, BLOCKED)"]
+  RED --> FS["failureStory (Part 2)"]
   EX[examples/*] --> EB["bench/evidence.ts (Part 3)"]
   EB -->|runExampleCampaign, scriptedRun| RP
   EB --> DOC[docs/evidence/EVIDENCE-NUMBERS.md]
@@ -65,7 +64,7 @@ Design decisions:
 - **D1. The table is engine data, the hooks live in the bridge.** The Peripheral_Table becomes a frozen data module `src/engine/peripherals.ts` with a pure classifier and a pure recorder. Only `src/engine/emulator-bridge.ts` installs avr8js hooks, and the hooks call the pure recorder (Requirement 3.8). The classifier and recorder can be tested without an emulator.
 - **D2. One rule for every unmodelled register.** Every read is a Use_Access. A write is a Disable_Write only when the register has a Disable_Mask and the written byte has every Disable_Mask bit clear; every other write is a Use_Access. So no access can be "other" (Requirement 2.6 and OI-6 cannot fire for a table register).
 - **D3. New optional field, not a new Diagnostic kind.** Peripheral_Diagnostics travel in a new optional field `peripheralUses`, present only when non-empty. Adding a kind to the existing `Diagnostic` union would reach every Checker through `CheckerObservation.diagnostics` and change existing results.
-- **D4. Peripheral use overrides BROKE.** Requirement 4.1 and 4.2 put the peripheral check ahead of today's BROKE branch in `computeVerdict`.
+- **D4. Only blocking peripheral use changes the verdict.** Following round 2 decision 2, a Peripheral_Diagnostic blocks only when it is in the Violating_Run at or before its Violation_Cycle, or when no Run has a Violation. A blocking use turns the verdict into COULDN'T TELL; with no blocking use, `computeVerdict` runs today's code unchanged (C4).
 - **D5. Part 3 reuses the example test helpers.** `bench/evidence.ts` imports `loadExample`, `readHex`, `runExampleCampaign`, `buildScriptedEvents` and `scriptedRun` from `tests/examples/examples-support.ts`, as `bench/example-campaign-bench.ts` already does (its line 20). No engine logic is copied.
 
 ## Peripheral_Table (Requirement 1)
@@ -94,32 +93,34 @@ Every row gives the avr8js class, the config, and the line in `src/engine/emulat
 | M9 | TC2 | timer 2, synchronous clock | `AVRTimer` | `timer2Config` | bridge:246 | TIFR2 0x37, TIMSK2 0x70, TCCR2A 0xB0, TCCR2B 0xB1, TCNT2 0xB2, OCR2A 0xB3, OCR2B 0xB4 | timer.js:34-43; DS "8-bit Timer/Counter2 with PWM and Asynchronous Operation" |
 | M10 | ADC | analog-to-digital converter | `AVRADC` | `adcConfig` | bridge:249 | ADCL 0x78, ADCH 0x79, ADCSRA 0x7A, ADCSRB 0x7B, ADMUX 0x7C | adc.js:35-52, adc.js:123 (ADCSRA hook); DS "Analog-to-Digital Converter" |
 
-Rows M5 and M6 are the Requirement 1.7 rows: INT0, INT1 and the pin-change interrupts meet the Requirement 1.7 meaning of "emulated" twice over. The `AVRIOPort` constructor installs write hooks on EICRA, EIMSK, EIFR, PCIFR and PCMSKn (gpio.js:181-232), and `updatePinRegister` calls `toggleInterrupt` on every PIN bit change (gpio.js:306-320), which calls `cpu.setInterruptFlag` for INT0/INT1 (gpio.js:347-349) and for PCINTn (gpio.js:355-359). The bridge itself already reports both as wired (bridge:553-569). **This fires STOP OI-1** (Requirement 1.7, Requirement 23.8): Requirements 3 to 8 are blocked. Requirement 1.3's list therefore holds no EXINT or PCINT row.
+Rows M5 and M6 are the Requirement 1.7 rows: INT0, INT1 and the pin-change interrupts meet the Requirement 1.7 meaning of "emulated" twice over. The `AVRIOPort` constructor installs write hooks on EICRA, EIMSK, EIFR, PCIFR and PCMSKn (gpio.js:181-232), and `updatePinRegister` calls `toggleInterrupt` on every PIN bit change (gpio.js:306-320), which calls `cpu.setInterruptFlag` for INT0/INT1 (gpio.js:347-349) and for PCINTn (gpio.js:355-359). The bridge itself already reports both as wired (bridge:553-569). This was STOP OI-1 in round 1. The user resolved it in round 2 (decision 1): EXINT and PCINT stay Modelled rows and are not detected, so the Unmodelled list of Requirement 1.3 holds no EXINT or PCINT row, and an access to EICRA, EIMSK, EIFR, PCICR, PCIFR or PCMSK0 to PCMSK2 records no Peripheral_Diagnostic.
 
 ADCSRB (row M10) also holds the analog comparator bit ACME (bit 6). It stays in the ADC row so that each register sits in one row. An ACME write alone changes nothing a program can see: the comparator result is only visible through an ACSR read or the ACIE/ACIC bits, and those are Use_Accesses of row U6.
 
 ### Unmodelled_Peripheral rows
 
-Row order U1 to U16 is the Peripheral_Table row order used for ties (Requirement 5.4). Every Peripheral_Reason built from these rows is 108 to 139 UTF-16 units long and holds no Banned_Words entry (Requirement 5.6; lengths computed with the Requirement 5.3 template).
+Row order U1 to U16 is the Peripheral_Table row order used for ties (Requirement 5.4). The Peripheral_IDs and Plain_Names are the ones set in round 2. Rows U7 to U16 are single registers with no plainer peripheral name, so their Peripheral_ID is the register name and the reason names the register (Requirement 1.10), for example "The program uses the sleep mode control register (SMCR), which this emulator setup does not model, so the rule cannot be checked." The EEPROM reason is "The program uses the data EEPROM (EEPROM), which this emulator setup does not model, so the rule cannot be checked." (Requirement 5.8).
 
-| Row | Peripheral_ID | Plain_Name | Registers (data-space address) | Why it counts as unmodelled | Sources |
-|---|---|---|---|---|---|
-| U1 | USART0 | serial port | UCSR0A 0xC0, UCSR0B 0xC1, UCSR0C 0xC2, UBRR0L 0xC4, UBRR0H 0xC5, UDR0 0xC6 | `AVRUSART` exists (usart.js:50) but the bridge does not build it | usart.js:3-13; iom328p.h:737, 747, 757, 771, 781, 787; DS "USART0" |
-| U2 | SPI | SPI bus | SPCR 0x4C, SPSR 0x4D, SPDR 0x4E | `AVRSPI` exists (spi.js:23), not built | spi.js:16-21; iom328p.h:287, 297, 302; DS "SPI - Serial Peripheral Interface" |
-| U3 | TWI | two-wire bus | TWBR 0xB8, TWSR 0xB9, TWAR 0xBA, TWDR 0xBB, TWCR 0xBC, TWAMR 0xBD | `AVRTWI` exists (twi.js:64), not built | twi.js:34-42; iom328p.h:680, 690, 699, 709, 719, 728; DS "2-wire Serial Interface" |
-| U4 | EEPROM | data EEPROM | EECR 0x3F, EEDR 0x40, EEARL 0x41, EEARH 0x42 | `AVREEPROM` exists (eeprom.js:34), not built | eeprom.js:18-26; iom328p.h:180, 188, 200, 210; DS "AVR Memories", EEPROM Data Memory |
-| U5 | WDT | watchdog timer | WDTCSR 0x60 | `AVRWatchdog` exists (watchdog.js:20), not built; `WDR` does nothing (cpu.js:29-31) | watchdog.js:15-19; iom328p.h:353-361; DS "System Control and Reset", Watchdog Timer |
-| U6 | AC | analog comparator | ACSR 0x50, DIDR1 0x7F | no avr8js class references ACSR or DIDR1 | iom328p.h:312-320, 512-514; DS "Analog Comparator" |
-| U7 | DIDR0 | digital input disable on analog pins | DIDR0 0x7E | `adcConfig` names DIDR0 (adc.js:41) but no hook reads it; `AVRIOPort` ignores it, so PINC bits of disabled pins do not read 0 as on the chip | adc.js:41; iom328p.h:504-510; DS "Analog-to-Digital Converter", Digital Input Disable Register 0 |
-| U8 | ASSR | timer 2 async clock | ASSR 0xB6 | timer.js never references ASSR (no AS2, EXCLK or busy flags) | iom328p.h:671-678; DS "8-bit Timer/Counter2 with PWM and Asynchronous Operation" |
-| U9 | GTCCR | timer prescaler reset | GTCCR 0x43 | timer.js never references GTCCR (only timer-attiny.js does, for another chip) | iom328p.h:216-219; DS "Timer/Counter0 and Timer/Counter1 Prescalers" |
-| U10 | PRR | power reduction register | PRR 0x64 | no avr8js class references PRR; timers and ADC keep running when their PRR bit is set | iom328p.h:370-377; DS "Power Management and Sleep Modes" |
-| U11 | SLEEP | sleep mode | SMCR 0x53 | `SLEEP` is not implemented (instruction.js:714-717), so the CPU keeps running where the chip would stop | iom328p.h:322-326; DS "Power Management and Sleep Modes" |
-| U12 | CLKPR | clock prescaler | CLKPR 0x61 | `AVRClock` exists (clock.js:13) but is not built; the bridge runs every cycle at the Fixture clock | clock.js:4-6, clock.js:21-30; iom328p.h:363-368; DS "System Clock and Clock Options", System Clock Prescaler |
-| U13 | MCUCR | chip control register | MCUCR 0x55 | no avr8js class references MCUCR: PUD is not modelled (bridge:328-329), IVSEL does not move the vectors (interrupt.js:13 jumps to the fixed vector), BODS has no sleep to act on | iom328p.h:334-339; DS "I/O-Ports" (PUD), "Interrupts" (IVSEL, IVCE), "Power Management and Sleep Modes" (BODS, BODSE) |
-| U14 | MCUSR | reset flags | MCUSR 0x54 | only `AVRWatchdog` writes MCUSR (watchdog.js:55), and it is not built; a read returns 0 where the chip shows the reset cause | watchdog.js:17; iom328p.h:328-332; DS "System Control and Reset" |
-| U15 | SPM | flash self-programming | SPMCSR 0x57 | `SPM` is not implemented (instruction.js:718-725) | iom328p.h:341-351; DS "Boot Loader Support - Read-While-Write Self-Programming" |
-| U16 | OSCCAL | oscillator calibration | OSCCAL 0x66 | no avr8js class references OSCCAL; a read returns 0 where the chip returns its factory calibration byte | iom328p.h:388; DS "System Clock and Clock Options" |
+Every Peripheral_Reason built from these rows is 108 to 138 UTF-16 units long and holds no Banned_Words entry (Requirement 5.6). The length is 98 plus the lengths of the Plain_Name and the Peripheral_ID: the template of Requirement 5.3 has 21 units before the Plain_Name, 2 between it and the id, and 75 after the id. The Reason column below gives each length.
+
+| Row | Peripheral_ID | Plain_Name | Registers (data-space address) | Why it counts as unmodelled | Reason length | Sources |
+|---|---|---|---|---|---|---|
+| U1 | USART0 | serial port | UCSR0A 0xC0, UCSR0B 0xC1, UCSR0C 0xC2, UBRR0L 0xC4, UBRR0H 0xC5, UDR0 0xC6 | `AVRUSART` exists (usart.js:50) but the bridge does not build it | 115 | usart.js:3-13; iom328p.h:737, 747, 757, 771, 781, 787; DS "USART0" |
+| U2 | SPI | SPI bus | SPCR 0x4C, SPSR 0x4D, SPDR 0x4E | `AVRSPI` exists (spi.js:23), not built | 108 | spi.js:16-21; iom328p.h:287, 297, 302; DS "SPI - Serial Peripheral Interface" |
+| U3 | TWI | two-wire bus | TWBR 0xB8, TWSR 0xB9, TWAR 0xBA, TWDR 0xBB, TWCR 0xBC, TWAMR 0xBD | `AVRTWI` exists (twi.js:64), not built | 113 | twi.js:34-42; iom328p.h:680, 690, 699, 709, 719, 728; DS "2-wire Serial Interface" |
+| U4 | EEPROM | data EEPROM | EECR 0x3F, EEDR 0x40, EEARL 0x41, EEARH 0x42 | `AVREEPROM` exists (eeprom.js:34), not built | 115 | eeprom.js:18-26; iom328p.h:180, 188, 200, 210; DS "AVR Memories", EEPROM Data Memory |
+| U5 | WDT | watchdog timer | WDTCSR 0x60 | `AVRWatchdog` exists (watchdog.js:20), not built; `WDR` does nothing (cpu.js:29-31) | 115 | watchdog.js:15-19; iom328p.h:353-361; DS "System Control and Reset", Watchdog Timer |
+| U6 | AC | analog comparator | ACSR 0x50, DIDR1 0x7F | no avr8js class references ACSR or DIDR1 | 117 | iom328p.h:312-320, 512-514; DS "Analog Comparator" |
+| U7 | DIDR0 | digital input disable register | DIDR0 0x7E | `adcConfig` names DIDR0 (adc.js:41) but no hook reads it; `AVRIOPort` ignores it, so PINC bits of disabled pins do not read 0 as on the chip | 133 | adc.js:41; iom328p.h:504-510; DS "Analog-to-Digital Converter", Digital Input Disable Register 0 |
+| U8 | ASSR | timer 2 asynchronous status register | ASSR 0xB6 | timer.js never references ASSR (no AS2, EXCLK or busy flags) | 138 | iom328p.h:671-678; DS "8-bit Timer/Counter2 with PWM and Asynchronous Operation" |
+| U9 | GTCCR | timer prescaler control register | GTCCR 0x43 | timer.js never references GTCCR (only timer-attiny.js does, for another chip) | 135 | iom328p.h:216-219; DS "Timer/Counter0 and Timer/Counter1 Prescalers" |
+| U10 | PRR | power reduction register | PRR 0x64 | no avr8js class references PRR; timers and ADC keep running when their PRR bit is set | 125 | iom328p.h:370-377; DS "Power Management and Sleep Modes" |
+| U11 | SMCR | sleep mode control register | SMCR 0x53 | `SLEEP` is not implemented (instruction.js:714-717), so the CPU keeps running where the chip would stop | 129 | iom328p.h:322-326; DS "Power Management and Sleep Modes" |
+| U12 | CLKPR | clock prescaler register | CLKPR 0x61 | `AVRClock` exists (clock.js:13) but is not built; the bridge runs every cycle at the Fixture clock | 127 | clock.js:4-6, clock.js:21-30; iom328p.h:363-368; DS "System Clock and Clock Options", System Clock Prescaler |
+| U13 | MCUCR | chip control register | MCUCR 0x55 | no avr8js class references MCUCR: PUD is not modelled (bridge:328-329), IVSEL does not move the vectors (interrupt.js:13 jumps to the fixed vector), BODS has no sleep to act on | 124 | iom328p.h:334-339; DS "I/O-Ports" (PUD), "Interrupts" (IVSEL, IVCE), "Power Management and Sleep Modes" (BODS, BODSE) |
+| U14 | MCUSR | reset status register | MCUSR 0x54 | only `AVRWatchdog` writes MCUSR (watchdog.js:55), and it is not built; a read returns 0 where the chip shows the reset cause | 124 | watchdog.js:17; iom328p.h:328-332; DS "System Control and Reset" |
+| U15 | SPMCSR | flash self-programming register | SPMCSR 0x57 | `SPM` is not implemented (instruction.js:718-725) | 135 | iom328p.h:341-351; DS "Boot Loader Support - Read-While-Write Self-Programming" |
+| U16 | OSCCAL | oscillator calibration register | OSCCAL 0x66 | no avr8js class references OSCCAL; a read returns 0 where the chip returns its factory calibration byte | 135 | iom328p.h:388; DS "System Clock and Clock Options" |
 
 ### Use_Access and Disable_Write (Requirements 1.5, 1.6)
 
@@ -290,18 +291,20 @@ export function computeVerdict(input: VerdictInput): Verdict | null {
   return { verdict: "HELD", text: heldText(runs.length), runs: runs.length };
 ```
 
-Precedence today: unfinished gives `null`; then BROKE whenever any Run has a Violation (a CannotCheck only adds to `unchecked`); then COULDN'T TELL when any reason part exists; then HELD. The `unsupportedPeripherals` input (verdict.ts lines 26-27, 105-107) exists but `campaign.ts` line 450 always passes `[]`.
+The full `computeVerdict` and its precedence today are quoted in C4 (Requirement 4.5). The `unsupportedPeripherals` input (verdict.ts lines 26-27, 105-107) exists but `campaign.ts` line 450 always passes `[]`.
 
 **Decision: the Peripheral_Diagnostic verdict path does not reuse the CannotCheck_Path.** It does reuse `buildReason` and `truncateReason` unchanged (Requirement 5.5). Reasons:
 
-1. A CannotCheck never overrides BROKE: in `computeVerdict` lines 61-73 a violating Run wins and the CannotCheck only lands in `unchecked`. Requirement 4.1 and 4.2 need peripheral use to turn a would-be BROKE into COULDN'T TELL.
-2. A CannotCheck is keyed by `[rule, reason]` (campaign.ts lines 198-205, verdict.ts lines 65-70) and carries no cycle. Requirement 4.2 and 4.3 compare the Peripheral_Diagnostic `cycle` with the Violation_Cycle, and Requirement 5.4 orders by cycle.
+1. A CannotCheck never overrides BROKE: in `computeVerdict` lines 61-73 a violating Run wins and the CannotCheck only lands in `unchecked`. Requirement 4.2 needs a blocking peripheral use to turn a would-be BROKE into COULDN'T TELL.
+2. A CannotCheck is keyed by `[rule, reason]` (campaign.ts lines 198-205, verdict.ts lines 65-70) and carries no cycle. Requirement 4.1 and 4.2 compare the Peripheral_Diagnostic `cycle` with the Violation_Cycle, and Requirement 5.4 orders by cycle.
 3. The CannotCheck part text is `Rule "<rule>" could not be checked: <reason>` (verdict.ts line 94). Requirement 5.2 fixes a different sentence, and Requirement 5.4 puts it before every other part. `unsupportedPeripherals` has the same order problem (its part comes after the CannotCheck parts, verdict.ts lines 105-107) and no cycle.
 4. CannotChecks come from the Checker. Peripheral use is seen by the bridge, below the Checker, and must not change what Checkers receive (Requirement 3.5, 8.4).
 
 ## Components and Interfaces
 
-### C1. Calibration_Script (Requirement 2) — can run now
+### C1. Calibration_Script (Requirement 2) — done
+
+Result: 72 cases ran with `src/` unchanged. No Use_Access was logged. The only access to a table register was the Disable_Write `UCSR0B = 0x00` from `init()`, at cycles 152 to 300 depending on the program. Logged and unlogged runs gave identical results. No calibration STOP fired, and the script was deleted. The design below is kept as the record of how the calibration ran.
 
 File `scripts/tmp-calibrate.ts`, run with `npx tsx scripts/tmp-calibrate.ts`, deleted before the task is reported done (Requirement 21). It runs while every file under `src/` is unchanged (Requirement 2.1).
 
@@ -356,14 +359,14 @@ Inventory step (before running): for each of the four HEX files, list every Comm
 
 **STOP conditions.** A Use_Access by any Calibration_Set program (Requirement 2.5, 23.2); an "other" access (Requirement 2.6; cannot happen under D2, but the script still checks); a load or bridge error (Requirement 2.8). Each STOP reports program, Run_Index or Fixture, register, cycle, access, value or error.
 
-### C2. Peripheral detection in the bridge (Requirements 3.1-3.5, 3.7-3.9) — **BLOCKED by STOP OI-1**
+### C2. Peripheral detection in the bridge (Requirements 3.1-3.5, 3.7-3.9)
 
 New pure module `src/engine/peripherals.ts` (no avr8js import):
 
 ```ts
 export interface PeripheralRegister { readonly name: string; readonly addr: number; readonly disableMask?: number }
 export interface PeripheralRow { readonly id: string; readonly plainName: string; readonly registers: readonly PeripheralRegister[] }
-export const UNMODELLED_PERIPHERALS: readonly PeripheralRow[];      // rows U1..U16 in table order, frozen
+export const UNMODELLED_PERIPHERALS: readonly PeripheralRow[];      // rows U1..U16 in table order, frozen; no EXINT or PCINT register
 export function peripheralReason(row: PeripheralRow): string;      // Requirement 5.2, 5.3 template
 export function isUseAccess(reg: PeripheralRegister, access: "read" | "write", value: number): boolean;
 //   read -> true; write -> reg.disableMask === undefined || (value & reg.disableMask) !== 0
@@ -398,46 +401,161 @@ for (const row of UNMODELLED_PERIPHERALS) for (const reg of row.registers) {
 
 `advance()` returns `peripheralUses: this._peripherals.take()` only when the list is non-empty (D3). `cpu.cycles` is the integer cycle count when the instruction runs (Requirement 3.4, 6.2). Detection sees only the cycles the Run executes (Requirement 3.9). A test seam `createWithTestHooks(..., { peripheralDetection: false })` builds a bridge without step 11d, for the transparency property (Property 1).
 
-### C3. Campaign plumbing (Requirement 3.6) — **BLOCKED by STOP OI-1**
+### C3. Campaign plumbing (Requirement 3.6)
 
 `runEventList` appends `r.peripheralUses ?? []` to a local list after each `advance()` and returns it as `peripheralUses` only when non-empty. `runOne` copies it into the RunResult the same way. Checkers do not receive it. The bridge's recorder lives for one Run, so at most one entry per peripheral reaches the RunResult, in ascending cycle order. The reducer's Run_Path ignores the field.
 
-### C4. Verdict (Requirements 4, 5, 6) — **BLOCKED by STOP OI-1**
+### C4. Verdict (Requirements 4, 5, 6)
 
-New step in `computeVerdict` between line 53 (`if (!input.finished) return null;`) and line 55:
+**Today's precedence (Requirement 4.5).** `src/engine/verdict.ts` lines 52-121, the whole of `computeVerdict` before this change:
 
 ```ts
-// 0. Peripheral use (Requirement 4.1, 4.2).
-const blocking: PeripheralDiagnostic[] = [];
-for (const run of runs) {
-  for (const d of run.peripheralUses ?? []) {
-    if (run.violation === null || d.cycle <= run.violation.cycle) blocking.push(d);
+export function computeVerdict(input: VerdictInput): Verdict | null {
+  if (!input.finished) return null;
+
+  const { runs } = input;
+
+  // 1. BROKE: lowest violating Run_Index, with every unchecked rule listed.
+  let lowest: RunResult | null = null;
+  const unchecked: CannotCheck[] = [];
+  const seen = new Set<string>();
+  for (const run of runs) {
+    if (run.violation !== null && (lowest === null || run.runIndex < lowest.runIndex)) {
+      lowest = run;
+    }
+    for (const c of run.cannotCheck) {
+      const key = JSON.stringify([c.rule, c.reason]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unchecked.push({ rule: c.rule, reason: c.reason });
+    }
   }
+  const untriggered = input.untriggeredRules ?? [];
+  if (lowest !== null && lowest.violation !== null) {
+    const reason = triggerReason(runs.length);
+    for (const s of untriggered) {
+      const key = JSON.stringify([s, reason]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unchecked.push({ rule: s, reason });
+    }
+    const trace: BrokeTrace = {
+      runIndex: lowest.runIndex,
+      runSeed: lowest.runSeed,
+      eventList: lowest.eventList.map((e) => ({ ...e })),
+      outputEvents: lowest.outputEvents.map((e) => ({ ...e })),
+      violation: { ...lowest.violation },
+    };
+    return { verdict: VERDICT_BROKE, trace, unchecked };
+  }
+
+  // 2. COULDN'T TELL.
+  const parts: string[] = [];
+  for (const c of unchecked) {
+    parts.push(`Rule "${c.rule}" could not be checked: ${c.reason}`);
+  }
+  const triggerSeen = new Set<string>();
+  for (const s of untriggered) {
+    if (triggerSeen.has(s)) continue;
+    triggerSeen.add(s);
+    parts.push(`Rule "${s}" could not be checked: ${triggerReason(runs.length)}`);
+  }
+  if (input.unmappedSignals.length > 0) {
+    parts.push(`Signals not mapped to a pin: ${input.unmappedSignals.join(", ")}`);
+  }
+  if (input.unsupportedPeripherals.length > 0) {
+    parts.push(`Peripherals not supported: ${input.unsupportedPeripherals.join(", ")}`);
+  }
+  if (runs.length !== input.requestedRuns) {
+    parts.push(`Only ${runs.length} of ${input.requestedRuns} runs completed`);
+  }
+  const anyEvent = runs.some((r) => r.eventList.some((e) => e.gremlinId !== "rest"));
+  if (!anyEvent) {
+    parts.push("No gremlin produced an event in any run");
+  }
+  if (parts.length > 0) {
+    return { verdict: VERDICT_COULDNT_TELL, reason: buildReason(parts) };
+  }
+
+  // 3. HELD.
+  return { verdict: "HELD", text: heldText(runs.length), runs: runs.length };
 }
-if (blocking.length > 0) {
-  const parts = [...peripheralReasons(blocking), ...todayCouldntTellParts(input)];
-  return { verdict: VERDICT_COULDNT_TELL, reason: buildReason(parts) };
-}
-// steps 1-3 unchanged
 ```
 
-- `peripheralReasons` gives one Peripheral_Reason per distinct `peripheral` in `blocking`, ordered by the lowest `cycle` of that peripheral among the blocking diagnostics, ties by table row order (Requirement 5.1, 5.4; Choices C7). An id that is not in the table (impossible from the bridge, possible in a hand-built input) uses its id as the Plain_Name and sorts after every table row.
-- `todayCouldntTellParts(input)` is today's branch 2 part list (verdict.ts lines 92-114), moved into a helper with no change, so the remaining parts follow the leading Peripheral_Reason (Requirement 5.4; Choices C6).
-- With no blocking diagnostic, steps 1 to 3 run as today on the same input and ignore `peripheralUses`, so the result is deep-equal to the result with every Peripheral_Diagnostic removed (Requirement 4.3, 4.4). An unfinished Campaign still returns `null` before step 0 (Requirement 4.6).
+In words, today's precedence is:
+
+1. An unfinished Campaign gives `null` (line 53).
+2. BROKE for the completed Run with the lowest Run_Index that has a Violation. Its trace is that Run's. Every CannotCheck of every Run, and every untriggered rule with the "trigger never happened in N runs" reason, goes into `unchecked` (lines 57-89). A CannotCheck never overrides BROKE.
+3. COULDN'T TELL when any reason part exists (lines 91-117). The parts, in order: one per CannotCheck (including the CannotChecks reported for floating inputs), one per untriggered rule, unmapped signals, unsupported peripherals, fewer completed Runs than requested, and no gremlin event in any Run.
+4. HELD otherwise (lines 119-120), with the HELD text for the real count of completed Runs.
+
+**New step (round 2 decision 2).** It runs right after the `finished` check, so an unfinished Campaign still gives `null` whatever its `peripheralUses` (Requirement 4.6):
+
+```ts
+// 0. Blocking peripheral use (Requirements 4.1-4.3, 5.1).
+let lowest: RunResult | null = null;
+for (const run of runs) {
+  if (run.violation !== null && (lowest === null || run.runIndex < lowest.runIndex)) lowest = run;
+}
+const blocking: PeripheralDiagnostic[] = [];
+if (lowest !== null && lowest.violation !== null) {
+  // A Violating_Run exists: only its own uses at or before its Violation_Cycle block.
+  for (const d of lowest.peripheralUses ?? []) if (d.cycle <= lowest.violation.cycle) blocking.push(d);
+} else {
+  // No Run has a Violation: every use of every Run blocks, so the verdict is never HELD.
+  for (const run of runs) for (const d of run.peripheralUses ?? []) blocking.push(d);
+}
+if (blocking.length > 0) {
+  const parts = [...peripheralReasons(blocking), ...couldntTellParts(input, collectUnchecked(runs))];
+  return { verdict: VERDICT_COULDNT_TELL, reason: buildReason(parts) };
+}
+// Steps 1-3: today's code, unchanged in behaviour.
+```
+
+| Case | `blocking` | Verdict |
+|---|---|---|
+| unfinished | not computed | `null`, as today (Requirement 4.6) |
+| a Violating_Run exists, none of its uses has `cycle <= violation.cycle` | empty | today's BROKE, deep-equal to today's verdict for the same input with every `peripheralUses` removed, whatever other Runs used (Requirement 4.1) |
+| a Violating_Run exists, one of its uses has `cycle <= violation.cycle` | that Run's uses up to its Violation_Cycle | COULDN'T TELL (Requirement 4.2) |
+| no Run has a Violation, some Run has a use | every use of every Run | COULDN'T TELL, never HELD (Requirement 4.3) |
+| no Run has a use | empty | today's verdict (Requirement 4.4) |
+
+- `collectUnchecked(runs)` and `couldntTellParts(input, unchecked)` are extracted from today's code without change: `collectUnchecked` is the CannotCheck half of the loop at lines 61-71, and `couldntTellParts` is the part list of today's branch 2 (lines 92-114). Today's branch 2 calls `couldntTellParts` too, so its output does not change. The part list starts with the CannotCheck parts, so the floating-input CannotChecks appear in the same words and order as today, after the Peripheral_Reasons (Requirement 4.5, 5.4; Choices C6). The untriggered-rule entries that today's BROKE branch adds to `unchecked` are not in this list; `couldntTellParts` adds untriggered rules exactly as branch 2 does.
+- `peripheralReasons(blocking)` gives one Peripheral_Reason per distinct `peripheral` in `blocking`, ordered by the lowest `cycle` of that peripheral among the blocking diagnostics, ties by Peripheral_Table row order U1 to U16 (Requirement 5.1, 5.4; Choices C7). An id that is not a table row (impossible from the bridge, possible in a hand-built input) uses its id as the Plain_Name and sorts after every table row; two such ids with equal lowest cycles sort by id (Choices C12).
+- The Reason is `buildReason(parts)`, unchanged, so it is cut at 200 UTF-16 units and begins with the leading Peripheral_Reason in full, because every Peripheral_Reason is at most 138 units (Requirement 5.5).
+- With `blocking` empty, the code after step 0 is today's code and never reads `peripheralUses`, so the verdict is deep-equal to today's verdict for the same input with every `peripheralUses` removed (Requirement 4.1, 4.4).
 - The function stays pure: it reads only its argument, builds new arrays, and uses no clock or random source (Requirement 6).
 
-### C5. New fixtures (Requirement 7) — **BLOCKED by STOP OI-1**
+### C5. New fixtures (Requirement 7)
 
 | File | Content (choices in Choices C8) |
 |---|---|
-| `fixtures/serial_hello/serial_hello.ino` | `Serial.begin(9600)` in `setup()`; `loop()` calls `Serial.print("hello ")`, toggles LED on PB5 (pin 13), then `delay(100)`; comment names the chip "ATmega328P" |
+| `fixtures/serial_hello/serial_hello.ino` | `pinMode(13, OUTPUT)` and `Serial.begin(9600)` in `setup()`; `loop()` calls `Serial.print("hello ")`, toggles LED on PB5 (pin 13), then `delay(100)`; comment names the chip "ATmega328P" |
 | `fixtures/serial_hello/fixture.json` | `{ "pins": [ { "signal": "LED", "port": "B", "bit": 5, "direction": "output" } ] }` |
-| `fixtures/ext_interrupt/ext_interrupt.ino` | `pinMode(2, INPUT_PULLUP)`; `attachInterrupt(digitalPinToInterrupt(2), onEdge, CHANGE)`; `onEdge` toggles LED on PB5; `pinMode(13, OUTPUT)` |
-| `fixtures/ext_interrupt/fixture.json` | `{ "pins": [ { "signal": "TRIGGER", "port": "D", "bit": 2, "direction": "input" }, { "signal": "LED", "port": "B", "bit": 5, "direction": "output" } ] }` |
+| `fixtures/eeprom_boot/eeprom_boot.ino` | `#include <EEPROM.h>`; in `setup()`: `pinMode(13, OUTPUT)`, `byte b = EEPROM.read(0);`, half-period 100 ms when `b == 0xFF` (erased chip) and 250 ms otherwise; `loop()` toggles LED on PB5 (pin 13), then `delay(halfPeriod)`; comment names the chip "ATmega328P" |
+| `fixtures/eeprom_boot/fixture.json` | `{ "pins": [ { "signal": "LED", "port": "B", "bit": 5, "direction": "output" } ] }` |
+| `fixtures/ext_interrupt/ext_interrupt.ino` | `pinMode(2, INPUT_PULLUP)`; `pinMode(13, OUTPUT)`; `attachInterrupt(digitalPinToInterrupt(2), onEdge, CHANGE)`; `onEdge` toggles LED on PB5; comment names the chip "ATmega328P" |
+| `fixtures/ext_interrupt/fixture.json` | `{ "pins": [ { "signal": "TRIGGER", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" }, { "signal": "LED", "port": "B", "bit": 5, "direction": "output" } ] }` |
 
-Both compile with `arduino-cli compile -b arduino:avr:uno --output-dir fixtures/<name>/build fixtures/<name>` and must leave exactly the Build_File_Set (Requirement 7.6, 7.7). A compile failure is STOP 23.5.
+Expected behaviour in the emulator, from the sources (the tests are the evidence):
 
-### C6. Failure story (Requirements 9 to 13) — **BLOCKED by STOP OI-2**
+- `serial_hello` writes UCSR0A, UBRR0H, UBRR0L, UCSR0C and then UCSR0B with RXEN0, TXEN0 and RXCIE0 set in `Serial.begin` (research finding 6), so the earliest Use_Access of USART0 comes in `setup()`. After the 64-byte TX buffer fills (about 11 loops), `HardwareSerial::write` spins forever because UDRE0 never becomes 1, so the LED stops toggling. COULDN'T TELL still holds: no Run has a Violation under the C8 test rule, so every use blocks (Requirement 4.3), and the Reason starts with the USART0 Peripheral_Reason.
+- `eeprom_boot` reads EEPROM byte 0 with accesses to EECR (the EEPE wait and the EERE write), EEARH, EEARL and EEDR. In the emulator EECR and EEDR read 0, so the EEPE busy-wait in `EEPROM.read` ends at once and the program does not hang; it reads 0, not the erased chip's 0xFF, and so blinks with the 250 ms half-period where an erased chip would use 100 ms. The earliest EEPROM Use_Access comes in `setup()`, and the Reason starts with "The program uses the data EEPROM (EEPROM), which this emulator setup does not model, so the rule cannot be checked." (Requirement 5.8, 8.6).
+- `ext_interrupt` touches only EICRA, EIMSK and EIFR (row M5) and the GPIO rows, so it records no Peripheral_Diagnostic. Each scripted PD2 edge raises INT0 and the handler toggles the LED once (Requirement 8.2).
+
+All three compile with `arduino-cli compile -b arduino:avr:uno --output-dir fixtures/<name>/build fixtures/<name>` and must leave exactly the Build_File_Set (Requirement 7.6, 7.7, 7.11). A compile failure is STOP 23.5.
+
+### C6. Failure story (Requirements 9 to 13)
+
+**Which Violation the story writes (Requirement 9.6, round 2 decision 4).** The story writes the Ms_Text and Cycle_Text of the Violation it is given. `src/engine/__tests__/reducer-examples.test.ts` line 82 already passes `res.violation`, the reducer result's Violation, so the story writes the Reduced_Replay's own Violation_Cycle. No code change is needed for this. The Report puts the two cycles side by side (Requirement 24.1):
+
+| Example | Original Campaign Violation_Cycle (`trace.violation.cycle`) | Reduced_Replay Violation_Cycle (`res.violation.cycle`) |
+|---|---|---|
+| crosswalk | 15,647,543 | 15,647,515 |
+| garage | read from the Campaign trace during implementation | 5,768,101 |
+| heartbeat | read from the Campaign trace during implementation | 12,811,661 |
+
+The missing originals are printed by the implementation task from `trace.violation.cycle` (`reducer-examples.test.ts` line 45 passes it into the reducer input), not guessed here.
 
 Changes in `src/engine/reducer/story.ts`:
 
@@ -459,9 +577,11 @@ Changes in `src/engine/reducer/story.ts`:
 
 - The Summary_Form is unchanged (Requirement 11.5). Packing, the 30-word limit (which now counts "and held" and label words), the form choice and the "does not fit" error are unchanged (Requirement 12.5, 13.5).
 
-### C7. Pre_Approved_Edits (Requirement 15) — **BLOCKED by STOP OI-2**
+### C7. Pre_Approved_Edits (Requirement 15)
 
-Built by applying Requirements 9 to 12 to each old string and its test's inputs, not copied from output (Requirement 15.6). In `src/engine/__tests__/reducer-story.test.ts` every test uses `violation.cycle` 15,648,000: Ms_Text `978.0 ms`, Cycle_Text `15,648,000`. No test passes `labels`. No Detailed_Form test holds a Held_Press: the presses at lines 29 and 68 are each followed by a release on the same signal; the only unreleased presses (line 75-76) are in a Summary_Form case, which "and held" does not change. In the table, `…rule: R` stands for `…rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.`.
+The user approved three kinds of edit in round 2 (decision 3). Every other line of every Committed_Test_File stays unchanged, and the Report names every edited line (Requirement 15.2, 15.3).
+
+**Edit kind (a): the six story strings in `src/engine/__tests__/reducer-story.test.ts`.** Built by applying Requirements 9 to 12 to each old string and its test's inputs, not copied from output (Requirement 15.6). In `src/engine/__tests__/reducer-story.test.ts` every test uses `violation.cycle` 15,648,000: Ms_Text `978.0 ms`, Cycle_Text `15,648,000`. No test passes `labels`. No Detailed_Form test holds a Held_Press: the presses at lines 29 and 68 are each followed by a release on the same signal; the only unreleased presses (line 75-76) are in a Summary_Form case, which "and held" does not change. In the table, `…rule: R` stands for `…rule: all of (CAR_GREEN is 1, WALK is 1) must never happen.`.
 
 | Line | Old string (changed part) | New string (changed part) |
 |---|---|---|
@@ -474,7 +594,25 @@ Built by applying Requirements 9 to 12 to each old string and its test's inputs,
 
 The part before "At 978.0 ms" is unchanged on every line. Lines 19-23 (`msText`) and 86-90 (the "does not fit" error; still unchanged because the long ids exceed 30 words in both forms) need no edit. `src/engine/__tests__/reducer-examples.test.ts` holds no expected story string (it only builds and prints the story at lines 82-83 and 95), so it gets no edit (OI-4, Requirement 15.5).
 
-### C8. Evidence_Bench (Requirements 16 to 19) — can run now
+**Edit kind (b): `refStory` in `src/engine/__tests__/reducer-arbitraries.ts` (about lines 700-742).** The reference model is written from Requirements 9 to 12, not from `story.ts` (Requirement 15.6), and imports nothing new from `story.ts`:
+
+- A small helper next to `refStory`, for example `refCycleText(n)`, builds the Cycle_Text from `String(n)` by taking 3-digit groups from the right and joining them with ",". It is written independently of `cycleText` in `story.ts`, so the model does not share code with the system under test.
+- The Detailed_Form phrase builder (today lines 705-713) gains the Held_Press case: for a press (`v === pressOf(pin)`) at index `i` of `c.reducedList`, it is held when no later index on the same signal has `value === "release"`, whatever the `gremlinId`. Held, no label: `${g} pressed and held ${S} at ${t}`. Held, label: `${g} ${active} and held at ${t}`.
+- Labels: `refStory` reads an optional `labels` field from its argument (its parameter type widens to `StoryCase & { labels?: Readonly<Record<string, { active: string; inactive: string }>> }`, so `StoryCase` itself does not change). With an own entry for the signal, a released press writes `${g} ${active} at ${t}`, and a `"release"` or a 0/1 that is not the Press_Value writes `${g} ${inactive} at ${t}`. Analog phrases and the Summary_Form phrases do not use labels.
+- Line 740 becomes `` `At ${ms(c.violation.cycle)} (cycle ${refCycleText(c.violation.cycle)}), the program broke this rule: ${c.violation.rule}` ``.
+- Line 741 becomes `` `The violation lasted ${c.violationSpan.cut ? "at least " : ""}${ms(c.violationSpan.lengthCycles)}.` ``.
+
+`arbStoryCase` is not changed and generates no labels. Where its cases hold a Detailed_Form press with no later release (NC-2), Property 11 exercises the held branch of `refStory`. Labels are exercised by a new property test in a new file (Property 7), which adds generated labels to `arbStoryCase` cases and compares `failureStory` with `refStory`.
+
+**Edit kind (c): the Property 11 number check in `src/engine/__tests__/reducer-story.property.test.ts` (lines 69-83).** Today the allowed set holds the Ms_Text numbers, analog values, 0, 1 and the counts, and the check matches `/\d+(\.\d)?/g` outside the rule and names. "cycle 15,647,543" yields the matches "15", "647" and "543", which are not in the set. One line is added after line 73 so the set also holds the comma groups of the violation Cycle_Text, built inline so that the import on line 7 does not change:
+
+```ts
+for (const grp of String(c.violation.cycle).replace(/\B(?=(\d{3})+(?!\d))/g, ",").split(",")) allowed.add(grp);
+```
+
+The check stays as strict as today for every other number. Property 11 keeps `seed: 20261211`, `numRuns: 300`, the counters `detailedForm`, `summaryForm`, `zeroEvents`, `withSpan` and `cutSpan` and every other assertion (Requirement 15.7). Its other assertions already hold for the new wording: the violation sentence still contains `msText(c.violation.cycle)` and still ends with the rule, and the span sentence still contains the span Ms_Text and "at least " exactly when cut.
+
+### C8. Evidence_Bench (Requirements 16 to 19) — done
 
 `package.json` gains `"bench:evidence": "tsx bench/evidence.ts"` (Requirement 16.1). Dependencies stay unchanged.
 
@@ -495,7 +633,9 @@ The helper file holds no wall-clock read, so the wall clock is read only in `ben
 | garage | BEAM_CLEAR | 6,400,000 | 6,432,000 | 32,000 | 10,000,000 | 160,000 to 9,920,000 (62) |
 | heartbeat | PULSE | 4,000,000 | 5,600,000 | 1,600,000 | 16,000,000 | 160,000 to 14,240,000 (89) |
 
-For each Example, build and Sweep_Start s in ascending order: `events = buildScriptedEvents(ex.fixture, [{ signal, value: pressValue(pin), cycle: s }, { signal, value: "release", cycle: s + hold }], ex.meta.runCycles)`, then `scriptedRun(ex, variant, events, ex.meta.runCycles, { untilEnd: true })`. `buildScriptedEvents` puts the Fixture's rest events before the press and adds no gremlin event (Requirement 18.6); `scriptedRun` uses a fresh bridge and the compiled `rules.txt` checker (Requirement 18.2). `untilEnd: true` makes every Run reach `runCycles` and make its end-of-run Checker call (Choices C11). Record: Sweep_Start count, Runs with a Violation and their Sweep_Starts, Runs with a CannotCheck (Requirement 18.4). A non-zero Violation count is a finding for the Report, not a STOP (Requirement 18.5). Peripheral_Diagnostics are not reported because they do not exist while Part 1 is blocked.
+For each Example, build and Sweep_Start s in ascending order: `events = buildScriptedEvents(ex.fixture, [{ signal, value: pressValue(pin), cycle: s }, { signal, value: "release", cycle: s + hold }], ex.meta.runCycles)`, then `scriptedRun(ex, variant, events, ex.meta.runCycles, { untilEnd: true })`. `buildScriptedEvents` puts the Fixture's rest events before the press and adds no gremlin event (Requirement 18.6); `scriptedRun` uses a fresh bridge and the compiled `rules.txt` checker (Requirement 18.2). `untilEnd: true` makes every Run reach `runCycles` and make its end-of-run Checker call (Choices C11). Record: Sweep_Start count, Runs with a Violation and their Sweep_Starts, Runs with a CannotCheck (Requirement 18.4). A non-zero Violation count is a finding for the Report, not a STOP (Requirement 18.5). The single-press column stays "Runs with a CannotCheck": Peripheral_Diagnostics of the Examples show up in the Seed_Sweep verdicts instead, and the Evidence_Doc format stays as written (Requirement 18.4).
+
+**Re-run after Parts 1 and 2 (Requirement 24.2, 24.3).** Before the re-run, the implementation keeps a copy of `docs/evidence/EVIDENCE-NUMBERS.md` as it stood (the committed version from commit 109f615, or the working copy if it differs). After `npm run bench:evidence`, it compares the two line by line, ignoring the "Date of run" row and the wall-clock values. The Report lists every other difference; a changed count is a finding (the user expects none). Calibration logged no Use_Access by any Example (C1), so no Seed_Sweep verdict is expected to move, but only the re-run shows it.
 
 **Evidence_Doc.** `renderEvidenceDoc(results)` returns the text; the bench creates `docs/evidence/` with `mkdirSync(..., { recursive: true })` and writes the file only when every sweep ended without error or fixed-build BROKE, and `findForbiddenWords(text)` returns an empty list (Requirement 19.4-19.6). Layout:
 
@@ -529,7 +669,7 @@ The doc layout, shown indented so its headings are not read as headings of this 
 
 ## Data Models
 
-Part 1 (**BLOCKED by STOP OI-1**), in `src/engine/types.ts`:
+Part 1, in `src/engine/types.ts`:
 
 ```ts
 /** Earliest Use_Access of one Unmodelled_Peripheral in one Run. */
@@ -555,9 +695,9 @@ export interface RunResult {
 
 `RunPathResult` in `campaign.ts` gets the same optional field. The field is optional and omitted when empty so that every existing RunResult, AdvanceResult and baseline comparison stays deep-equal (Requirement 8.4; Choices C1). The name does not clash with `diagnostics`.
 
-Peripheral_Table data (`src/engine/peripherals.ts`): `PeripheralRow { id, plainName, registers }`, `PeripheralRegister { name, addr, disableMask? }`, 16 frozen rows U1 to U16 in table order.
+Peripheral_Table data (`src/engine/peripherals.ts`): `PeripheralRow { id, plainName, registers }`, `PeripheralRegister { name, addr, disableMask? }`, 16 frozen rows U1 to U16 in table order, with the ids USART0, SPI, TWI, EEPROM, WDT, AC, DIDR0, ASSR, GTCCR, PRR, SMCR, CLKPR, MCUCR, MCUSR, SPMCSR, OSCCAL.
 
-Part 2 (**BLOCKED by STOP OI-2**), in `src/engine/reducer/story.ts`:
+Part 2, in `src/engine/reducer/story.ts`:
 
 ```ts
 export interface StoryLabel { active: string; inactive: string }
@@ -600,7 +740,7 @@ export function findForbiddenWords(text: string): string[];      // BANNED_WORDS
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-Properties 1 to 5 belong to Part 1 and are **BLOCKED by STOP OI-1**. Properties 6 to 9 belong to Part 2 and are **BLOCKED by STOP OI-2**. Properties 10 to 12 belong to Part 3 and can be implemented now. Passing property tests are evidence, not proof.
+Properties 1 to 5 belong to Part 1 and Properties 6 to 9 to Part 2; none is blocked. Properties 10 to 12 belong to Part 3, which is done. Passing property tests are evidence, not proof.
 
 ### Property 1: Every unmodelled access is exactly one of Use_Access and Disable_Write
 
@@ -610,9 +750,9 @@ Properties 1 to 5 belong to Part 1 and are **BLOCKED by STOP OI-1**. Properties 
 
 ### Property 2: The recorder keeps the earliest Use_Access per peripheral
 
-*For any* sequence of accesses with non-decreasing cycles, mixing table addresses (Use_Accesses and Disable_Writes) and non-table addresses, the recorder's output equals a reference model: one entry per peripheral that had at least one Use_Access, holding the register name, cycle and access kind of its earliest Use_Access, in ascending cycle order; Disable_Writes and non-table addresses add nothing; taking in several chunks gives the same concatenated list as taking once.
+*For any* sequence of accesses with non-decreasing cycles, mixing table addresses (Use_Accesses and Disable_Writes) and non-table addresses (including the EXINT and PCINT registers EICRA, EIMSK, EIFR, PCICR, PCIFR and PCMSK0 to PCMSK2), the recorder's output equals a reference model: one entry per peripheral that had at least one Use_Access, holding the register name, cycle and access kind of its earliest Use_Access, in ascending cycle order; Disable_Writes and non-table addresses add nothing; taking in several chunks gives the same concatenated list as taking once.
 
-**Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.6**
+**Validates: Requirements 1.7, 3.1, 3.2, 3.3, 3.4, 3.6**
 
 ### Property 3: Detection is transparent and replays deep-equal
 
@@ -620,17 +760,17 @@ Properties 1 to 5 belong to Part 1 and are **BLOCKED by STOP OI-1**. Properties 
 
 **Validates: Requirements 3.5, 3.7, 3.9**
 
-### Property 4: Peripheral use decides COULDN'T TELL, and nothing else changes
+### Property 4: The round 2 precedence
 
-*For any* VerdictInput (finished or not) whose Runs carry arbitrary `peripheralUses` with cycles placed before, at, one after and well after their Run's Violation_Cycle: when the input is finished and some Run has a blocking diagnostic (no Violation, or `cycle <= violation.cycle`), the verdict is COULDN'T TELL; otherwise the verdict is deep-equal to the verdict for the same input with every `peripheralUses` removed. The input is unchanged after the call and a second call returns a deep-equal verdict.
+*For any* hand-built VerdictInput (finished or not, with or without Violations, CannotChecks including floating-input ones, untriggered rules, unmapped signals, unsupported peripherals, fewer completed Runs than requested, and Runs with no gremlin event) whose Runs carry arbitrary `peripheralUses` with cycles placed before, at, one after and well after their Run's Violation_Cycle, let the reference model pick `lowest` (the completed Run with the lowest Run_Index that has a Violation) and `blocking` (when `lowest` exists, its uses with `cycle <= lowest.violation.cycle`; otherwise every use of every Run). Then: an unfinished input gives `null`; a finished input with `blocking` non-empty gives COULDN'T TELL, never BROKE or HELD; a finished input with `blocking` empty gives a verdict deep-equal to today's `computeVerdict` (a frozen copy of verdict.ts lines 52-121 kept in the test helper) on the same input with every `peripheralUses` removed. The input is unchanged after the call and a second call returns a deep-equal verdict.
 
-**Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.7, 6.1, 8.3, 8.6**
+**Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.7, 6.1, 8.3, 8.5**
 
 ### Property 5: The Reason leads with the Peripheral_Reasons in order
 
-*For any* finished VerdictInput with at least one blocking diagnostic, the Reason equals `buildReason` of the reference part list: one Peripheral_Reason per distinct blocking peripheral, ordered by its lowest blocking cycle with ties in table row order, followed by today's COULDN'T TELL parts; so the Reason starts with the leading Peripheral_Reason in full and is at most 200 UTF-16 units long.
+*For any* finished VerdictInput whose `blocking` set (as in Property 4) is non-empty, the Reason equals `buildReason` of the reference part list: one Peripheral_Reason per distinct peripheral in `blocking`, ordered by its lowest cycle in `blocking` with ties in table row order U1 to U16 and unknown ids last, followed by today's branch 2 part list for the same input (CannotCheck parts, then untriggered rules, unmapped signals, unsupported peripherals, incomplete runs, no gremlin event); so the Reason starts with the leading Peripheral_Reason in full and is at most 200 UTF-16 units long.
 
-**Validates: Requirements 5.1, 5.4, 5.5**
+**Validates: Requirements 4.5, 5.1, 5.4, 5.5**
 
 ### Property 6: Cycle_Text round trip
 
@@ -640,9 +780,9 @@ Properties 1 to 5 belong to Part 1 and are **BLOCKED by STOP OI-1**. Properties 
 
 ### Property 7: The story matches the phrase table
 
-*For any* valid story input with optional valid Story_Labels (including entries for signals with no digital Gremlin_Event, releases by `"rest"` events, and releases at an equal cycle), `failureStory` returns the text a reference model builds from the phrase table in component C6, the violation sentence `At <Ms_Text> (cycle <Cycle_Text>), the program broke this rule: <rule>`, and the span sentence `The violation lasted [at least ]<Ms_Text>.` when a Violation_Span is given; labels never change Summary_Form or analog wording.
+*For any* `arbStoryCase` case with generated valid Story_Labels added (including entries for signals with no digital Gremlin_Event, releases by `"rest"` events, and releases at an equal cycle), `failureStory` returns the text that the updated `refStory` (C7, edit kind (b)) builds from the phrase table in component C6, the violation sentence `At <Ms_Text> (cycle <Cycle_Text>), the program broke this rule: <rule>`, and the span sentence `The violation lasted [at least ]<Ms_Text>.` when a Violation_Span is given; labels never change Summary_Form or analog wording.
 
-**Validates: Requirements 9.1, 10.1, 10.2, 10.3, 11.2, 11.3, 11.4, 11.5, 11.8, 12.1, 12.2, 12.3, 12.4**
+**Validates: Requirements 9.1, 9.6, 10.1, 10.2, 10.3, 11.2, 11.3, 11.4, 11.5, 11.8, 12.1, 12.2, 12.3, 12.4**
 
 ### Property 8: The story keeps its rules of form
 
@@ -695,17 +835,19 @@ Properties 1 to 5 belong to Part 1 and are **BLOCKED by STOP OI-1**. Properties 
 
 ## Testing Strategy
 
-Libraries already in `devDependencies`: Vitest 1.6.0 and fast-check 4.10.2. No new dependency (Requirement 20.4). Every property test runs at least 100 iterations with a fixed seed, as the committed property tests do (`{ seed, numRuns }`), and starts with the tag comment `// Feature: honest-verdicts, Property <N>: <property title>`. Each property is implemented by a single property-based test. Every test file is new: no Committed_Test_File changes except the Pre_Approved_Edits (Requirement 15, 20.2). Passing tests are evidence, not proof (Requirement 20.6).
+Libraries already in `devDependencies`: Vitest 1.6.0 and fast-check 4.10.2. No new dependency (Requirement 20.4). Every property test runs at least 100 iterations with a fixed seed, as the committed property tests do (`{ seed, numRuns }`), and starts with the tag comment `// Feature: honest-verdicts, Property <N>: <property title>`. Each property is implemented by a single property-based test. Every test file in the table is new except the three files in the row marked "(committed)", which get only the Pre_Approved_Edits of C7 (Requirement 15, 20.2). Passing tests are evidence, not proof (Requirement 20.6).
 
 | Test file (new) | Part | Kind | Covers |
 |---|---|---|---|
-| `src/engine/__tests__/honest-peripherals.test.ts` | 1, BLOCKED | unit examples | table has USART0, SPI, TWI, EEPROM, WDT, AC and no EXINT/PCINT row (1.3); ids and addresses distinct (1.4); UCSR0B write 0 is a Disable_Write (1.6); USART0 reason exact (5.2); every row's reason follows the template, is at most 200 units and holds no Banned_Words entry (5.3, 5.6) |
-| `src/engine/__tests__/honest-peripherals.property.test.ts` | 1, BLOCKED | properties | Property 1, Property 2 |
-| `src/engine/__tests__/honest-bridge.property.test.ts` | 1, BLOCKED | property on the real bridge | Property 3, with a 120,000 ms timeout |
-| `src/engine/__tests__/honest-verdict.property.test.ts` | 1, BLOCKED | properties | Property 4, Property 5 |
-| `src/engine/__tests__/honest-verdict.test.ts` | 1, BLOCKED | unit and integration | boundary BROKE at Violation_Cycle + 1 (8.3); COULDN'T TELL at the Violation_Cycle (8.6); `serial_hello` Campaign gives COULDN'T TELL with the USART0 reason (8.1); New_Fixture file checks (7.3-7.5, 7.7, 7.8); `ext_interrupt` test (8.2) is not written while OI-1 stands (8.5) |
-| `src/engine/__tests__/honest-story.test.ts` | 2, BLOCKED | unit examples | 15,647,543 sentence (9.2); cycle 0 and 16,000 (9.4); both span sentences; labelled press and release; Held_Press with and without labels; each malformed `labels` case; no labels keeps today's verbs (14.1, 14.2) |
-| `src/engine/__tests__/honest-story.property.test.ts` and `honest-story-arbitraries.ts` | 2, BLOCKED | properties and reference model | Property 6, 7, 8, 9 |
+| `src/engine/__tests__/honest-peripherals.test.ts` | 1 | unit examples | table ids are exactly USART0, SPI, TWI, EEPROM, WDT, AC, DIDR0, ASSR, GTCCR, PRR, SMCR, CLKPR, MCUCR, MCUSR, SPMCSR, OSCCAL in that order, with no EXINT or PCINT register (1.3, 1.7, 1.10); ids and addresses distinct (1.4); UCSR0B write 0 is a Disable_Write (1.6); USART0, EEPROM and SMCR reasons exact (5.2, 5.8, 1.10); every row's reason follows the template, is at most 200 units and holds no Banned_Words entry (5.3, 5.6) |
+| `src/engine/__tests__/honest-peripherals.property.test.ts` | 1 | properties | Property 1, Property 2 |
+| `src/engine/__tests__/honest-bridge.property.test.ts` | 1 | property on the real bridge | Property 3, with a 120,000 ms timeout |
+| `src/engine/__tests__/honest-verdict.property.test.ts` and `honest-verdict-arbitraries.ts` | 1 | properties on hand-built VerdictInputs | Property 4, Property 5. The helper holds the VerdictInput generators, the reference `blocking` and part-list model, and a frozen copy of today's `computeVerdict` (verdict.ts lines 52-121) as the "before" oracle |
+| `src/engine/__tests__/honest-verdict.test.ts` | 1 | precedence unit tests | (a) Violating_Run's only use at Violation_Cycle + 1 keeps BROKE with that Run's trace; (b) a use in another completed Run, none in the Violating_Run, keeps BROKE; (c) and 8.5: a use at the Violation_Cycle gives COULDN'T TELL; (d) no Violation and a use in any Run gives COULDN'T TELL, not HELD (8.3, 8.5); a floating-input CannotCheck with a blocking use gives the Peripheral_Reason, then the CannotCheck part in today's words (4.5) |
+| `src/engine/__tests__/honest-fixtures.test.ts` | 1 | integration on the real emulator | `serial_hello` and `eeprom_boot` Campaigns with the C8 settings: verdict COULDN'T TELL and the Reason starts with the exact USART0 or EEPROM Peripheral_Reason (8.1, 8.6); `ext_interrupt` Scripted_Run with PD2 edges: one LED toggle per edge within 2,000 cycles of the edge, and no `peripheralUses` on any step (8.2); New_Fixture file checks: `validateFixture` returns `null`, the build folder holds exactly the Build_File_Set, "ATmega328P" in the sketch comment, no Banned_Words entry (7.3-7.5, 7.7, 7.8, 7.11) |
+| `src/engine/__tests__/honest-story.test.ts` | 2 | unit examples | 15,647,543 sentence (9.2); cycle 0 and 16,000 (9.4); both span sentences; labelled press and release; Held_Press with and without labels; each malformed `labels` case; no labels keeps today's verbs (14.1, 14.2) |
+| `src/engine/__tests__/honest-story.property.test.ts` and `honest-story-arbitraries.ts` | 2 | properties | Property 6, 7, 8, 9. Property 7 adds generated labels to `arbStoryCase` cases and compares `failureStory` with the updated `refStory`; `arbStoryCase` itself is not changed |
+| `src/engine/__tests__/reducer-story.test.ts`, `reducer-arbitraries.ts`, `reducer-story.property.test.ts` (committed) | 2 | Pre_Approved_Edits only | the six story strings, `refStory` plus its cycle-text helper, and the Property 11 number check (C7) |
 | `tests/evidence/evidence-stats.property.test.ts` | 3 | properties | Property 10, 11, 12 |
 | `tests/evidence/evidence-stats.test.ts` | 3 | unit examples | Sweep_Start counts 94, 62, 89 (18.1, 18.2); Single_Input constants (18.1); doc gate refuses on error, fixed BROKE or forbidden word (17.7, 17.8, 19.4); renderer holds every count and the machine block (18.4, 19.1, 19.2) |
 
@@ -715,67 +857,61 @@ Not tested by properties: document content (Requirements 1.1, 1.2, 1.7-1.9), the
 
 Existing evidence that must stay green: `src/engine/__tests__/held-text-preservation.test.ts` (verdict baseline), `bridge-output-scan-preservation.test.ts` (bridge baseline, which compares only the six named step fields, so the optional `peripheralUses` field does not affect it), `gremlin-baseline.test.ts`, `input-pullup` baselines, `reducer-examples.test.ts` Pinned_Literals, and the example tests under `tests/examples/` (Requirement 8.4, 20.3).
 
-## Decisions the user needs to make
+## Decisions recorded (round 2)
 
-### OI-1: INT0, INT1 and pin-change interrupts are modelled (blocks Requirements 3 to 8)
+Round 1 of this design listed options for OI-1 and OI-2. The user decided in round 2 (verbatim text in `requirements.md`, "Decisions recorded (round 2)"):
 
-Evidence: rows M5 and M6 above (gpio.js:3-45, 52-75, 181-232, 306-360; bridge:220-222, 556-557). Requirement 8.2 expects `fixtures/ext_interrupt` to give COULDN'T TELL, which cannot happen if the table follows the source. Options (not ranked, none chosen):
+- **OI-1 (decision 1).** EXINT and PCINT are modelled and are not detected; they stay rows M5 and M6. `fixtures/ext_interrupt` is a positive test (Requirement 8.2), and `fixtures/eeprom_boot` is added and must give COULDN'T TELL naming the EEPROM (Requirement 8.6). The detection list is rows U1 to U16, with the register name as the id where there is no plainer name.
+- **OI-2 (decision 3).** The Pre_Approved_Edits now also cover `refStory` and its helpers in `reducer-arbitraries.ts`, and the Property 11 number check, with the same seed, `numRuns` and counters (C7).
+- **OI-3 (decision 2).** The literal reading is replaced by the round 2 precedence: only the Violating_Run's uses at or before its Violation_Cycle override BROKE, and with no Violation any use gives COULDN'T TELL (C4).
+- **Decision 4.** The story writes the Reduced_Replay's own Violation_Cycle, and the Report puts both cycles side by side (C6).
 
-- **(a) Keep EXINT and PCINT modelled.** Change Requirement 8.2: either give `ext_interrupt` the verdict its rule actually produces, or replace it with a fixture that uses an unmodelled peripheral (for example the watchdog timer or the data EEPROM). The rest of Part 1 can then go ahead as designed.
-- **(b) Treat EXINT and PCINT as unmodelled anyway.** Every program that calls `attachInterrupt` or sets PCMSKn would get COULDN'T TELL, although avr8js emulates these interrupts. This contradicts Requirement 1.7's definition, so Requirement 1.7 and the table would change too.
-- **(c) Drop `fixtures/ext_interrupt` and Requirement 8.2.** Part 1 goes ahead with `serial_hello` only.
+## Execution plan
 
-### OI-2: committed story property test encodes today's wording (blocks Requirements 9 to 15)
-
-Evidence: `src/engine/__tests__/reducer-story.property.test.ts` line 33 compares the story with `refStory`; `src/engine/__tests__/reducer-arbitraries.ts` lines 740-741 build "the chip broke this rule" and "The rule stayed broken for"; the number check at `reducer-story.property.test.ts` lines 69-83 allows only Ms_Text numbers, analog values, 0, 1 and counts, so the digit groups of a Cycle_Text fail it. New finding: the `refStory` phrase builder at `reducer-arbitraries.ts` lines 705-713 writes "pressed" for every press, so every generated case with an unreleased press in the Detailed_Form also fails once "and held" exists (NC-2). Options (not ranked, none chosen):
-
-- **(a) Approve edits to both files:** `refStory` lines 705-713 (held presses) and 740-741 (new wording), and the allowed-number set at `reducer-story.property.test.ts` lines 69-80 (add the digit groups of the violation Cycle_Text). The check itself stays as strict as today.
-- **(b) Keep Property 11 unchanged** and drop or defer the Part 2 wording. Requirements 9 to 12 are then not met.
-- **(c) Retire Property 11** in favour of the new Properties 6 to 9. This removes a committed test, so it needs the user's explicit approval under the workspace testing rule.
-
-### OI-3: mixed campaigns
-
-The design follows the literal reading in Requirement 4.1: a non-violating Run with a Peripheral_Diagnostic gives COULDN'T TELL even when another Run broke a rule before any peripheral use. No action unless the user wants a different rule.
-
-## Execution plan under the known STOPs
-
-| Order | Work | Runs now? | Output |
+| Order | Work | Status | Output |
 |---|---|---|---|
 | 1 | Peripheral_Table and CannotCheck_Path quotes (Requirement 1) | done in this document | `design.md` sections above |
-| 2 | Calibration (Requirement 2) with `scripts/tmp-calibrate.ts`, `src/` unchanged; delete the script after | yes | Report: inventory, logs, classification; STOP if any Use_Access |
-| 3 | Part 3: `bench/evidence-stats.ts`, `bench/evidence.ts`, `package.json` script, tests for Properties 10-12, then `npm run bench:evidence` | yes | `docs/evidence/EVIDENCE-NUMBERS.md`, findings of Requirement 18.5 |
-| 4 | Requirement 20 commands (`npx vitest --run`, `npm run typecheck`, `npm run guard`, `npm run build`) for the unblocked work | yes | Report |
-| 5 | Part 1 (Requirements 3-8) | **waits for the OI-1 decision** | |
-| 6 | Part 2 (Requirements 9-15) | **waits for the OI-2 decision** | |
-| 7 | Final Report listing every STOP (OI-1 at Requirement 1.7/23.8, OI-2 at Requirement 15.4/23.9, plus any from steps 2-4) | after steps 2-4 | Requirement 23.13 |
+| 2 | Calibration (Requirement 2) | done: 72 cases, 0 Use_Access, script deleted | Report: inventory, logs, classification |
+| 3 | Part 3: Evidence_Bench and Evidence_Doc (Requirements 16-19) | done | `docs/evidence/EVIDENCE-NUMBERS.md` |
+| 4 | Part 1: `src/engine/peripherals.ts`, bridge step 11d, campaign plumbing, verdict step 0 with the extracted helpers, the three New_Fixtures compiled with `arduino-cli`, Part 1 tests (Requirements 3-8) | next | C2-C5; tests in the Testing Strategy table |
+| 5 | Part 2: `cycleText`, new wording, Story_Labels, "and held", the Pre_Approved_Edits of C7, Part 2 tests (Requirements 9-15) | after or alongside step 4 | C6, C7 |
+| 6 | Cycle comparison per Example (Requirement 24.1) | after step 5 | Report table: original vs Reduced_Replay Violation_Cycle |
+| 7 | Re-run `npm run bench:evidence` and compare with the Evidence_Doc as it stood before, ignoring the date and wall-clock times (Requirement 24.2, 24.3) | after steps 4 and 5 | Report: differences, expected none |
+| 8 | Requirement 20 commands (`npx vitest --run`, `npm run typecheck`, `npm run guard`, `npm run build`) | after step 7 | Report |
+| 9 | Final Report: every STOP that fired, Pre_Approved_Edits by file, line, old and new string, Choices I made (Requirements 22, 23.13) | last | Report |
 
-Part 3 needs no result of Parts 1 or 2: it reads verdicts, Violations and CannotChecks only. If Part 1 lands later, the Evidence_Bench can be rerun; no committed Example uses an Unmodelled_Peripheral (research finding 5), so its numbers are not expected to move, but only a rerun would show that.
+Parts 1 and 2 are independent of each other. Part 3 reads verdicts, Violations and CannotChecks only, so step 7 shows whether Part 1 moved any Example verdict.
 
 ## Choices I made
 
 Non-acceptance values chosen under Requirement 23.10, most conservative where there was a choice:
 
 - **C1.** `peripheralUses` is optional and omitted when empty, on AdvanceResult, RunPathResult and RunResult. Committed tests build RunResult literals without it (for example `src/engine/__tests__/rules-verdict.test.ts` line 23, `held-text.property.test.ts` line 18) and `tsconfig.node.json` typechecks tests, so a required field would break `npm run typecheck`; an always-present `[]` could break deep-equal checks.
-- **C2.** Plain_Names: "two-wire bus" for TWI (avoids a third-party trademark name), "SPI bus", "data EEPROM", "watchdog timer", "analog comparator", and the rest as in rows U1-U16. Peripheral_IDs for register-only features are the register names (DIDR0, ASSR, GTCCR, PRR, CLKPR, MCUCR, MCUSR, OSCCAL); SLEEP and SPM name the instruction they gate.
+- **C2.** Plain_Names and Peripheral_IDs are the ones the user set in round 2 (rows U1 to U16). "two-wire bus" for TWI also avoids a third-party trademark name. Rows U7 to U16 use the register name as the Peripheral_ID (DIDR0, ASSR, GTCCR, PRR, SMCR, CLKPR, MCUCR, MCUSR, SPMCSR, OSCCAL); the earlier ids SLEEP and SPM are renamed SMCR and SPMCSR.
 - **C3.** The WDTCSR change-enable write (WDCE and WDE set) is a Use_Access, so `wdt_disable()` gives COULDN'T TELL.
 - **C4.** Every read of a table register is a Use_Access, and every write to UCSR0A, UCSR0C, UBRR0L/H, UDR0, SPSR, SPDR, TWBR, TWSR, TWAR, TWDR, TWAMR, EEDR, EEARL/H, MCUSR, SPMCSR and OSCCAL is a Use_Access.
 - **C5.** Calibration runs of `blink_button`, `analog_read`, `pwm_out` and `floating_input` use the empty event list (inputs at their released level).
-- **C6.** After the Peripheral_Reasons, the Reason holds today's COULDN'T TELL parts (verdict.ts lines 92-114), computed from the same input.
+- **C6.** After the Peripheral_Reasons, the Reason holds today's branch 2 parts (verdict.ts lines 92-114), computed from the same input by the extracted `collectUnchecked` and `couldntTellParts` helpers. On the BROKE-override path, the untriggered rules appear as branch 2 words them, not as the extra `unchecked` entries that today's BROKE branch adds.
 - **C7.** Peripheral_Reason order uses the lowest cycle among the blocking diagnostics only.
-- **C8.** New fixture details: LED on PB5 (pin 13) in both; `serial_hello` prints `"hello "` and waits `delay(100)` per loop; `ext_interrupt` uses `INPUT_PULLUP` on PD2 with mode `CHANGE` and signal name `TRIGGER`. Test settings for Requirement 8.1: rule `LED is 1 must never last 600 ms or longer.`, `gremlinSet` empty (the Fixture has no input), `runs` 2, `runCycles` 1,600,000.
+- **C8.** New fixture details: LED on PB5 (pin 13) in all three. `serial_hello` prints `"hello "` and waits `delay(100)` per loop. `eeprom_boot` reads `EEPROM.read(0)` once in `setup()` and uses a 100 ms half-period when the byte is 0xFF and 250 ms otherwise. `ext_interrupt` uses `INPUT_PULLUP` on PD2 with mode `CHANGE`, signal name `TRIGGER` and `activeLevel` `"low"`. Campaign test settings for Requirements 8.1 and 8.6: rule `LED is 1 must never last 400 ms or longer.` (a 2000 ms window does not fit the 500 ms run of 8,000,000 cycles at 16 MHz, so that rule could not be checked on its own and an extra "run shorter" CannotCheck part appeared in the Reason; the 400 ms window fits inside the run) (the `notLongerThan` form of `src/engine/rules/parse.ts` line 90 and `render.ts` line 42), `gremlinSet` `[]` (or the smallest gremlin set the config builder accepts, if it rejects `[]`), `runs` 2, `runCycles` 8,000,000, `campaignSeed` 1. With `runCycles` 8,000,000 (500 ms) the rule cannot break, so the verdict comes from Requirement 4.3; with `gremlinSet` `[]` today's code would also give COULDN'T TELL ("No gremlin produced an event in any run"), so the tests assert that the Reason starts with the exact Peripheral_Reason, which only the new path writes. `ext_interrupt` test: a Scripted_Run with PD2 edges at chosen cycles, checking one LED toggle per edge within 2,000 cycles of the edge.
 - **C9.** The `labels` check runs right after the `violationSpan` check; messages are "Field labels: must be absent or an object whose entries each hold one-line active and inactive texts." and "Field labels: a label text holds a word the story may not use."
 - **C10.** On a fixed-build BROKE the bench finishes every sweep, prints every such seed and trace, exits with code 3 and writes no doc.
 - **C11.** Single_Press_Sweep runs use `scriptedRun` with `untilEnd: true`, so each Run reaches `runCycles`.
-- **C12.** A Peripheral_Diagnostic whose id is not a table row uses its id as the Plain_Name and sorts after every table row.
+- **C12.** A Peripheral_Diagnostic whose id is not a table row uses its id as the Plain_Name and sorts after every table row; two such ids with the same lowest cycle sort by id in code-unit order.
 - **C13.** The calibration script reaches the bridge's private `_cpu` through a cast and a structural type; it imports nothing from avr8js.
 - **C14.** The Evidence_Doc date is the UTC date from `new Date().toISOString()`, read in `bench/evidence.ts` only.
 - **C15.** Bench exit codes: 1 for an error, 3 for a fixed-build BROKE, 4 for a forbidden word in the doc.
+- **C16.** `refStory` gets its own Cycle_Text helper next to it (`refCycleText`), written independently of `cycleText` in `story.ts`. The Property 11 number check builds the comma groups inline in one added line, so the import line of `reducer-story.property.test.ts` does not change.
+- **C17.** Story_Labels are tested by a new property file that adds generated labels to `arbStoryCase` cases; `arbStoryCase` is not changed.
+- **C18.** The Evidence_Doc re-run comparison ignores the "Date of run" row and the wall-clock values only; every other line, including the machine block, is compared and any difference is reported.
+- **C19.** Property 4 uses a frozen copy of today's `computeVerdict` in a new test helper as the "before" oracle, so the comparison does not depend on the changed function stripping `peripheralUses` itself.
 
 ## New conflicts found
 
 - **NC-1. Datasheet section numbers (Requirement 1.8).** I could not open an ATmega328P datasheet here, so sources cite datasheet section titles without numbers. Every address and bit also has a line source in avr8js or in `iom328p.h`. `iom328p.h` is part of the avr-gcc toolchain installed with arduino:avr 1.8.8, not of the Arduino AVR core, so it is not one of the source kinds Requirement 1.8 lists. The user can accept `iom328p.h` as a source, or the Agent fills in section numbers from a datasheet copy the user provides.
-- **NC-2. OI-2 is wider than the requirements say.** Besides the wording (lines 740-741) and the number check, the `refStory` phrase builder (`reducer-arbitraries.ts` lines 705-713) has no "and held" case, so Property 11 fails for any generated Detailed_Form case with an unreleased press.
+- **NC-2. OI-2 was wider than the round 1 requirements said (resolved in round 2).** Besides the wording (lines 740-741) and the number check, the `refStory` phrase builder (`reducer-arbitraries.ts` lines 705-713) had no "and held" case, so Property 11 would fail for any generated Detailed_Form case with an unreleased press. Round 2 decision 3 approves the "and held" edit to `refStory` (C7, edit kind (b)).
 - **NC-3. Gaps inside modelled peripherals are not detected.** Timer 1 input capture, ADC auto-trigger and the PCICR enable path (table "Known gaps inside modelled rows") can still lead to HELD for a program that relies on them. Catching them would mean classing ordinary accesses to TIMSK1, TIFR1, ADCSRA, ADCSRB or PCICR as use.
 - **NC-4. Requirement 2.3 is open-ended for generated Fixtures.** Some property tests build Fixtures from generators, so "each distinct Fixture" has no finite list. The calibration uses each generator's base pin-map literal and says so in the Report.
-- **NC-5. `serial_hello` stalls in the emulator.** With no USART model, `Serial.print` fills its 64-byte buffer and then spins (research finding 6), so the LED stops toggling after about 11 loops. Without Part 1, a timing rule on that LED would give BROKE for a reason the chip would not show. This supports the purpose of Part 1; it needs no decision.
+- **NC-5. `serial_hello` stalls in the emulator.** With no USART model, `Serial.print` fills its 64-byte buffer and then spins (research finding 6), so the LED stops toggling after about 11 loops. Without Part 1, a timing rule on that LED would give BROKE for a reason the chip would not show. With Part 1, such a BROKE becomes COULDN'T TELL, because the USART0 use in `setup()` comes before any Violation_Cycle (Requirement 4.2). The user accepted the stall in round 2 (decision 1).
+- **NC-7. `eeprom_boot` reads 0, not 0xFF, in the emulator.** EECR and EEDR read 0, so the sketch picks the 250 ms half-period where an erased chip would pick 100 ms. A rule on the blink rate could therefore break or hold for a reason the chip would not show; the EEPROM use in `setup()` makes such a verdict COULDN'T TELL. No decision needed.
 - **NC-6. Unrelated mismatch noticed.** `SupportedCapability` in `src/engine/types.ts` lines 85-91 lists `"usart"`, `"eeprom"` and `"watchdog"`, but `supports()` rejects them (bridge:553-569). Reported only; out of scope.

@@ -71,6 +71,7 @@ describe("trace-reducer failure story properties", () => {
         const cycles = [...c.reducedList.map((e) => e.cycle), c.violation.cycle, ...c.outputEdges.map((e) => e.cycle)];
         if (c.violationSpan !== undefined) cycles.push(c.violationSpan.lengthCycles);
         for (const cy of cycles) allowed.add(msText(cy).replace(" ms", ""));
+        for (const grp of String(c.violation.cycle).replace(/\B(?=(\d{3})+(?!\d))/g, ",").split(",")) allowed.add(grp);
         for (const e of c.reducedList) {
           const a = (e as { analog?: number }).analog;
           if (a !== undefined) allowed.add(String(a));
