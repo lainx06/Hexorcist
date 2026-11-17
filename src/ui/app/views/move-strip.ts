@@ -91,7 +91,11 @@ export function createMoveStrip(): MoveStrip {
   if (typeof ResizeObserver === "function") new ResizeObserver(() => layoutMoves()).observe(track);
 
   function legendItem(style: ShrinkDot["style"], text: string): HTMLElement {
-    return el("span", { class: "strip-legend-item" }, [el("span", { class: `strip-dot is-${style}`, "aria-hidden": "true" }), ` ${text}`]);
+    // An icon box of fixed size, then a 6 px gap (CSS), then the text: the "testing now" ring never touches it.
+    return el("span", { class: "strip-legend-item" }, [
+      el("span", { class: "legend-icon", "aria-hidden": "true" }, [el("span", { class: `strip-dot is-${style}` })]),
+      el("span", {}, [text]),
+    ]);
   }
 
   return {

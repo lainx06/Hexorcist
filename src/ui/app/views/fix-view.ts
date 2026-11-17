@@ -2,7 +2,7 @@
 // width of the stage. Each Scene sits in its own bordered card (coral for the original, mint for the fixed
 // program) with its title chip at top left and one state badge at bottom left. Under the Scenes, the BROKE
 // card and the fixed-program card sit side by side at equal height, then the Player, then the "What the
-// fix changed" panel with "Show the code change" and "Replay both". One Playback (views/playback.ts)
+// fix changed" panel with "Show the code change". One Playback (views/playback.ts)
 // drives both Scenes. The plan is the Pacing_Plan of the broke replay plus the 4x tail (pacing.withTail),
 // so the right Scene follows the Cursor up to its own end and stops. The one speed pill sits in the
 // heading; the Scenes and the Player carry no speed badge of their own here.
@@ -12,20 +12,23 @@ import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent, Verdict } from "../../../engine/types";
 import type { ExampleId } from "../data/examples";
 import type { DiffHunk } from "../model/diff";
-import { codeHunks, fixBadge, leftCursor, rightCursorEnd } from "../model/fix-view";
+import { codeHunks, fixBadge, fixPanelScroll, leftCursor, rightCursorEnd } from "../model/fix-view";
 import type { PacingPlan, Ratio } from "../model/pacing";
 import { speedBadge, withTail } from "../model/pacing";
+import { FORGOT_LINE } from "../model/scenes";
 import type { FixOutcome } from "../model/stage-copy";
 import {
   FIX_EXPLAIN,
   FIX_TEXT,
+  STAGE_TEXT,
+  VERDICT_WORD,
   fixBadgeText,
   fixedCampaignText,
   fixedProgressText,
   fixHeading,
   fixReplayText,
 } from "../model/stage-copy";
-import { el, setChildren } from "./dom";
+import { el, prefersReducedMotion, setChildren } from "./dom";
 import { createPlayerBar } from "./player-bar";
 import type { Playback } from "./playback";
 import { createCrosswalkScene } from "./scene-crosswalk";
@@ -46,6 +49,10 @@ export interface FixBegin {
   limitMs?: number;
   /** Diff hunks of buggy to fixed source. */
   hunks: readonly DiffHunk[];
+  /** The plain BROKE sentence of the example (the main BROKE card's). */
+  broke: string;
+  /** The cause line of the main BROKE card, or null when it shows none. */
+  cause: string | null;
 }
 
 /** The reduced replay on the fixed build, once it and its display replay are in. */
@@ -71,6 +78,8 @@ export interface FixView {
   showCampaignError(message: string): void;
   /** Both Scenes, the shared plan and the replay sentence. Loads the Playback. */
   ready(data: FixReady): void;
+  /** Opens the code change in the "What the fix changed" panel, scrolls the panel into view and focuses the code. */
+  openCode(): void;
   dispose(): void;
 }
 
@@ -111,10 +120,14 @@ export function diffView(hunks: readonly DiffHunk[]): HTMLElement {
 }
 
 /**
- * The "What the fix changed" panel: the explanation, then a row with "Show the code change ▾" and
- * "Replay both". The code change opens inside the panel. This is the only place the code change shows.
+ * The "What the fix changed" panel: the explanation, then "Show the code change ▾". The code change opens
+ * inside the panel. This is the only place the code change shows. `open` is the one open path: the button
+ * uses it, and so does "The fix" tab (through FixView.openCode).
  */
-export function createFixChange(id: ExampleId, hunks: readonly DiffHunk[], onReplayBoth: () => void): HTMLElement {
+export function createFixChange(
+  id: ExampleId,
+  hunks: readonly DiffHunk[],
+): { node: HTMLElement; openCode(): void } {
   const diffId = `${FIX_PANEL_ID}-diff`;
   const diff = diffView(hunks);
   diff.id = diffId;
@@ -122,37 +135,39 @@ export function createFixChange(id: ExampleId, hunks: readonly DiffHunk[], onRep
   const show = el("button", { type: "button", class: "secondary fix-show-code", "aria-expanded": "false", "aria-controls": diffId }, [
     FIX_TEXT.showCode,
   ]);
-  show.addEventListener("click", () => {
-    const open = diff.hidden;
-    diff.hidden = !open;
-    show.setAttribute("aria-expanded", open ? "true" : "false");
-  });
-  const replay = el("button", { type: "button", class: "secondary fix-replay-both" }, [FIX_TEXT.replayBoth]);
-  replay.addEventListener("click", onReplayBoth);
-  return el("section", { class: "fix-change", id: FIX_PANEL_ID, "aria-labelledby": `${FIX_PANEL_ID}-title` }, [
+  const node = el("section", { class: "fix-change", id: FIX_PANEL_ID, "aria-labelledby": `${FIX_PANEL_ID}-title` }, [
     el("h3", { class: "fix-change-title", id: `${FIX_PANEL_ID}-title` }, [FIX_TEXT.whatChanged]),
     el("p", { class: "fix-explain" }, [FIX_EXPLAIN[id]]),
-    el("div", { class: "fix-change-actions" }, [show, replay]),
+    el("div", { class: "fix-change-actions" }, [show]),
     diff,
   ]);
+  /** Opens the code change, scrolls the panel into view and moves focus to the opened code change. */
+  function openCode(): void {
+    diff.hidden = false;
+    show.setAttribute("aria-expanded", "true");
+    node.scrollIntoView({ block: "center", behavior: fixPanelScroll(prefersReducedMotion()) });
+    diff.focus({ preventScroll: true });
+  }
+  show.addEventListener("click", () => {
+    if (diff.hidden) openCode();
+    else {
+      diff.hidden = true;
+      show.setAttribute("aria-expanded", "false");
+    }
+  });
+  return { node, openCode };
 }
 
 /**
- * What "The fix" tab shows while the Fix_View is open: the explanation, and a button that takes the
- * focus to the panel's "Show the code change" button. The code change itself shows only in the panel.
+ * What "The fix" tab shows while the Fix_View is open: the explanation, and a "What the fix changed" button
+ * that opens the code change in the Fix_View's panel (`onOpen`, FixView.openCode). The code change itself
+ * shows in the panel only.
  */
-export function createFixTab(id: ExampleId): HTMLElement {
+export function createFixTab(id: ExampleId, onOpen: () => void): HTMLElement {
   const go = el("button", { type: "button", class: "secondary fix-tab-go" }, [FIX_TEXT.whatChanged]);
-  go.addEventListener("click", () => {
-    const panel = document.getElementById(FIX_PANEL_ID);
-    const target = panel?.querySelector<HTMLButtonElement>(".fix-show-code") ?? null;
-    if (panel === null || target === null) return;
-    panel.scrollIntoView({ block: "center" });
-    target.focus();
-  });
+  go.addEventListener("click", () => onOpen());
   return el("section", { class: "fix-tab", "aria-label": FIX_TEXT.whatChanged }, [el("p", { class: "fix-explain" }, [FIX_EXPLAIN[id]]), go]);
 }
-
 export function createFixView(playback: Playback, playerNode?: HTMLElement): FixView {
   const heading = el("h2", { class: "fix-heading" }, [""]);
   // The one speed pill of the Fix_View. It sits in the heading row and is as wide as its text.
@@ -161,10 +176,14 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
 
   const leftHost = el("div", { class: "scene-card fix-scene fix-scene--original" });
   const rightHost = el("div", { class: "scene-card fix-scene fix-scene--fixed" });
-  // The BROKE card keeps its place before the break (it is only invisible), so both cards stay level.
-  const leftCard = el("div", { class: "card fix-card fix-card--left is-waiting" }, [
-    el("p", { class: "fix-left-text" }, [FIX_TEXT.leftCard]),
-  ]);
+  // The BROKE card is there from the start, dimmed, so nothing jumps when the break arrives. At the break it
+  // brightens and its "Stopped at the break." line shows (that line keeps its space before then).
+  const leftWord = el("p", { class: "fix-left-word" }, [VERDICT_WORD.broke]);
+  const leftHead = el("p", { class: "fix-left-text" }, [""]);
+  const leftForgot = el("p", { class: "fix-left-forgot", hidden: true }, [FORGOT_LINE]);
+  const leftCause = el("p", { class: "fix-left-cause", hidden: true }, [""]);
+  const leftStopped = el("p", { class: "fix-left-stopped" }, [`${STAGE_TEXT.stopped}.`]);
+  const leftCard = el("div", { class: "card fix-card fix-card--left is-waiting" }, [leftWord, leftHead, leftForgot, leftCause, leftStopped]);
   const replayLine = el("p", { class: "fix-replay" }, [""]);
   const campaignBox = el("div", { class: "fix-campaign" });
   const rightCard = el("div", { class: "card fix-card fix-card--right", "aria-live": "polite" }, [replayLine, campaignBox]);
@@ -188,6 +207,7 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
   let rightScene: Scene | null = null;
   let rightEnd = 0;
   let slow: Ratio | null = null;
+  let change: { node: HTMLElement; openCode(): void } | null = null;
 
   function draw(c: number): void {
     if (info === null || ready === null || leftScene === null || rightScene === null) return;
@@ -256,11 +276,21 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
       leftHost.classList.add("is-dim");
       rightHost.classList.add("is-dim");
       leftCard.classList.add("is-waiting");
+      leftHead.textContent = next.broke;
+      // The I'm-alive line sits under the headline, in this card, not between the scenes and the cards.
+      leftForgot.hidden = next.exampleId !== "heartbeat";
+      leftCause.textContent = next.cause ?? "";
+      leftCause.hidden = next.cause === null;
+      // Idle frames with the title chips and the free band at the bottom, before the replay is in.
+      const idle = { layout: "fix", atBreak: false, stopped: false };
+      leftScene.update([], [], 0, { ...idle, title: FIX_TEXT.leftTitle });
+      rightScene.update([], [], 0, { ...idle, title: FIX_TEXT.rightTitle });
       replayLine.hidden = true;
       replayLine.textContent = "";
       cardTone(null);
       setChildren(campaignBox, []);
-      setChildren(changeHost, [createFixChange(next.exampleId, next.hunks, () => playback.replay())]);
+      change = createFixChange(next.exampleId, next.hunks);
+      setChildren(changeHost, [change.node]);
     },
     showCampaignProgress(runsCompleted, tries) {
       setChildren(campaignBox, [campaignParagraph(fixedProgressText(runsCompleted, tries), "fix-progress")]);
@@ -285,6 +315,9 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
       replayLine.textContent = fixReplayText(info.k, data.outcome);
       replayLine.hidden = false;
       playback.load(withTail(data.plan, rightEnd), data.autoPlay);
+    },
+    openCode() {
+      change?.openCode();
     },
     dispose() {
       offCursor();

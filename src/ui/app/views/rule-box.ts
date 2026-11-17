@@ -59,13 +59,13 @@ export function appendSentence(text: string, sentence: string): string {
 export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
   const headline = el("p", { class: "rule-headline" });
   const lines = el("div", { class: "rule-lines" });
-  const edit = el("button", { type: "button", class: "secondary", "aria-expanded": "false", "aria-controls": "rule-editor" }, [
+  const edit = el("button", { type: "button", class: "secondary rule-edit-button", "aria-expanded": "false", "aria-controls": "rule-editor" }, [
     RULE_TEXT.edit,
   ]);
-  const area = el("textarea", { id: "rule-box", class: "rule-box mono", rows: 5, spellcheck: "false", "aria-label": RULE_TEXT.boxLabel });
+  const area = el("textarea", { id: "rule-box", class: "rule-box mono", rows: 4, spellcheck: "false", "aria-label": RULE_TEXT.boxLabel });
   const errors = el("ul", { class: "rule-errors", "aria-live": "polite" });
   const patterns = el("ul", { class: "pattern-list", "aria-label": RULE_TEXT.patterns });
-  const reset = el("button", { type: "button", class: "secondary" }, [RULE_TEXT.reset]);
+  const reset = el("button", { type: "button", class: "secondary rule-reset-button" }, [RULE_TEXT.reset]);
   const editor = el("div", { id: "rule-editor", class: "rule-editor" }, [area, errors, patterns, reset]);
   editor.hidden = true;
   let busy = false;
@@ -78,6 +78,8 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
   };
   const setOpen = (open: boolean): void => {
     editor.hidden = !open;
+    // The rule shows once: the read-only box while closed, the text box while the editor is open.
+    lines.hidden = open;
     edit.setAttribute("aria-expanded", open ? "true" : "false");
     edit.textContent = open ? RULE_TEXT.close : RULE_TEXT.edit;
   };
@@ -92,13 +94,16 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
 
   const techTitle = el("span", {}, [RULE_TEXT.title]);
   const node = el("section", { class: "panel", "aria-labelledby": "rule-area-title" }, [
-    el("h2", { class: "region-title", id: "rule-area-title" }, [
-      techOnly(techTitle),
-      plainOnly(el("span", {}, [RULE_TEXT.plainTitle])),
+    // The one button sits top right, beside the heading: "Edit rule", or "Close editor" while open.
+    el("div", { class: "rule-area-head" }, [
+      el("h2", { class: "region-title", id: "rule-area-title" }, [
+        techOnly(techTitle),
+        plainOnly(el("span", {}, [RULE_TEXT.plainTitle])),
+      ]),
+      edit,
     ]),
     headline,
     lines,
-    edit,
     editor,
   ]);
 

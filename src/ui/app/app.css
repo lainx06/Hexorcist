@@ -547,8 +547,10 @@ h3,
 }
 
 .rule-box {
+  /* Full width of the Rule area, 4 lines tall (rows="4"), resizable vertically only. */
+  display: block;
   width: 100%;
-  min-height: 96px;
+  min-height: 0;
   padding: var(--s-2) var(--s-3);
   font-size: var(--fs-body);
   color: var(--text);
@@ -575,18 +577,56 @@ h3,
   overflow-wrap: anywhere;
 }
 
-.pattern {
+/* Template rows: one grid, the same three columns on every row, everything left-aligned except Insert. */
+.pattern-list {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2);
-  padding: var(--s-2) 0;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.pattern {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 88px;
+  align-items: start;
+  gap: var(--s-3);
+  padding: 0 0 var(--s-3);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.pattern:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.pattern-label {
+  text-align: left;
 }
 
 .pattern code {
-  flex: 1 1 240px;
   min-width: 0;
+  font-size: 14px;
+  text-align: left;
   overflow-wrap: anywhere;
+}
+
+.pattern button {
+  width: 88px;
+  justify-self: end;
+}
+
+/* Rule area header: the heading, and the one Edit / Close button top right. */
+.rule-area-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.rule-edit-button,
+.rule-reset-button {
+  align-self: flex-start;
+  width: auto;
 }
 
 /* ---------- Gremlin chips ---------- */
@@ -1187,7 +1227,17 @@ button:disabled {
 .strip-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: var(--s-1);
+  gap: 6px;
+}
+
+/* A fixed icon box, so the ring of "testing now" (which draws outside its dot) stays clear of the text. */
+.legend-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .strip-legend {
@@ -3512,9 +3562,26 @@ button:disabled {
 }
 
 /* The Fix_View shows each side's state in its badges, so the labels and the phone line stay out. */
-.fix-view .scene-labels,
-.fix-view .scene-phone-line {
+.fix-view .scene-frame:not(.keeps-labels) .scene-labels,
+.fix-view .scene-phone-line,
+.fix-view .scene-line {
   display: none;
+}
+
+/* A free band under the art for the state badge and "Stopped at the break": 48 units of the 830-unit
+   scene, so the badges never cover the art. */
+.scene-frame.is-fix {
+  padding-bottom: calc(100% * 48 / 830);
+}
+
+.scene-frame.is-fix .scene-corner--bl,
+.scene-frame.is-fix .scene-corner--br {
+  bottom: 4px;
+}
+
+.scene-frame.is-fix .scene-badge--break {
+  padding: 4px var(--s-2);
+  font-size: var(--fs-meta);
 }
 
 /* One speed badge for the Fix_View: the one by the heading. */
@@ -3533,14 +3600,58 @@ button:disabled {
   border: 1px solid var(--broke-line);
 }
 
+.fix-card--left .fix-left-word {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--coral);
+}
+
 .fix-card--left .fix-left-text {
   font-size: 15px;
   font-weight: 600;
 }
 
-/* Before the break the BROKE card keeps its place but does not show. */
-.fix-card.is-waiting {
+.fix-card--left .fix-left-forgot {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.fix-card--left .fix-left-cause {
+  font-size: 14px;
+  color: #D9B8B2;
+}
+
+.fix-card--left .fix-left-stopped {
+  font-size: 14px;
+  color: var(--pumpkin-soft);
+}
+
+/* The BROKE card is there from the start, dimmed; at the break it brightens. "Stopped at the break." keeps its
+   space while it is hidden, so the card does not change height. */
+.fix-card--left {
+  transition: opacity var(--t-break) ease;
+}
+
+.fix-card--left.is-waiting {
+  opacity: 0.5;
+}
+
+.fix-card--left.is-waiting .fix-left-stopped {
   visibility: hidden;
+}
+
+/* "This rule has no number to change.": takes the place and height of "Change rule". */
+.rule-menu-note {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: var(--target);
+  max-width: 220px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--muted);
+  text-align: right;
 }
 
 .fix-card--right {
@@ -3671,9 +3782,6 @@ button:disabled {
       "right-card";
   }
 
-  .fix-card.is-waiting {
-    display: none;
-  }
 }
 
 /* ---------- 600 px and narrower: the labels would crowd or clip the art, so one line of the same texts goes
@@ -3696,6 +3804,29 @@ button:disabled {
 
   .scene-frame > .scene-svg {
     flex: 0 0 100%;
+  }
+
+  .scene-frame.is-fix {
+    padding-bottom: 0;
+  }
+
+  .fix-view .scene-frame.keeps-labels + .scene-phone-line {
+    display: block;
+  }
+
+  /* Template rows stack: name, example, then Insert under the example, all left-aligned. */
+  .pattern {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2);
+  }
+
+  .pattern button {
+    justify-self: start;
+  }
+
+  .rule-menu-note {
+    max-width: none;
+    text-align: left;
   }
 
   .scene-corner {

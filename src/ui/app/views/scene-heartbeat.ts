@@ -41,12 +41,18 @@ export function ringCaption(limitMs: number): string {
 
 const VIEW_W = 830;
 const VIEW_H = 460;
+// The sensor, the program and the light share one centre line, CY, and the three names share one top line,
+// LABEL_Y, under the tallest part. The whole group (stuck icon at the top, ring caption at the bottom)
+// is centred vertically in the 460-unit scene.
+const CY = 180;
 const SENSOR_X = 140;
-const SENSOR_Y = 200;
+const SENSOR_Y = CY - 28;
 const PROGRAM_X = 400;
 const LIGHT_X = 650;
-const LIGHT_Y = 170;
+const LIGHT_Y = CY;
 const RING_R = 62;
+const PROGRAM_H = 156;
+const LABEL_Y = CY + PROGRAM_H / 2 + 18;
 
 export function createHeartbeatScene(): HeartbeatSceneView {
   const lever = svg("line", { x1: SENSOR_X + 20, y1: SENSOR_Y, x2: SENSOR_X - 10, y2: SENSOR_Y + 22, class: "switch-lever" });
@@ -76,7 +82,7 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     svg("circle", { cx: SENSOR_X + 20, cy: SENSOR_Y, r: 8, class: "switch-pivot" }),
     lever,
     svg("line", { x1: SENSOR_X + 60, y1: SENSOR_Y + 28, x2: PROGRAM_X - 80, y2: SENSOR_Y + 28, class: "wire" }),
-    svg("rect", { x: PROGRAM_X - 80, y: LIGHT_Y - 20, width: 160, height: 156, rx: 10, class: "chip-body" }),
+    svg("rect", { x: PROGRAM_X - 80, y: CY - PROGRAM_H / 2, width: 160, height: PROGRAM_H, rx: 10, class: "chip-body" }),
     svg("line", { x1: PROGRAM_X + 80, y1: LIGHT_Y, x2: LIGHT_X - RING_R, y2: LIGHT_Y, class: "wire" }),
     stuckIcon,
   ]);
@@ -121,10 +127,11 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     art,
     width: VIEW_W,
     height: VIEW_H,
+    keepLabelsInFix: true,
     labels: [
-      { node: column(HEARTBEAT_TEXT.sensor, "PULSE", []), x: SENSOR_X, y: SENSOR_Y + 66 },
-      { node: column(HEARTBEAT_TEXT.program, null, []), x: PROGRAM_X, y: LIGHT_Y + 146 },
-      { node: column(HEARTBEAT_TEXT.light, "HEARTBEAT", [ringLabel, ringNote]), x: LIGHT_X, y: LIGHT_Y + RING_R + 10, maxWidth: 0.36 },
+      { node: column(HEARTBEAT_TEXT.sensor, "PULSE", []), x: SENSOR_X, y: LABEL_Y },
+      { node: column(HEARTBEAT_TEXT.program, null, []), x: PROGRAM_X, y: LABEL_Y },
+      { node: column(HEARTBEAT_TEXT.light, "HEARTBEAT", [ringLabel, ringNote]), x: LIGHT_X, y: LABEL_Y, maxWidth: 0.36 },
     ],
     below: [line, summary],
   });

@@ -114,6 +114,8 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   const menuBtn = el("button", { type: "button", class: "secondary rule-menu-button", "aria-expanded": "false", "aria-controls": "preset-menu" }, [
     SETUP.changeRule,
   ]);
+  // A rule with no number has no "Change rule" button; this muted line takes its place and height.
+  const noNumber = el("p", { class: "rule-menu-note", hidden: true }, [SETUP.noNumber]);
   const presetLine = el("p", { class: "meta preset-line" });
   const limitInput = el("input", {
     id: "limit-field",
@@ -182,7 +184,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     el("section", { class: "setup-section", "aria-labelledby": "setup-rule-title" }, [
       sectionTitle("setup-rule-title", SETUP.ruleHeading),
       // One boxed row: the headline and "Why it matters" on the left, "Change rule ▾" on the right.
-      el("div", { class: "rule-row" }, [el("div", { class: "rule-row-text" }, [headlineNode, customList, why]), menuBtn]),
+      el("div", { class: "rule-row" }, [el("div", { class: "rule-row-text" }, [headlineNode, customList, why]), menuBtn, noNumber]),
       menu,
       techOnly(rules.node),
     ]),
@@ -305,6 +307,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
       menuBtn.setAttribute("aria-expanded", "false");
       // Only a rule with a number has a preset to change; the crosswalk rule has none.
       menuBtn.hidden = ex === null || def === null;
+      noNumber.hidden = ex === null || def !== null;
       paint();
     },
     setHeadline(text) {

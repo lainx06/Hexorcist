@@ -31,6 +31,8 @@ export const SETUP = {
   changeRule: "Change rule \u25be",
   limitLabel: "Time limit in ms",
   changeSetup: "Change setup \u25be",
+  /** Where "Change rule" would be, for a rule that has no number to change. */
+  noNumber: "This rule has no number to change.",
   runAgain: "Run again",
   summaryTail: "gremlins are scripted pests, not AI",
 } as const;
@@ -96,11 +98,9 @@ export const REDUCTION_TEXT = {
 export const FIX_TEXT = {
   leftTitle: "Original program",
   rightTitle: "Fixed program",
-  leftCard: "BROKE \u00b7 Stopped at the break.",
   badgePrefix: "Same moves, same moment \u00b7 ",
   whatChanged: "What the fix changed",
   showCode: "Show the code change \u25be",
-  replayBoth: "Replay both",
 } as const;
 
 export const TAB_TEXT = {

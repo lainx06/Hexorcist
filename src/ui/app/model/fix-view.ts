@@ -9,6 +9,11 @@ import { levelAt } from "./timeline";
 /** Cycles the right Scene runs past the break (500 ms at 16 MHz). */
 export const FIX_TAIL_CYCLES = 8_000_000;
 
+/** Scroll behaviour for taking the "What the fix changed" panel into view: instant under Reduced_Motion, else smooth. */
+export function fixPanelScroll(reducedMotion: boolean): "auto" | "smooth" {
+  return reducedMotion ? "auto" : "smooth";
+}
+
 /** Left Scene Cursor: follows the shared Cursor, then stays frozen at v. */
 export function leftCursor(c: number, v: number): number {
   return c >= v ? v : c;

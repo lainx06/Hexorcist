@@ -7,7 +7,6 @@ import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
 import type { ExampleId } from "../data/examples";
-import type { DiffHunk } from "../model/diff";
 import { ms } from "../model/format";
 import { PICKER_TEXT } from "../model/gremlin-picker";
 import { GREMLIN_LEGEND } from "../model/labels";
@@ -76,7 +75,7 @@ export interface TabsView {
    * "The fix" while the Fix_View is open: the explanation and a button to the "What the fix changed" panel, which
    * is the one place the code change shows. Null shows "Press See the fix work to compare.".
    */
-  setFixChange(id: ExampleId | null, hunks?: readonly DiffHunk[]): void;
+  setFixChange(id: ExampleId | null, onOpenCode?: () => void): void;
   /** Cycles_Rate_Text of the Details tab; null shows none (Technical_View only). */
   setCyclesRate(text: string | null): void;
   /** The tries and seed fields (Technical_View only); null removes them. */
@@ -280,8 +279,8 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
       pending = on;
       paintReplay();
     },
-    setFixChange(id) {
-      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createFixTab(id)]);
+    setFixChange(id, onOpenCode = () => undefined) {
+      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createFixTab(id, onOpenCode)]);
     },
     setCyclesRate(text) {
       rateText.textContent = text ?? "";

@@ -44,6 +44,8 @@ export interface SceneChromeSpec {
   width: number;
   height: number;
   labels: readonly SceneLabel[];
+  /** Keep the in-scene labels in the Fix_View (the I'm-alive names and ring caption are needed there). */
+  keepLabelsInFix?: boolean;
   /** Nodes under the card (a line of text, a visually hidden summary). */
   below?: readonly (Node | null)[];
 }
@@ -91,7 +93,7 @@ export function createChrome(spec: SceneChromeSpec): SceneChrome {
       return l.node;
     }),
   );
-  const frame = el("div", { class: "scene-frame" }, [spec.art, labels, topLeft, topRight, bottomLeft, bottomRight]);
+  const frame = el("div", { class: spec.keepLabelsInFix === true ? "scene-frame keeps-labels" : "scene-frame" }, [spec.art, labels, topLeft, topRight, bottomLeft, bottomRight]);
   const line = el("p", { class: "scene-phone-line", "aria-hidden": "true" }, [""]);
   const node = el("div", { class: "scene" }, [frame, line, ...(spec.below ?? [])]);
   let layout: "stage" | "fix" = "stage";
@@ -103,6 +105,8 @@ export function createChrome(spec: SceneChromeSpec): SceneChrome {
       const next = opts.layout ?? "stage";
       if (next !== layout) {
         layout = next;
+        // The Fix_View reserves a free band under the art (CSS, .scene-frame.is-fix) for the badges.
+        frame.classList.toggle("is-fix", layout === "fix");
         // In the Fix_View the title chip owns the top-left corner, so the break badge goes to bottom left.
         if (layout === "fix") bottomLeft.insertBefore(conflict, state);
         else topLeft.appendChild(conflict);

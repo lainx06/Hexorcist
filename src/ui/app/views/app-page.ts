@@ -41,7 +41,7 @@ import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
 import type { StagePhase } from "../model/stage";
-import { STAGE_TEXT, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
+import { STAGE_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
 import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
@@ -820,8 +820,10 @@ export function mountApp(root: HTMLElement): void {
         v: sb.v,
         ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
         hunks,
+        broke: copyFor(c.example.id, c.custom).broke,
+        cause: causeLine(c.example.id, previousFingerprint),
       });
-      tabs.setFixChange(c.example.id, hunks);
+      tabs.setFixChange(c.example.id, () => fv.openCode());
       renderAside();
 
       const fr = await doFixedReplay(c.example.fixedHex, res.reducedList, sb.v);
