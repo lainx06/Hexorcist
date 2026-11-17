@@ -6,9 +6,9 @@
       "trigger": "PostFileSave",
       "action": {
         "type": "command",
-        "command": "cmd /c \"echo hook ran in %CD% at %TIME% > C:\\Users\\Lain\\dev\\Hexorcist\\hook-check.txt\""
+        "command": "cmd /c \"node scripts/build-examples.mjs && npx vitest --run tests/examples\""
       },
-      "matcher": "buggy\\.ino$",
+      "matcher": "examples[\\\\/][^\\\\/]+[\\\\/](buggy|fixed)[\\\\/][^\\\\/]+\\.ino$",
       "timeout": 600,
       "enabled": true
     }
