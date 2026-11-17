@@ -11,7 +11,10 @@ import type { LaneLevel, Marker } from "../model/timeline";
 import { axisTicks, eventValue, gremlinMarkers, laneSegments, LANES, markersToRemove } from "../model/timeline";
 import { cycles, ms } from "../model/format";
 import { originalRunNote } from "../model/verdict-plain";
-import { plainOnly, signalLabel, techOnly } from "./details";
+import { plainOnly, techOnly } from "./details";
+import { EXAMPLE_LABELS } from "../model/signal-labels";
+import type { SignalLabels } from "../model/signal-labels";
+import { labelNode } from "./signal-label";
 import { el, prefersReducedMotion, setChildren, svg } from "./dom";
 import { UI_COPY } from "./panels";
 
@@ -34,7 +37,9 @@ export interface TimelineView {
   dropMarkers(bestGremlinCount: number, bestList: readonly ReducerEvent[]): void;
   setToggle(selected: RunLabel, reducedEnabled: boolean, fixedEnabled?: boolean): void;
   /** Lanes, labels and Lane_Words for the Current_Example fixture. Call before show(). */
-  setFixture(fixture: Fixture): void;
+  setFixture(fixture: Fixture, labels?: SignalLabels): void;
+  /** False for the Upload_Device: the "Fixed program" toggle is not offered. */
+  setFixedOffered(on: boolean): void;
   /** Gremlin_Event counts for the note under the Timeline while "Original run" is selected; null clears it. */
   setRunNote(counts: { original: number; reduced: number } | null): void;
   /** The stage Cursor moved (playback or seek). `range` is the span the scrubber covers, or null for the whole window. */
@@ -86,11 +91,12 @@ export function createTimeline(): TimelineView {
   reducedBtn.addEventListener("click", () => toggleFn("Reduced replay"));
   fixedBtn.addEventListener("click", () => toggleFn("Fixed program"));
 
+  let laneLabels: SignalLabels = EXAMPLE_LABELS;
   const labels = el("div", { class: "lane-labels", "aria-hidden": "true" }, []);
   const drawLabels = (): void =>
     setChildren(
       labels,
-      lanes.map((l) => el("div", { class: "lane-label" }, [signalLabel(l.signal)])),
+      lanes.map((l) => el("div", { class: "lane-label" }, [labelNode(l.signal, laneLabels)])),
     );
   drawLabels();
   const plotSvg = svg("svg", { class: "plot-svg", height: LANE_H * lanes.length + AXIS_H, width: MIN_W });
@@ -313,7 +319,11 @@ export function createTimeline(): TimelineView {
       setButtons();
       refreshNote();
     },
-    setFixture(fixture) {
+    setFixedOffered(on) {
+      fixedBtn.hidden = !on;
+    },
+    setFixture(fixture, next = EXAMPLE_LABELS) {
+      laneLabels = next;
       lanes = exampleLanes(fixture);
       drawLabels();
     },

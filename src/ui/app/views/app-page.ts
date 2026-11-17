@@ -17,12 +17,22 @@ import { buildEventList } from "../../../engine/event-list";
 import { failureStory } from "../../../engine/reducer/story";
 import type { ReducerEvent, ReducerResult } from "../../../engine/reducer/types";
 import type { RuleSet } from "../../../engine/rules/ir";
+import type { Fixture } from "../../../engine/types";
 import type { BuildLabel } from "../model/verdict-text";
 import { EXAMPLE_IDS, loadExample } from "../data/examples";
 import type { ExampleBundle, ExampleId, LoadedExample } from "../data/examples";
 import { diffHunks } from "../model/diff";
 import { displayAgrees, displaySpan, displayWindowEnd } from "../model/display";
-import { CUSTOM_COPY, copyFor, isCustomRuleSet, spanSentenceFor, storyEndingFor } from "../model/example-copy";
+import {
+  CUSTOM_COPY,
+  OTHER_RULE_KEY,
+  SPAN_SENTENCE,
+  STORY_ENDING,
+  copyFor,
+  isCustomRuleSet,
+  spanSentenceFor,
+  storyEndingFor,
+} from "../model/example-copy";
 import type { FlowState } from "../model/flow";
 import { chooseHeldRun, heldPlan } from "../model/held-replay";
 import { canApplyFix, canReplayAgain, canTryRemoving, canUnleash, initialFlow } from "../model/flow";
@@ -36,7 +46,9 @@ import { plainStory } from "../model/plain-story";
 import { limitMsOf, presetFor, presetHeadline, presetRuleText } from "../model/presets";
 import { checkRuleBox, sentencePatterns } from "../model/rule-box";
 import type { RuleError } from "../model/rule-box";
-import { ruleBySentence } from "../model/rules";
+import { ruleBySentence, ruleSignals } from "../model/rules";
+import { pinLevelRows } from "../model/pin-levels";
+import type { PinLevelRow } from "../model/pin-levels";
 import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
@@ -46,6 +58,16 @@ import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
 import { announcement, findingText } from "../model/verdict-text";
+import { sampleDownloads } from "../data/upload-sample";
+
+import { exportPinMap } from "../model/pin-map-file";
+import { EXAMPLE_LABELS } from "../model/signal-labels";
+import type { SignalLabels } from "../model/signal-labels";
+import { HEX_ERROR_TEXT, UPLOAD_COPY } from "../model/upload-copy";
+import { msToCycles } from "../model/upload-fields";
+import { SIZE_LIMIT, hexCheck, hexPreCheck } from "../model/upload-hex";
+import * as U from "../model/upload-state";
+import type { UploadState } from "../model/upload-state";
 import type { CampaignDoneMsg, ReplayDoneMsg } from "../worker/messages";
 import { el, prefersReducedMotion, setChildren } from "./dom";
 import type { FixView } from "./fix-view";
@@ -54,7 +76,12 @@ import { createHero } from "./hero";
 import { createLiveRegion } from "./live";
 import { controls, UI_COPY } from "./panels";
 import { createPlayback } from "./playback";
+import { offerDownload, readFileText } from "./file-io";
+import { createProgramSection } from "./program-section";
+import { createRunLengthField } from "./run-length-field";
 import { createSetup } from "./setup";
+import { createCapabilityPanel } from "./capability-panel";
+import type { DeviceId } from "./setup";
 import { createStage } from "./stage";
 import { createTabs, REPLAY_AGAIN } from "./tabs";
 import type { ReplayView, RunLabel } from "./timeline";
@@ -81,7 +108,7 @@ interface CampaignRecord {
 
 /** What the running Campaign and every job after it use; a snapshot taken when a run starts. */
 interface RunContext {
-  example: ExampleBundle;
+  target: RunTarget;
   ruleSet: RuleSet;
   /** Canonical_Sentence of each rule of the rule set. */
   sentences: string[];
@@ -89,6 +116,39 @@ interface RunContext {
   gremlinSet: GremlinSpec[];
   /** The time limit of the rule set in whole ms (garage, I'm-alive light); null for the crosswalk. */
   limitMs: number | null;
+}
+
+/** What every job of one Campaign uses. Built when "Unleash gremlins" is pressed and never changed after. */
+export interface RunTarget {
+  device: DeviceId;
+  /** The Example's buggy HEX, or the Loaded_Program text. */
+  hex: string;
+  /** The Example's fixed HEX; null for the Upload_Device (no Fixed_Campaign, no fix view). */
+  fixedHex: string | null;
+  /** The Example's Fixture, or the Upload_Fixture. */
+  fixture: Fixture;
+  /** meta.runCycles, or Run_Length_Field ms x 16,000. */
+  runCycles: number;
+  /** Where signal names come from: the Example tables, or the Pin_Table snapshot. */
+  labels: SignalLabels;
+  /** The Example bundle; null for the Upload_Device. */
+  example: ExampleBundle | null;
+  /** Pin_Table snapshot for the Pin_Levels_View; empty for the Examples. */
+  pinRows: readonly PinLevelRow[];
+}
+
+/** The RunTarget of an Example: exactly the values the page posted before the Upload_Device existed. */
+export function exampleRunTarget(example: ExampleBundle): RunTarget {
+  return {
+    device: example.id,
+    hex: example.buggyHex,
+    fixedHex: example.fixedHex,
+    fixture: example.fixture,
+    runCycles: example.meta.runCycles,
+    labels: EXAMPLE_LABELS,
+    example,
+    pinRows: [],
+  };
 }
 
 interface ReplayResult {
@@ -161,6 +221,14 @@ export function mountApp(root: HTMLElement): void {
   let ruleErrors: RuleError[] = [];
   let selectedIds: string[] = [];
 
+  // Device state: an Example or the Upload_Device. The upload's setup lives only in this variable,
+  // never in storage, the URL or a cookie; a reload starts from initialUpload() again.
+  let device: DeviceId = EXAMPLE_IDS[0];
+  let upload: UploadState = U.initialUpload();
+  let lastFixtureKey: string | null = null;
+  let lastRowsKey: string | null = null;
+  const isUpload = (): boolean => device === "upload";
+
   // Run state.
   let flow: FlowState = initialFlow(false);
   let phase: StagePhase = "idle";
@@ -187,7 +255,84 @@ export function mountApp(root: HTMLElement): void {
   const removeButtons: HTMLButtonElement[] = [];
 
   const ctl = controls(24, 0);
-  const timeline = createTimeline();
+  /** After an upload edit; an async file read that lands after the user left the upload only updates the state. */
+  const afterUploadEdit = (): void => {
+    if (isUpload()) uploadChanged();
+  };
+  const program = createProgramSection({
+    onHexFile: (file) => {
+      if (lockedNow()) return;
+      const b = U.beginHexRead(upload);
+      upload = b.state;
+      const pre = hexPreCheck(file.name, file.size);
+      if (pre !== null) {
+        upload = U.hexChosen(upload, b.token, { ok: false, error: pre });
+        afterUploadEdit();
+        return;
+      }
+      afterUploadEdit();
+      void readFileText(file).then(
+        (text) => {
+          upload = U.hexChosen(upload, b.token, hexCheck(file.name, file.size, text));
+          afterUploadEdit();
+        },
+        () => {
+          upload = U.hexReadFailed(upload, b.token);
+          afterUploadEdit();
+        },
+      );
+    },
+    onSample: () => {
+      if (lockedNow()) return;
+      upload = U.loadSample(upload);
+      setup.rules.setText(upload.ruleText);
+      ctl.setTexts(upload.fields.runs, upload.fields.seed);
+      afterUploadEdit();
+    },
+    onDownloadSample: () => {
+      for (const f of sampleDownloads()) offerDownload(f.name, f.text, f.type);
+    },
+    onImport: (file) => {
+      if (lockedNow()) return;
+      if (file.size > SIZE_LIMIT) {
+        upload = U.importPins(upload, "", file.size);
+        afterUploadEdit();
+        return;
+      }
+      void readFileText(file).then(
+        (text) => {
+          upload = U.importPins(upload, text, file.size);
+          afterUploadEdit();
+        },
+        () => {
+          upload = { ...upload, importError: HEX_ERROR_TEXT.unreadable };
+          afterUploadEdit();
+        },
+      );
+    },
+    onExport: () => offerDownload(UPLOAD_COPY.exportFileName, exportPinMap(upload.rows), "application/json"),
+    onAddRow: () => {
+      if (lockedNow()) return;
+      upload = U.addRow(upload);
+      afterUploadEdit();
+    },
+    onRemoveRow: (id) => {
+      if (lockedNow()) return;
+      upload = U.removeRow(upload, id);
+      afterUploadEdit();
+    },
+    onEditRow: (id, patch) => {
+      if (lockedNow()) return;
+      upload = U.editRow(upload, id, patch);
+      afterUploadEdit();
+    },
+  });
+  const runLength = createRunLengthField((text) => {
+    if (lockedNow()) return;
+    upload = U.setField(upload, "runLengthMs", text);
+    afterUploadEdit();
+  });
+  runLength.node.hidden = true;  const timeline = createTimeline();
   // The Signals tab shares the stage cursor: its scrubber moves the stage Playback, and the Playback
   // moves the waveform cursor while the stage plays.
   timeline.onSeek((cycle) => playback.seek(cycle));
@@ -196,10 +341,14 @@ export function mountApp(root: HTMLElement): void {
     timeline.setCursor(cycle, p === null ? null : { min: p.start, max: p.end });
   });
   const tabs = createTabs(timeline);
-  tabs.setFields(ctl.node);
+  tabs.setFields(el("div", { class: "fields-stack" }, [ctl.node, runLength.node]));
+  // The Capability_Panel shows for every device; it lists floating-input reasons of the shown verdict only.
+  const capability = createCapabilityPanel();
+  capability.update({ verdict: null, labels: EXAMPLE_LABELS });
+  tabs.setCapability(capability.node);
   const heroView = createHero();
   const setup = createSetup({
-    onDevice: (id) => selectExample(id),
+    onDevice: (id) => (id === "upload" ? selectUpload() : selectExample(id)),
     onToggleGremlin: (id) => toggleGremlin(id),
     onRuleText: (t) => applyRuleText(t),
     onUnleash: () => void unleash(),
@@ -211,6 +360,8 @@ export function mountApp(root: HTMLElement): void {
   const lockedNow = (): boolean => flow.busy !== null || working;
 
   const canSeeFix = (): boolean =>
+    ctx !== null &&
+    ctx.target.fixedHex !== null &&
     buggy !== null &&
     buggy.done !== null &&
     buggy.done.result.verdict.verdict === "BROKE" &&
@@ -223,7 +374,7 @@ export function mountApp(root: HTMLElement): void {
   /** "See the fix work →" shows only for the broke phase, and never while the setup is re-expanded. */
   const paintPrimary = (): void => {
     const btn = stage.aside.fixButton();
-    const show = stageFlags(phase, hasReplay).primary === "fix" && !setup.expanded();
+    const show = stageFlags(phase, hasReplay).primary === "fix" && !setup.expanded() && (ctx === null || ctx.target.fixedHex !== null);
     if (btn !== null) {
       btn.hidden = !show;
       btn.disabled = !canSeeFix();
@@ -233,23 +384,45 @@ export function mountApp(root: HTMLElement): void {
 
   const refresh = (): void => {
     const vals = ctl.values();
-    flow = { ...flow, dataOk: loadedOk, runsOk: vals.runsOk, seedOk: vals.seedOk };
-    const unleashOff = !(canUnleash(flow) && !working && ruleErrors.length === 0 && selectedIds.length > 0);
-    setup.setUnleashEnabled(!unleashOff);
-    setup.setTries(vals.runsOk ? vals.runs : null, current === null ? 0 : current.meta.runCycles);
+    if (isUpload()) {
+      flow = { ...flow, dataOk: true, runsOk: vals.runsOk, seedOk: vals.seedOk };
+      setup.setUnleashEnabled(U.uploadReady(upload, lockedNow()));
+      // The tries line keeps the last valid values while a field is invalid.
+      const d = U.deriveUpload(upload);
+      setup.setTries(
+        d.runs.ok ? d.runs.value : upload.lastValid.runs,
+        d.runLength.ok ? msToCycles(d.runLength.value) : upload.lastValid.runCycles,
+      );
+    } else {
+      flow = { ...flow, dataOk: loadedOk, runsOk: vals.runsOk, seedOk: vals.seedOk };
+      const unleashOff = !(canUnleash(flow) && !working && ruleErrors.length === 0 && selectedIds.length > 0);
+      setup.setUnleashEnabled(!unleashOff);
+      setup.setTries(vals.runsOk ? vals.runs : null, current === null ? 0 : current.meta.runCycles);
+    }
     tabs.setReplayAgainEnabled(canReplayAgain(flow) && !working);
     const removable = canTryRemoving(flow) && !working;
     for (const b of removeButtons) b.disabled = !removable;
     paintPrimary();
   };
-  ctl.onFieldChange(refresh);
+  ctl.onFieldChange(() => {
+    if (!isUpload()) {
+      refresh();
+      return;
+    }
+    const t = ctl.texts();
+    upload = U.setField(U.setField(upload, "runs", t.runs), "seed", t.seed);
+    uploadChanged();
+  });
 
   const paintLocks = (): void => {
-    const locked = lockedNow() || !loadedOk;
+    const locked = lockedNow() || (!isUpload() && !loadedOk);
     setup.setBusy(lockedNow());
     setup.rules.setBusy(locked);
     setup.gremlins.setBusy(locked);
-  };
+    if (isUpload()) {
+      program.paint(upload, U.deriveUpload(upload), lockedNow());
+      runLength.paint(upload.fields.runLengthMs, lockedNow());
+    }  };
 
   const setBusy = (busy: FlowState["busy"]): void => {
     flow = { ...flow, busy };
@@ -287,7 +460,7 @@ export function mountApp(root: HTMLElement): void {
       if (cardShown) card.style.animation = "none";
       cardShown = true;
     } else cardShown = false;
-    stage.aside.render({ card, reduction: reductionInput, fixBusy: !canSeeFix() });
+    stage.aside.render({ card, reduction: reductionInput, fixBusy: !canSeeFix(), noFix: isUpload() || (ctx !== null && ctx.target.fixedHex === null) });
     paintPrimary();
   };
 
@@ -316,15 +489,23 @@ export function mountApp(root: HTMLElement): void {
     return { label, events, outputEdges: src.outputEdges, violation: v, reachedEnd: src.reachedEnd, windowEnd: end, span };
   };
 
+  /** Upload: the output signals named by the Target_Rule, which get the coral ring at the break. */
+  const ringOutputs = (c: RunContext, sentence: string): string[] => {
+    const found = ruleBySentence(c.ruleSet, sentence);
+    if (found === null) return [];
+    const outs = new Set(c.target.pinRows.filter((r) => r.role === "output").map((r) => r.signal));
+    return ruleSignals(found.rule).filter((s) => outs.has(s));
+  };
+
   const replayJob = async (hex: string, events: ReducerEvent[]): Promise<ReplayDoneMsg | string> => {
     const c = ctx as RunContext;
     const o = await client.run({
       kind: "replay",
       hex,
-      fixture: c.example.fixture,
+      fixture: c.target.fixture,
       ruleSet: c.ruleSet,
       events,
-      runCycles: c.example.meta.runCycles,
+      runCycles: c.target.runCycles,
     });
     const err = outcomeError(o);
     return err !== null ? err : (o as { message: ReplayDoneMsg }).message;
@@ -332,7 +513,7 @@ export function mountApp(root: HTMLElement): void {
 
   const displayJob = async (hex: string, events: ReducerEvent[], violationCycle: number): Promise<ReplayDoneMsg | string> => {
     const c = ctx as RunContext;
-    const o = await client.runDisplay({ hex, fixture: c.example.fixture, ruleSet: c.ruleSet, events, violationCycle });
+    const o = await client.runDisplay({ hex, fixture: c.target.fixture, ruleSet: c.ruleSet, events, violationCycle });
     const err = outcomeError(o);
     return err !== null ? err : (o as { message: ReplayDoneMsg }).message;
   };
@@ -380,19 +561,21 @@ export function mountApp(root: HTMLElement): void {
     const exact = failureStory(
       exampleStoryInput({
         reducedList: res.reducedList,
-        fixture: c.example.fixture,
+        fixture: c.target.fixture,
         violation: v,
         outputEdges: view.outputEdges,
         span: view.span,
+        labels: c.target.labels,
       }),
     );
     const plain = plainStory({
       reducedList: res.reducedList,
-      fixture: c.example.fixture,
+      fixture: c.target.fixture,
       v: v.cycle,
-      storyEnding: storyEndingFor(v.rule),
-      spanSentence: spanSentenceFor(c.example.id, c.custom),
+      storyEnding: c.target.example === null ? (STORY_ENDING[OTHER_RULE_KEY] as string) : storyEndingFor(v.rule),
+      spanSentence: c.target.example === null ? SPAN_SENTENCE.custom : spanSentenceFor(c.target.example.id, c.custom),
       ...(view.span !== null ? { span: { lengthCycles: view.span.lengthCycles, cut: view.span.cut } } : {}),
+      labels: c.target.labels,
     });
     return { plain, exact: typeof exact === "string" ? exact : null };
   };
@@ -410,12 +593,12 @@ export function mountApp(root: HTMLElement): void {
       {
         kind: "campaign",
         hex: rec.hex,
-        fixture: c.example.fixture,
+        fixture: c.target.fixture,
         ruleSet: c.ruleSet,
         gremlinSet: c.gremlinSet,
         campaignSeed: rec.seed,
         runs: rec.runs,
-        runCycles: c.example.meta.runCycles,
+        runCycles: c.target.runCycles,
         measure: false,
       },
       (m) => {
@@ -452,7 +635,7 @@ export function mountApp(root: HTMLElement): void {
         b.addEventListener("click", () => {
           void (async () => {
             const without = withoutEvent(list, i);
-            const r = await doReplay(c.example.buggyHex, without);
+            const r = await doReplay(c.target.hex, without);
             if (typeof r === "string") {
               result.textContent = r;
               result.classList.add("error-text");
@@ -482,7 +665,7 @@ export function mountApp(root: HTMLElement): void {
   const replayAgain = async (): Promise<void> => {
     if (reduction === null || ctx === null) return;
     const out = tabs.replayAgain.out;
-    const r = await doReplay(ctx.example.buggyHex, reduction.reducedList);
+    const r = await doReplay(ctx.target.hex, reduction.reducedList);
     if (typeof r === "string") {
       out.textContent = r;
       return;
@@ -528,6 +711,7 @@ export function mountApp(root: HTMLElement): void {
     tabs.setTryRemoving(null);
     tabs.setCyclesRate(null);
     tabs.replayAgain.out.textContent = "";
+    capability.update({ verdict: null, labels: EXAMPLE_LABELS });
     shown = "Original run";
     timeline.setRunNote(null);
     timeline.show(null);
@@ -552,8 +736,8 @@ export function mountApp(root: HTMLElement): void {
     const v = (rec.done as CampaignDoneMsg).result.verdict;
     return {
       kind: "BROKE",
-      exampleId: c.example.id,
-      plainBroke: copyFor(c.example.id, c.custom).broke,
+      exampleId: c.target.example === null ? null : c.target.example.id,
+      plainBroke: c.target.example === null ? CUSTOM_COPY.broke : copyFor(c.target.example.id, c.custom).broke,
       violatingRunIndex: (rec.done as CampaignDoneMsg).result.violatingRunIndex ?? (v.verdict === "BROKE" ? v.trace.runIndex : 0),
       tries: rec.runs,
       elapsedMs: rec.elapsedMs,
@@ -567,7 +751,7 @@ export function mountApp(root: HTMLElement): void {
     const rec = buggy as CampaignRecord;
     const verdict = (rec.done as CampaignDoneMsg).result.verdict;
     if (verdict.verdict !== "BROKE") return;
-    const example = c.example;
+    const example = c.target;
     const originalList = verdict.trace.eventList;
     targetRule = verdict.trace.violation.rule;
 
@@ -585,12 +769,12 @@ export function mountApp(root: HTMLElement): void {
     const o = await client.run(
       {
         kind: "reduce",
-        hex: example.buggyHex,
+        hex: example.hex,
         fixture: example.fixture,
         ruleSet: c.ruleSet,
         originalList,
         violation: verdict.trace.violation,
-        runCycles: example.meta.runCycles,
+        runCycles: example.runCycles,
         measure: false,
       },
       (m) => {
@@ -636,7 +820,7 @@ export function mountApp(root: HTMLElement): void {
     if (!("error" in card)) live.announce(`${card.summary} ${card.smallest}`);
 
     // Reduced replay and its Display_Replay on the buggy build.
-    const red = await doReplay(example.buggyHex, res.reducedList);
+    const red = await doReplay(example.hex, res.reducedList);
     const rv = typeof red === "string" ? null : red.replay.violation;
     if (typeof red === "string" || rv === null) {
       showError(typeof red === "string" ? red : REDUCED_NO_BREAK);
@@ -663,6 +847,7 @@ export function mountApp(root: HTMLElement): void {
       fixture: example.fixture,
       exactStory: cardStory === null ? null : cardStory.exact,
       canonical: c.sentences,
+      labels: c.target.labels,
     });
     shown = "Reduced replay";
     paintToggle();
@@ -687,13 +872,14 @@ export function mountApp(root: HTMLElement): void {
       v: rv.cycle,
       ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
       imAliveRuleBroke: true,
+      ...(c.target.example === null ? { ringSignals: ringOutputs(c, rv.rule), labels: c.target.labels } : {}),
     });
     // Under Reduced_Motion the Playback shows the frame at v and does not play.
     playback.load(plan, true);
     renderAside();
 
     // The original replay, for the Signals tab.
-    const orig = await doReplay(example.buggyHex, originalList);
+    const orig = await doReplay(example.hex, originalList);
     if (typeof orig === "string") showError(orig);
     else {
       original = viewOf("Original run", originalList, orig.replay, orig.display);
@@ -707,12 +893,12 @@ export function mountApp(root: HTMLElement): void {
    * The event list of that run is rebuilt from the campaign seed, as the engine does for every run.
    */
   const heldFlow = async (c: RunContext, rec: CampaignRecord, tries: number): Promise<void> => {
-    const example = c.example;
+    const example = c.target;
     const choice = chooseHeldRun(undefined);
     const gen = buildEventList({
       fixture: example.fixture,
       gremlinSet: c.gremlinSet,
-      runCycles: example.meta.runCycles,
+      runCycles: example.runCycles,
       campaignSeed: rec.seed,
       runIndex: choice.runIndex,
     });
@@ -722,7 +908,7 @@ export function mountApp(root: HTMLElement): void {
       return;
     }
     const events = gen.events;
-    const r = await doReplay(example.buggyHex, events);
+    const r = await doReplay(example.hex, events);
     if (typeof r === "string" || r.replay.violation !== null) {
       showError(typeof r === "string" ? r : "The replay of this try broke the rule, which the campaign did not see.");
       stage.showNote(STAGE_TEXT.heldFailed, true);
@@ -747,27 +933,61 @@ export function mountApp(root: HTMLElement): void {
     playback.load(plan, !prefersReducedMotion());
   };
   const unleash = async (): Promise<void> => {
-    const vals = ctl.values();
     if (flow.busy !== null || working) return;
-    if (current === null || !loadedOk || !vals.runsOk || !vals.seedOk || ruleErrors.length > 0 || selectedIds.length === 0) return;
-    if (setup.limitInvalid()) return;
-    const example = current;
-    leaveFix();
-    clearOutputs();
-    ctx = {
-      example,
-      ruleSet: activeRuleSet,
-      sentences: [...activeSentences],
-      custom: isCustomRuleSet(activeSentences, example.sentences),
-      gremlinSet: orderedSelection(selectedIds, example),
-      limitMs: limitMsOf(example.id, activeRuleSet),
-    };
+    let runs: number;
+    let seed: number;
+    if (isUpload()) {
+      // Upload_Ready is checked again; every job of this Campaign then reads the RunTarget snapshot.
+      if (!U.uploadReady(upload, false)) return;
+      const req = U.buildCampaignRequest(upload);
+      if (req === null) return;
+      const d = U.deriveUpload(upload);
+      leaveFix();
+      clearOutputs();
+      ctx = {
+        target: {
+          device: "upload",
+          hex: req.hex,
+          fixedHex: null,
+          fixture: req.fixture,
+          runCycles: req.runCycles,
+          labels: U.uploadLabels(upload.rows),
+          example: null,
+          pinRows: pinLevelRows(upload.rows),
+        },
+        ruleSet: req.ruleSet,
+        sentences: d.rule.ok ? [...d.rule.sentences] : [],
+        custom: true,
+        gremlinSet: req.gremlinSet,
+        limitMs: null,
+      };
+      runs = req.runs;
+      seed = req.campaignSeed;
+      timeline.setFixture(req.fixture, ctx.target.labels);
+    } else {
+      const vals = ctl.values();
+      if (current === null || !loadedOk || !vals.runsOk || !vals.seedOk || ruleErrors.length > 0 || selectedIds.length === 0) return;
+      if (setup.limitInvalid()) return;
+      const example = current;
+      leaveFix();
+      clearOutputs();
+      ctx = {
+        target: exampleRunTarget(example),
+        ruleSet: activeRuleSet,
+        sentences: [...activeSentences],
+        custom: isCustomRuleSet(activeSentences, example.sentences),
+        gremlinSet: orderedSelection(selectedIds, example),
+        limitMs: limitMsOf(example.id, activeRuleSet),
+      };
+      runs = vals.runs;
+      seed = vals.seed;
+    }
     const c = ctx;
     setWorking(true);
     try {
       setPhase("running");
-      stage.showRunning(null, vals.runs);
-      const rec: CampaignRecord = { build: "Buggy build", hex: example.buggyHex, runs: vals.runs, seed: vals.seed, done: null, elapsedMs: 0 };
+      stage.showRunning(null, runs);
+      const rec: CampaignRecord = { build: "Buggy build", hex: c.target.hex, runs, seed, done: null, elapsedMs: 0 };
       buggy = rec;
       const done = await runCampaign(rec, (n) => stage.showRunning(n, rec.runs), showError);
       if (done === null) {
@@ -777,6 +997,7 @@ export function mountApp(root: HTMLElement): void {
       }
       tabs.setCyclesRate(cyclesRateText(done.result.totalCycles, rec.elapsedMs));
       const v = done.result.verdict;
+      capability.update({ verdict: v, labels: c.target.labels });
       if (v.verdict === "HELD") {
         cardInput = { kind: "HELD", text: v.text, tries: v.runs };
         setPhase("held");
@@ -800,7 +1021,11 @@ export function mountApp(root: HTMLElement): void {
 
   const seeFix = async (): Promise<void> => {
     if (!canSeeFix()) return;
-    const c = ctx as RunContext;
+    const run = ctx as RunContext;
+    const runExample = run.target.example;
+    // The fix view exists for an Example only; the Upload_Device has no fixed build.
+    if (runExample === null) return;
+    const c = { ...run, example: runExample };
     const b = buggy as CampaignRecord;
     const res = reduction as ReducerResult;
     const sb = shownBroke as ShownBroke;
@@ -815,7 +1040,7 @@ export function mountApp(root: HTMLElement): void {
       stage.setFixMode(true, fv.root);
       fv.begin({
         exampleId: c.example.id,
-        fixture: c.example.fixture,
+        fixture: c.target.fixture,
         k: res.reducedEventCount,
         v: sb.v,
         ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
@@ -881,6 +1106,11 @@ export function mountApp(root: HTMLElement): void {
     setup.rules.setErrors(ruleErrors);
   };
   const applyRuleText = (text: string): void => {
+    if (isUpload()) {
+      upload = U.setRuleText(upload, text);
+      uploadChanged();
+      return;
+    }
     if (current === null) return;
     const r = checkRuleBox(text, current.fixture);
     if (r.ok) {
@@ -897,6 +1127,12 @@ export function mountApp(root: HTMLElement): void {
   };
 
   const toggleGremlin = (id: string): void => {
+    if (isUpload()) {
+      if (lockedNow()) return;
+      upload = U.toggleGremlin(upload, id);
+      uploadChanged();
+      return;
+    }
     if (lockedNow() || !loadedOk) return;
     selectedIds = selectedIds.includes(id) ? selectedIds.filter((s) => s !== id) : [...selectedIds, id];
     setup.gremlins.setSelected(selectedIds);
@@ -907,10 +1143,11 @@ export function mountApp(root: HTMLElement): void {
   // Example selection: ignored while busy and for the Current_Example.
   const applyExample = (id: ExampleId, loaded: LoadedExample): void => {
     currentId = id;
+    device = id;
     leaveFix();
     clearOutputs();
     ctx = null;
-    stage.setExample(id);
+    stage.setDevice(id);
     setup.setSelectedDevice(id);
     setPhase("idle");
     stage.showIdle();
@@ -951,8 +1188,79 @@ export function mountApp(root: HTMLElement): void {
     refresh();
   };
   const selectExample = (id: ExampleId): void => {
-    if (lockedNow() || id === currentId) return;
+    if (lockedNow() || id === device) return;
+    if (isUpload()) leaveUpload();
     applyExample(id, loadExample(id));
+  };
+
+  // ---------- The Upload_Device ----------
+  /** Repaints everything that depends on UploadState, in one render. */
+  const paintUpload = (): void => {
+    const d = U.deriveUpload(upload);
+    setup.setHeadline(CUSTOM_COPY.headline);
+    const sentences = d.rule.ok ? d.rule.sentences : [];
+    setup.setCustomRule(true, sentences);
+    setup.rules.setSentences(sentences);
+    setup.rules.setErrors(d.rule.ok ? [] : d.rule.errors);
+    setup.rules.setPatterns(d.patterns.map((p) => ({ label: PATTERN_LABELS[p.form] ?? p.form, sentence: p.sentence })));
+    // The picker is rebuilt only when the pins change, so a chip keeps focus when it is toggled.
+    const levelRows = pinLevelRows(upload.rows);
+    const key = JSON.stringify([d.previewFixture, levelRows]);
+    if (key !== lastFixtureKey) {
+      lastFixtureKey = key;
+      const labels = U.uploadLabels(upload.rows);
+      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels);
+      timeline.setFixture(d.previewFixture, labels);
+    } else setup.gremlins.setSelected(upload.selected);
+    tabs.setGremlinOrder(U.gremlinOrderLine(upload.selected));
+    // The idle Pin_Levels_View lists the current rows (names included).
+    const rowsKey = JSON.stringify(levelRows);
+    if (rowsKey !== lastRowsKey && !lockedNow() && ctx === null) {
+      lastRowsKey = rowsKey;
+      stage.setPinRows(levelRows);
+      stage.showIdle();
+    }
+    paintLocks();
+    refresh();
+  };
+  /** Any change to the upload setup returns the Stage to idle (D4), then repaints. */
+  const uploadChanged = (): void => {
+    resetToIdle();
+    paintUpload();
+  };
+  const selectUpload = (): void => {
+    if (lockedNow() || isUpload()) return;
+    device = "upload";
+    leaveFix();
+    clearOutputs();
+    ctx = null;
+    setup.setSelectedDevice("upload");
+    setup.setProblems([]);
+    setup.setExample(null);
+    setup.setUploadMode(true);
+    setup.setProgramSection(program.node);
+    runLength.node.hidden = false;
+    stage.setDevice("upload");
+    lastRowsKey = null;
+    tabs.setNoFix(true);
+    timeline.setFixedOffered(false);
+    setPhase("idle");
+    stage.showIdle();
+    setup.rules.setText(upload.ruleText);
+    ctl.setTexts(upload.fields.runs, upload.fields.seed);
+    lastFixtureKey = null;
+    paintUpload();
+  };
+  const leaveUpload = (): void => {
+    const t = ctl.texts();
+    upload = U.setField(U.setField(upload, "runs", t.runs), "seed", t.seed);
+    setup.setUploadMode(false);
+    setup.setProgramSection(null);
+    runLength.node.hidden = true;
+    lastFixtureKey = null;
+    tabs.setNoFix(false);
+    tabs.setGremlinOrder(null);
+    timeline.setFixedOffered(true);
   };
 
   setChildren(root, [

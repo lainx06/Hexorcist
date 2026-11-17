@@ -15,6 +15,10 @@ export interface ControlsView {
   onFieldChange(fn: () => void): void;
   /** Sets both fields to an Example's defaults and refreshes their messages. */
   setValues(runs: number, seed: number): void;
+  /** The raw text of both fields, valid or not. */
+  texts(): { runs: string; seed: string };
+  /** Sets the raw text of both fields and refreshes their messages. */
+  setTexts(runs: string, seed: string): void;
 }
 
 export function controls(defaultRuns: number, defaultSeed: number): ControlsView {
@@ -61,6 +65,14 @@ export function controls(defaultRuns: number, defaultSeed: number): ControlsView
     setValues(r, s) {
       runs.value = String(r);
       seed.value = String(s);
+      check();
+    },
+    texts() {
+      return { runs: runs.value, seed: seed.value };
+    },
+    setTexts(r, s) {
+      runs.value = r;
+      seed.value = s;
       check();
     },
   };

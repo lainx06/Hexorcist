@@ -13,6 +13,8 @@ export interface AsideState {
   reduction: ReductionInput | null;
   /** Disables "See the fix work →" while a job runs. */
   fixBusy?: boolean;
+  /** Upload_Device: there is no fixed build, so no "See the fix work →" button is built. */
+  noFix?: boolean;
 }
 
 export interface AsideView {
@@ -67,7 +69,7 @@ export function createAside(): AsideView {
       let action: HTMLElement | null = null;
       if (state.reduction !== null) {
         children.push(reductionCardView(state.reduction));
-        if (state.reduction.ok) {
+        if (state.reduction.ok && state.noFix !== true) {
           const b = el("button", { type: "button", class: "primary aside-fix" }, [REDUCTION_TEXT.seeFix]);
           b.disabled = state.fixBusy === true;
           b.addEventListener("click", () => {

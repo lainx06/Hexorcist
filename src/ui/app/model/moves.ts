@@ -2,7 +2,8 @@
 import { msText } from "../../../engine/reducer/story";
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
-import { friendlyLabel, PLAIN_STORY_LABELS } from "./labels";
+import { EXAMPLE_LABELS, labelOf, plainStoryTableFor } from "./signal-labels";
+import type { SignalLabels } from "./signal-labels";
 
 export type MoveKind = "active" | "held" | "inactive";
 
@@ -21,19 +22,25 @@ export function moveKind(list: readonly ReducerEvent[], index: number, fixture: 
 }
 
 /** Full phrase of a Gremlin_Event, chosen by its `moveKind`. */
-export function movePhrase(list: readonly ReducerEvent[], index: number, fixture: Fixture): string {
+export function movePhrase(
+  list: readonly ReducerEvent[],
+  index: number,
+  fixture: Fixture,
+  labels: SignalLabels = EXAMPLE_LABELS,
+): string {
+  const table = plainStoryTableFor(labels);
   const e = list[index] as ReducerEvent;
   const kind = moveKind(list, index, fixture);
-  const label = Object.prototype.hasOwnProperty.call(PLAIN_STORY_LABELS, e.signal) ? PLAIN_STORY_LABELS[e.signal] : undefined;
-  if (label === undefined) return `changed ${friendlyLabel(e.signal).text}`;
+  const label = Object.prototype.hasOwnProperty.call(table, e.signal) ? table[e.signal] : undefined;
+  if (label === undefined) return `changed ${labelOf(labels, e.signal).text}`;
   return label.full[kind] ?? label.full.active;
 }
 
 /** One line per Gremlin_Event in list order; Rest_Events are skipped. */
-export function reducedMoveLines(list: readonly ReducerEvent[], fixture: Fixture): string[] {
+export function reducedMoveLines(list: readonly ReducerEvent[], fixture: Fixture, labels: SignalLabels = EXAMPLE_LABELS): string[] {
   const out: string[] = [];
   list.forEach((e, i) => {
-    if (e.gremlinId !== "rest") out.push(`${msText(e.cycle)}: ${movePhrase(list, i, fixture)}`);
+    if (e.gremlinId !== "rest") out.push(`${msText(e.cycle)}: ${movePhrase(list, i, fixture, labels)}`);
   });
   return out;
 }

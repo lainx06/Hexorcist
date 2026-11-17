@@ -8,12 +8,13 @@ import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
 import { brokeLabel, crossed, shrinkDots, stripDots, stripLayout, type ShrinkDot } from "../model/strip";
 import { STAGE_TEXT } from "../model/stage-copy";
+import type { SignalLabels } from "../model/signal-labels";
 import { clear, el, prefersReducedMotion, setChildren } from "./dom";
 
 export interface MoveStrip {
   root: HTMLElement;
   /** Replay mode: dots by cycle up to v, each labelled, with the broke mark. */
-  showMoves(list: readonly ReducerEvent[], fixture: Fixture, start: number, v: number): void;
+  showMoves(list: readonly ReducerEvent[], fixture: Fixture, start: number, v: number, labels?: SignalLabels): void;
   /** Shrink mode: dots of the original list styled from the faded set and, once known, the Reduced_List. */
   showShrink(original: readonly ReducerEvent[], faded: ReadonlySet<number>, reduced: readonly ReducerEvent[] | null): void;
   /** Feed the Cursor; pulses the dots it crossed since the last call (never under Reduced_Motion). */
@@ -100,12 +101,12 @@ export function createMoveStrip(): MoveStrip {
 
   return {
     root,
-    showMoves(list, fixture, _start, v) {
+    showMoves(list, fixture, _start, v, labels) {
       mode = "moves";
       root.classList.remove("is-collapsed", "is-shrinking");
       root.classList.add("is-moves");
       setChildren(legend, []);
-      const dots = stripDots(list, fixture, v);
+      const dots = stripDots(list, fixture, v, labels);
       dotCycles = dots.map((d) => d.cycle);
       breakCycle = v;
       resetDots(dots.length);

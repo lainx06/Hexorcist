@@ -2196,9 +2196,6 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .device-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 
   .fix-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2258,9 +2255,6 @@ button:disabled {
     font-size: 22px;
   }
 
-  .device-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
   .panel,
   .stage {
@@ -3760,9 +3754,6 @@ button:disabled {
 
 /* ---------- 899 px and narrower ---------- */
 @media (max-width: 899px) {
-  .device-slot {
-    display: none;
-  }
 
   .stage-status {
     min-height: 0;
@@ -3893,4 +3884,201 @@ button:disabled {
     flex-basis: 100%;
     max-width: none;
   }
+}
+/* ---------- Device grid: 4 columns above 768 px, 2 x 2 at 768 px and below (every device). ---------- */
+@media (max-width: 768px) {
+  .device-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* ---------- Program_Section and Pin_Table (Your own program) ---------- */
+.program-host {
+  margin-top: var(--s-4);
+}
+.program-section {
+  display: flex;
+  flex-direction: column;
+}
+.program-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.file-control {
+  display: inline-flex;
+}
+/* The file input is visually hidden but stays focusable; its label is the visible button. */
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+  cursor: pointer;
+}
+.file-input:focus-visible + .file-button {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+.file-button.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.loaded-line,
+.help-line {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pin-table-wrap {
+  overflow-x: auto;
+}
+.pin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pin-table th {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+}
+.pin-cell {
+  padding: var(--s-1) var(--s-2);
+  vertical-align: top;
+}
+.pin-cell .field {
+  width: 100%;
+  min-width: 4em;
+}
+/* Column names are the table header above 600 px; on stacked cards each cell shows its own label. */
+.pin-cell-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.port-bit-text {
+  display: block;
+  margin-top: var(--s-1);
+}
+.pin-row.has-error .field {
+  border-color: var(--coral);
+}
+.pin-row-errors,
+.pin-table-errors {
+  margin: 0;
+  padding-left: var(--s-4);
+  color: var(--coral);
+}
+
+@media (max-width: 600px) {
+  .pin-table thead {
+    display: none;
+  }
+  .pin-table,
+  .pin-table tbody,
+  .pin-table tr,
+  .pin-table td {
+    display: block;
+    width: 100%;
+  }
+  .pin-row {
+    margin-top: var(--s-3);
+    padding: var(--s-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+  }
+  .pin-row-error-row td {
+    padding: var(--s-1) var(--s-2);
+  }
+  .pin-cell-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 var(--s-1);
+    overflow: visible;
+    clip: auto;
+    display: block;
+    font-size: var(--fs-meta);
+    color: var(--text-2);
+  }
+}
+/* ---------- Pin_Levels_View (Your own program): real pin levels, not an illustration ---------- */
+.pin-levels-svg {
+  width: 100%;
+  height: auto;
+}
+.pin-levels-svg .switch-lever {
+  stroke-width: 5;
+}
+.pin-lamp {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+.pin-lamp.is-lit {
+  fill: var(--mint);
+  stroke: var(--mint);
+}
+/* Not driven: hollow and dashed, so it never reads as a lamp that is off. */
+.pin-lamp.is-not-driven {
+  fill: none;
+  stroke-dasharray: 4 3;
+}
+.pin-level-label {
+  display: flex;
+  gap: var(--s-2);
+  align-items: baseline;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.pin-level-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pin-level-state {
+  color: var(--text-2);
+}
+.pin-level-gremlin .pin-level-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Capability_Panel (Details tab, every device) ---------- */
+.details-capability {
+  margin-top: var(--s-4);
+}
+.capability-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.capability-heading {
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+.capability-list {
+  margin: 0;
+  padding-left: var(--s-4);
+}
+.capability-line {
+  margin: 0;
 }

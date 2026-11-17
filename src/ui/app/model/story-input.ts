@@ -4,7 +4,8 @@ import type { RuleSet } from "../../../engine/rules/ir";
 import type { StoryInput, StoryLabel } from "../../../engine/reducer/story";
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent } from "../../../engine/types";
-import { storyLabelsFor } from "./labels";
+import { EXAMPLE_LABELS, exactLabelsFor } from "./signal-labels";
+import type { SignalLabels } from "./signal-labels";
 import { ruleBySentence } from "./rules";
 import { spanFor } from "./span";
 
@@ -23,13 +24,15 @@ export function exampleStoryInput(args: {
   violation: Violation;
   outputEdges: readonly OutputEvent[];
   span: { lengthCycles: number; cut: boolean } | null;
+  /** Default the Example tables; an upload gives signal names only. */
+  labels?: SignalLabels;
 }): StoryInput {
   const input: StoryInput = {
     reducedList: args.reducedList,
     fixture: args.fixture,
     violation: args.violation,
     outputEdges: args.outputEdges,
-    labels: storyLabelsFor(args.fixture),
+    labels: exactLabelsFor(args.labels ?? EXAMPLE_LABELS, args.fixture),
   };
   if (args.span !== null) input.violationSpan = { lengthCycles: args.span.lengthCycles, cut: args.span.cut };
   return input;

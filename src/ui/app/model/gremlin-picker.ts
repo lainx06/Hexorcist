@@ -3,7 +3,8 @@ import { findGremlin } from "../../../engine/gremlins/catalogue";
 import type { GremlinDefinition, GremlinSpec, ParamSpec } from "../../../engine/gremlins/catalogue";
 import type { Fixture, FixturePin } from "../../../engine/types";
 import { cycles } from "./format";
-import { friendlyLabel } from "./labels";
+import { EXAMPLE_LABELS, labelOf } from "./signal-labels";
+import type { SignalLabels } from "./signal-labels";
 
 export const PICKER_TEXT: Readonly<Record<string, { name: string; behaviour: string }>> = {
   masher: { name: "Masher", behaviour: "Presses a button again and again." },
@@ -71,11 +72,11 @@ function rangeText(p: ParamSpec): string {
   return `${p.name}: ${String(min)}\u2013${String(max)}${unit}`;
 }
 
-export function pickerTile(def: GremlinDefinition, fixture: Fixture): PickerTile {
+export function pickerTile(def: GremlinDefinition, fixture: Fixture, labels: SignalLabels = EXAMPLE_LABELS): PickerTile {
   const text = PICKER_TEXT[def.id];
   const targets = fixture.pins
     .filter((p) => def.targets.some((t) => matches(t, p)))
-    .map((p) => friendlyLabel(p.signal).text);
+    .map((p) => labelOf(labels, p.signal).text);
   const compatible = isCompatible(def, fixture);
   return {
     id: def.id,

@@ -6,7 +6,8 @@
 // Copy comes from model/stage-copy.ts. Playback comes from a Playback the caller owns.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent } from "../../../engine/types";
-import type { ExampleId } from "../data/examples";
+import type { PinLevelRow } from "../model/pin-levels";
+import type { SignalLabels } from "../model/signal-labels";
 import type { ShownKind } from "../model/scenes";
 import { STAGE_TEXT, shorterText, tryProgress } from "../model/stage-copy";
 import { fadeShrinkDots } from "../model/strip";
@@ -21,6 +22,9 @@ import type { Playback } from "./playback";
 import { createCrosswalkScene } from "./scene-crosswalk";
 import { createGarageScene } from "./scene-garage";
 import { createHeartbeatScene } from "./scene-heartbeat";
+import { createPinLevelsScene } from "./scene-pin-levels";
+import type { PinLevelsSceneView } from "./scene-pin-levels";
+import type { DeviceId } from "./setup";
 
 /** What the Scene needs to draw the broke replay. */
 export interface ShownReplay {
@@ -37,14 +41,20 @@ export interface ShownReplay {
   imAliveRuleBroke?: boolean;
   /** Which replay this is, for the garage deadline badge. Default "reduced-buggy". */
   kind?: ShownKind;
+  /** Upload: the outputs named by the Target_Rule, ringed at the break. */
+  ringSignals?: readonly string[];
+  /** Where the Move_Strip takes signal names from; default the Example tables. */
+  labels?: SignalLabels;
 }
 
 export interface StageView {
   root: HTMLElement;
   aside: AsideView;
   strip: MoveStrip;
-  /** Chooses the Scene of the example. Does not change the phase. */
-  setExample(id: ExampleId): void;
+  /** Chooses the Scene of the device (an Example's scene, or the Pin_Levels_View). Does not change the phase. */
+  setDevice(id: DeviceId): void;
+  /** Upload: the Pin_Table rows the Pin_Levels_View lists; redraws it with no replay. */
+  setPinRows(rows: readonly PinLevelRow[]): void;
   /** The one Player. The Fix_View takes this node as its `playerNode`, so a second player is never built. */
   playerNode: HTMLElement;
   /**
@@ -94,9 +104,11 @@ type Scene = {
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: Record<string, unknown>): void;
 };
 
-function makeScene(id: ExampleId): Scene {
-  // The three scene views share the call shape of `update`; each reads only the options it knows.
+function makeScene(id: DeviceId): Scene {
+  // The scene views share the call shape of `update`; each reads only the options it knows.
   switch (id) {
+    case "upload":
+      return createPinLevelsScene() as unknown as Scene;
     case "garage":
       return createGarageScene() as unknown as Scene;
     case "heartbeat":
@@ -106,7 +118,7 @@ function makeScene(id: ExampleId): Scene {
   }
 }
 
-export function createStage(playback: Playback, initial: ExampleId = "crosswalk"): StageView {
+export function createStage(playback: Playback, initial: DeviceId = "crosswalk"): StageView {
   const aside = createAside();
   const strip = createMoveStrip();
   const playerBar: PlayerBar = createPlayerBar(playback);
@@ -123,7 +135,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
   const side = el("div", { class: "stage-aside" }, [sideStatus, aside.root, aside.actions]);
   const root = el("section", { class: "stage", "aria-label": "Stage" }, [main, side]);
 
-  let exampleId: ExampleId = initial;
+  let exampleId: DeviceId = initial;
   let fixMode = false;
   let stripWanted = false;
   let scene: Scene = makeScene(initial);
@@ -136,6 +148,8 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
 
   /** Scene look: "idle" 60%, "dim" for the Shrink_View and errors, "live" for the replay. */
   function look(kind: "idle" | "dim" | "live"): void {
+    // The Pin_Levels_View never keeps an old lamp lit: outside a replay it is drawn with no replay.
+    if (kind !== "live" && exampleId === "upload") scene.update([], [], 0, { waiting: true });
     sceneCard.classList.toggle("is-idle", kind === "idle");
     sceneCard.classList.toggle("is-dim", kind === "dim");
     sceneCard.classList.toggle("is-broke", false);
@@ -160,6 +174,8 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     let opts: Record<string, unknown> = common;
     if (exampleId === "garage") {
       opts = { ...common, fixture: s.fixture, kind: s.kind ?? "reduced-buggy", v: s.v, limitMs: s.limitMs };
+    } else if (exampleId === "upload") {
+      opts = { ...common, v: Number.isFinite(s.v) ? s.v : null, ringSignals: s.ringSignals ?? [] };
     } else if (exampleId === "heartbeat") {
       opts = { ...common, limitMs: s.limitMs, imAliveRuleBroke: s.imAliveRuleBroke === true, build: "buggy" };
     }
@@ -268,10 +284,16 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       }
       paintPanel();
     },
-    setExample(id) {
+    setDevice(id) {
       if (id === exampleId) return;
       exampleId = id;
       scene = makeScene(id);
+      shown = null;
+      mountScene();
+    },
+    setPinRows(rows) {
+      if (exampleId !== "upload") return;
+      (scene as unknown as PinLevelsSceneView).setRows(rows);
       shown = null;
       mountScene();
     },
@@ -313,7 +335,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       showLabel(null);
       clearText();
       stripVisible(true);
-      strip.showMoves(replay.events, replay.fixture, replay.start, replay.v);
+      strip.showMoves(replay.events, replay.fixture, replay.start, replay.v, replay.labels);
       hidePlayer(false);
       drawScene(playback.cursor());
     },

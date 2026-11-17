@@ -213,6 +213,13 @@ export function deviceArt(id: string): SVGElement {
       svg("line", { x1: 30, y1: 56, x2: 90, y2: 56, class: "art-beam" }),
       svg("ellipse", { cx: 60, cy: 50, rx: 7, ry: 6, class: "art-gremlin" }),
     ];
+  } else if (id === "upload") {
+    // A rounded rectangle with an upward arrow.
+    parts = [
+      svg("rect", { x: 38, y: 8, width: 44, height: 48, rx: 8, class: "art-frame" }),
+      svg("path", { d: "M60 44V20", class: "art-line" }),
+      svg("path", { d: "M50 30l10-10 10 10", class: "art-line" }),
+    ];
   } else if (id === "heartbeat") {
     // A ring that fills around a lit light.
     parts = [

@@ -5,6 +5,7 @@ import type { Fixture } from "../../../engine/types";
 import { pickerTile } from "../model/gremlin-picker";
 import type { PickerTile } from "../model/gremlin-picker";
 import { moreNeedText } from "../model/stage-copy";
+import type { SignalLabels } from "../model/signal-labels";
 import { el, setChildren } from "./dom";
 import { gremlinIcon } from "./icons";
 
@@ -19,7 +20,7 @@ export interface PickerView {
   /** The chip row, the "N more need other inputs" link, the disabled list and the message. */
   node: HTMLElement;
   /** Rebuilds the chips for a fixture and sets the selected ids. */
-  setFixture(fixture: Fixture, selected: readonly string[]): void;
+  setFixture(fixture: Fixture, selected: readonly string[], labels?: SignalLabels): void;
   setSelected(selected: readonly string[]): void;
   setBusy(busy: boolean): void;
 }
@@ -65,10 +66,10 @@ export function picker(onToggle: (id: string) => void): PickerView {
 
   return {
     node,
-    setFixture(fixture, sel) {
+    setFixture(fixture, sel, labels) {
       selected = [...sel];
       listOpen = false;
-      const tiles = GREMLIN_CATALOGUE.map((def) => pickerTile(def, fixture));
+      const tiles = GREMLIN_CATALOGUE.map((def) => pickerTile(def, fixture, labels));
       chips = tiles
         .filter((t) => t.compatible)
         .map((tile) => {

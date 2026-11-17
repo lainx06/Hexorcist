@@ -31,7 +31,8 @@ export function violatedRule(ruleSet: RuleSet, v: Verdict): Rule | null {
 export type StoryState = { kind: "none" } | { kind: "pending" } | { kind: "ready"; text: string };
 
 export interface StageBrokeInput {
-  exampleId: ExampleId;
+  /** Null for the Upload_Device: no Cause_Line is ever shown. */
+  exampleId: ExampleId | null;
   plainBroke: string;
   /** `violatingRunIndex` of the buggy Campaign. */
   violatingRunIndex: number;
@@ -69,7 +70,7 @@ function cardShell(modifier: "broke" | "held" | "tell", word: string, iconNode: 
 }
 
 export function stageBrokeCard(i: StageBrokeInput): HTMLElement {
-  const cause = causeLine(i.exampleId, i.fingerprint);
+  const cause = i.exampleId === null ? null : causeLine(i.exampleId, i.fingerprint);
   // The verdict word, the plain BROKE sentence, the cause line and the try line. Until the cause line can be
   // known the placeholder holds its place.
   return cardShell("broke", VERDICT_WORD.broke, brokenLinkIcon(), [

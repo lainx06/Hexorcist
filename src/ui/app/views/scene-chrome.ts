@@ -48,6 +48,8 @@ export interface SceneChromeSpec {
   keepLabelsInFix?: boolean;
   /** Nodes under the card (a line of text, a visually hidden summary). */
   below?: readonly (Node | null)[];
+  /** The top-right badge. Default "Illustrative"; the Pin_Levels_View shows "Pin levels". */
+  badge?: string;
 }
 
 export interface SceneChrome {
@@ -68,7 +70,8 @@ export function createChrome(spec: SceneChromeSpec): SceneChrome {
   const conflict = el("span", { class: "scene-badge scene-badge--break", hidden: true }, [""]);
   const title = el("span", { class: "scene-badge scene-badge--title", hidden: true }, [""]);
   const state = el("span", { class: "scene-badge scene-badge--state", hidden: true }, [""]);
-  const illustrative = el("span", { class: "scene-badge scene-badge--illustrative" }, [STAGE_TEXT.illustrative]);
+  const badgeText = spec.badge ?? STAGE_TEXT.illustrative;
+  const illustrative = el("span", { class: "scene-badge scene-badge--illustrative" }, [badgeText]);
   const stopped = el("span", { class: "scene-badge scene-badge--stopped", hidden: true }, [STAGE_TEXT.stopped]);
   const topLeft = el("div", { class: "scene-corner scene-corner--tl" }, [title, conflict]);
   const bottomLeft = el("div", { class: "scene-corner scene-corner--bl" }, [state]);
@@ -125,7 +128,7 @@ export function createChrome(spec: SceneChromeSpec): SceneChrome {
       conflict.toggleAttribute("hidden", text === null);
     },
     setLine(parts) {
-      line.textContent = [...parts, STAGE_TEXT.illustrative].join(" \u00b7 ");
+      line.textContent = [...parts, badgeText].join(" \u00b7 ");
     },
   };
 }

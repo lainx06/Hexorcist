@@ -2,7 +2,8 @@
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
 import { PICKER_TEXT } from "./gremlin-picker";
-import { friendlyLabel, PLAIN_STORY_LABELS } from "./labels";
+import { EXAMPLE_LABELS, labelOf, plainStoryTableFor } from "./signal-labels";
+import type { SignalLabels } from "./signal-labels";
 
 /** Cycles to whole milliseconds at 16 MHz, rounded half up. */
 export function plainMs(cycles: number): string {
@@ -27,7 +28,11 @@ export function plainStory(a: {
   /** Span_Sentence template for a span with cut false; holds "<Plain_Ms>". */
   spanSentence: string;
   span?: { lengthCycles: number; cut: boolean };
+  /** Where signal names come from; default the Example tables. */
+  labels?: SignalLabels;
 }): string {
+  const labels = a.labels ?? EXAMPLE_LABELS;
+  const table = plainStoryTableFor(labels);
   const list = a.reducedList;
   const g = list.filter((e) => e.gremlinId !== "rest");
   if (g.length === 0) return "No gremlin move was needed: the program broke the rule on its own.";
@@ -41,13 +46,13 @@ export function plainStory(a: {
         ? "active"
         : "held";
     }
-    const label = Object.prototype.hasOwnProperty.call(PLAIN_STORY_LABELS, e.signal) ? PLAIN_STORY_LABELS[e.signal] : undefined;
+    const label = Object.prototype.hasOwnProperty.call(table, e.signal) ? table[e.signal] : undefined;
     const same = i > 0 && g[i - 1].signal === e.signal;
     const text =
       label === undefined
         ? same
           ? "changed it"
-          : `changed ${friendlyLabel(e.signal).text}`
+          : `changed ${labelOf(labels, e.signal).text}`
         : (same ? label.short : label.full)[kind];
     // The gremlin is named on the opening move and again whenever it differs from the previous move's.
     return i === 0 || g[i - 1].gremlinId !== e.gremlinId ? `${gremlinName(e.gremlinId)} ${text}` : text;

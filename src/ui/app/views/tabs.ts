@@ -13,6 +13,9 @@ import { GREMLIN_LEGEND } from "../model/labels";
 import { distinctGremlinIds, movePhrase } from "../model/moves";
 import { STAGE_TEXT, TAB_TEXT, legendLines } from "../model/stage-copy";
 import { tabAfterKey, tabIndexes } from "../model/tabs";
+import { EXAMPLE_LABELS, labelOf } from "../model/signal-labels";
+import type { SignalLabels } from "../model/signal-labels";
+import { UPLOAD_COPY } from "../model/upload-copy";
 import { EMPTY_TRACE_TEXT, traceRows } from "../model/verdict-text";
 import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
@@ -52,6 +55,8 @@ export interface ReplayTabData {
   exactStory: string | null;
   /** Canonical_Sentence of each rule in the rule set. */
   canonical: readonly string[];
+  /** Where signal names come from; default the Example tables. */
+  labels?: SignalLabels;
 }
 
 export interface TabsView {
@@ -84,6 +89,12 @@ export interface TabsView {
   setTryRemoving(node: HTMLElement | null): void;
   /** Enables or disables "Replay again" (the page passes `canReplayAgain(flow)`). */
   setReplayAgainEnabled(enabled: boolean): void;
+  /** Upload_Device: "The fix" shows only that there is no fixed version to compare. */
+  setNoFix(on: boolean): void;
+  /** The "Gremlin order: ..." line of the Details tab (Technical_View only); null removes it. */
+  setGremlinOrder(line: string | null): void;
+  /** Mounts the Capability_Panel at the end of the Details tab, for every device. */
+  setCapability(node: HTMLElement | null): void;
 }
 
 let instance = 0;
@@ -122,13 +133,19 @@ function table(label: string, head: readonly string[], rows: readonly (readonly 
 }
 
 /** Gremlin_Log: Time · Move · Gremlin, and in the Technical_View Time · Signal · Value · Gremlin. */
-function gremlinLog(list: readonly ReducerEvent[], fixture: Fixture): HTMLElement[] {
+function gremlinLog(list: readonly ReducerEvent[], fixture: Fixture, labels: SignalLabels = EXAMPLE_LABELS): HTMLElement[] {
   if (list.length === 0) return [el("p", { class: "meta" }, [EMPTY_TRACE_TEXT])];
   const plainRows: string[][] = [];
   list.forEach((e, i) => {
-    if (e.gremlinId !== "rest") plainRows.push([ms(e.cycle), movePhrase(list, i, fixture), nameOf(e.gremlinId)]);
+    if (e.gremlinId !== "rest") plainRows.push([ms(e.cycle), movePhrase(list, i, fixture, labels), nameOf(e.gremlinId)]);
   });
-  const techRows = traceRows(list).map((r) => [r.time, r.signal, r.value, r.gremlin]);
+  // Upload (D6): "<Plain name> (<Signal name>)", or the signal name when the plain name is blank.
+  const signalCell = (s: string): string => {
+    if (labels.kind === "example") return s;
+    const f = labelOf(labels, s);
+    return f.known ? `${f.text} (${s})` : s;
+  };
+  const techRows = traceRows(list).map((r) => [r.time, signalCell(r.signal), r.value, r.gremlin]);
   return [
     plainOnly(table("Gremlin log", ["Time", "Move", "Gremlin"], plainRows)),
     techOnly(table("Gremlin log, signals", ["Time", "Signal", "Value", "Gremlin"], techRows)),
@@ -163,6 +180,8 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
 
   // Details
   const fieldsHost = techOnly(el("div", { class: "details-fields" }));
+  const orderLine = techOnly(el("div", { class: "gremlin-order" }));
+  let noFix = false;
   const rateText = el("p", { class: "cycles-rate meta mono", hidden: true }, [""]);
   const rateLine = techOnly(el("div", { class: "details-rate" }, [rateText]));
   const canonicalHost = el("div", { class: "details-canonical" });
@@ -170,11 +189,12 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
   const exactHost = el("div", { class: "details-exact" });
   const tryHost = el("div", { class: "details-try" });
   const replayRow = techOnly(el("div", { class: "details-replay-again" }, [replayAgain.row]));
+  const capabilityHost = el("div", { class: "details-capability" });
 
   setChildren(panelEls[0] as HTMLElement, [happenedIdle, happenedBody]);
   setChildren(panelEls[1] as HTMLElement, [signalsIdle, timeline.node]);
   setChildren(panelEls[2] as HTMLElement, [fixHost]);
-  setChildren(panelEls[3] as HTMLElement, [fieldsHost, rateLine, canonicalHost, logHost, exactHost, tryHost, replayRow]);
+  setChildren(panelEls[3] as HTMLElement, [fieldsHost, orderLine, rateLine, canonicalHost, logHost, exactHost, tryHost, replayRow, capabilityHost]);
   const root = el("section", { class: "tabs", "aria-label": "Run details" }, [tabList, ...panelEls]);
 
   function paintSelection(): void {
@@ -226,7 +246,7 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
             ),
           ],
     );
-    setChildren(logHost, gremlinLog(d.list, d.fixture));
+    setChildren(logHost, gremlinLog(d.list, d.fixture, d.labels));
     setChildren(
       exactHost,
       d.exactStory === null
@@ -280,6 +300,10 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
       paintReplay();
     },
     setFixChange(id, onOpenCode = () => undefined) {
+      if (noFix) {
+        setChildren(fixHost, [el("p", { class: "tab-idle" }, [UPLOAD_COPY.noFix])]);
+        return;
+      }
       setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createFixTab(id, onOpenCode)]);
     },
     setCyclesRate(text) {
@@ -294,6 +318,17 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
     },
     setReplayAgainEnabled(enabled) {
       replayAgain.button.disabled = !enabled;
+    },
+    setNoFix(on) {
+      noFix = on;
+      setChildren(fixHost, [el("p", { class: "tab-idle" }, [on ? UPLOAD_COPY.noFix : TAB_TEXT.fixNotRun])]);
+    },
+    setCapability(node) {
+      setChildren(capabilityHost, node === null ? [] : [node]);
+    },
+    setGremlinOrder(line) {
+      // The host is techOnly, so the Plain_View never shows the line.
+      setChildren(orderLine, line === null ? [] : [el("p", { class: "meta gremlin-order-line" }, [line])]);
     },
   };
 }

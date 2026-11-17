@@ -9,7 +9,8 @@ import { setupBodyState } from "../model/setup-state";
 import { checkLimit, presetFor, presetHeadline, presetRuleText } from "../model/presets";
 import { SETUP, WHY, setupSummary, triesLine } from "../model/stage-copy";
 import { UI_COPY } from "../model/ui-copy";
-import { plainOnly, techOnly } from "./details";
+import { UPLOAD_COPY } from "../model/upload-copy";
+import { markDetail, plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
 import { deviceArt } from "./icons";
 import { picker } from "./picker";
@@ -17,9 +18,12 @@ import type { PickerView } from "./picker";
 import { appendSentence, ruleArea } from "./rule-box";
 import type { RuleAreaView } from "./rule-box";
 
+/** An Example or the "Your own program" device. */
+export type DeviceId = ExampleId | "upload";
+
 export interface SetupCallbacks {
   /** A Device_Card was pressed (not for the Current_Example, not while busy). */
-  onDevice(id: ExampleId): void;
+  onDevice(id: DeviceId): void;
   /** A Gremlin_Chip was pressed. */
   onToggleGremlin(id: string): void;
   /** New rules text: a valid Limit_Control value, a Rule_Box edit, an inserted pattern or a reset. */
@@ -37,7 +41,11 @@ export interface SetupView {
   /** The Gremlin_Chips and the "N more need other inputs" list. */
   gremlins: PickerView;
   /** Marks one Device_Card as the Current_Example. */
-  setSelectedDevice(id: ExampleId): void;
+  setSelectedDevice(id: DeviceId): void;
+  /** Mounts the Program_Section between section 1 and the rule and gremlin columns; null removes it. */
+  setProgramSection(node: HTMLElement | null): void;
+  /** Upload mode: the exact-text editor open in both views, no preset menu, no "Why it matters", no reset. */
+  setUploadMode(on: boolean): void;
   /** Lists each failing file with its reasons; an empty list clears the problems. */
   setProblems(problems: readonly FileProblem[]): void;
   /** The Current_Example: its "Why it matters" text, its Limit_Control and its default limit. Null when it did not load. */
@@ -77,7 +85,7 @@ function sectionTitle(id: string, text: string): HTMLElement {
 }
 
 export function createSetup(cb: SetupCallbacks): SetupView {
-  let selected: ExampleId = EXAMPLE_IDS[0];
+  let selected: DeviceId = EXAMPLE_IDS[0];
   let example: ExampleBundle | null = null;
   let busy = false;
   let enabled = false;
@@ -88,7 +96,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   let headline = "";
 
   // Section 1.
-  const cards = new Map<ExampleId, HTMLButtonElement>();
+  const cards = new Map<DeviceId, HTMLButtonElement>();
   for (const id of EXAMPLE_IDS) {
     const btn = el("button", { type: "button", class: "device-card", "aria-pressed": "false", "data-example": id }, [
       deviceArt(id),
@@ -103,8 +111,20 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     });
     cards.set(id, btn);
   }
+  const uploadCard = el("button", { type: "button", class: "device-card", "aria-pressed": "false", "data-device": "upload" }, [
+    deviceArt("upload"),
+    el("span", { class: "device-text" }, [
+      el("span", { class: "device-title" }, [UPLOAD_COPY.cardTitle]),
+      el("span", { class: "device-line" }, [UPLOAD_COPY.cardLine]),
+    ]),
+  ]);
+  uploadCard.addEventListener("click", () => {
+    if (selected === "upload" || busy) return;
+    cb.onDevice("upload");
+  });
+  cards.set("upload", uploadCard);
+  const programHost = el("div", { class: "program-host", hidden: true });
   const problems = el("div", { class: "file-problems", "aria-live": "polite" });
-  const slot = el("div", { class: "device-slot", "aria-hidden": "true" });
 
   // Section 2.
   const headlineNode = el("p", { class: "rule-headline" });
@@ -177,9 +197,10 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   const card = el("div", { class: "setup-card" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-device-title" }, [
       sectionTitle("setup-device-title", SETUP.deviceHeading),
-      el("div", { class: "device-grid" }, [...cards.values(), slot]),
+      el("div", { class: "device-grid" }, [...cards.values()]),
       problems,
     ]),
+    programHost,
     el("div", { class: "setup-columns" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-rule-title" }, [
       sectionTitle("setup-rule-title", SETUP.ruleHeading),
@@ -209,7 +230,8 @@ export function createSetup(cb: SetupCallbacks): SetupView {
 
   /** The Setup_Summary text, in parts so each can have its own colour; the text is setupSummary's. */
   function paintSummary(): void {
-    const parts = setupSummary(EXAMPLE_COPY[selected].title, headline, names).split(" \u00b7 ");
+    const title = selected === "upload" ? UPLOAD_COPY.cardTitle : EXAMPLE_COPY[selected].title;
+    const parts = setupSummary(title, headline, names).split(" \u00b7 ");
     const cls = ["summary-device", "summary-rule", "summary-gremlins", "summary-note"];
     const kids: HTMLElement[] = [];
     parts.forEach((part, i) => {
@@ -280,6 +302,34 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     setSelectedDevice(id) {
       selected = id;
       paint();
+    },
+    setProgramSection(section) {
+      setChildren(programHost, section === null ? [] : [section]);
+      programHost.hidden = section === null;
+    },
+    setUploadMode(on) {
+      if (on) {
+        // Shown in both views: the upload has no plain preset, only the exact-text editor.
+        rules.node.removeAttribute("data-detail");
+        rules.node.hidden = false;
+        rules.setOpen(true);
+        rules.setEditShown(false);
+        rules.setResetShown(false);
+        why.hidden = true;
+        presetLine.hidden = true;
+        menu.hidden = true;
+        menuBtn.hidden = true;
+        menuBtn.setAttribute("aria-expanded", "false");
+        noNumber.hidden = true;
+        example = null;
+      } else {
+        markDetail(rules.node, "tech");
+        rules.setOpen(false);
+        rules.setEditShown(true);
+        rules.setResetShown(true);
+        why.hidden = false;
+        presetLine.hidden = false;
+      }
     },
     setProblems(list) {
       setChildren(

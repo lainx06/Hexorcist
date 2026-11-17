@@ -2,6 +2,8 @@
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
 import { moveKind, type MoveKind } from "./moves";
+import { EXAMPLE_LABELS, labelOf } from "./signal-labels";
+import type { SignalLabels } from "./signal-labels";
 
 const CYCLES_PER_MS = 16_000;
 const HALF_MS = 8_000;
@@ -25,8 +27,10 @@ export function relativeTime(cycle: number, e0: number): string {
 }
 
 /** Short move word of the event at index i, chosen by the active/held/inactive kind of `movePhrase`. */
-export function stripPhrase(list: readonly ReducerEvent[], i: number, f: Fixture): string {
+export function stripPhrase(list: readonly ReducerEvent[], i: number, f: Fixture, labels: SignalLabels = EXAMPLE_LABELS): string {
   const e = list[i] as ReducerEvent;
+  // Upload: no Example wording; the move names the pin by its Display_Name (Q8).
+  if (labels.kind === "upload") return `changed ${labelOf(labels, e.signal).text}`;
   const kind = moveKind(list, i, f);
   switch (e.signal) {
     case "REQUEST":
@@ -52,12 +56,12 @@ export interface StripDot {
 }
 
 /** One dot per Gremlin_Event, in list order, labelled "<Relative_Time> <Strip_Phrase>". e0 is the earliest Gremlin_Event cycle. */
-export function stripDots(list: readonly ReducerEvent[], fixture: Fixture, _v?: number): StripDot[] {
+export function stripDots(list: readonly ReducerEvent[], fixture: Fixture, _v?: number, labels: SignalLabels = EXAMPLE_LABELS): StripDot[] {
   const e0 = Math.min(...gremlinCycles(list));
   const out: StripDot[] = [];
   list.forEach((e, i) => {
     if (e.gremlinId === "rest") return;
-    out.push({ cycle: e.cycle, label: `${relativeTime(e.cycle, e0)} ${stripPhrase(list, i, fixture)}`, gremlinId: e.gremlinId });
+    out.push({ cycle: e.cycle, label: `${relativeTime(e.cycle, e0)} ${stripPhrase(list, i, fixture, labels)}`, gremlinId: e.gremlinId });
   });
   return out;
 }

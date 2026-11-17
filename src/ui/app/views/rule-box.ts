@@ -34,6 +34,10 @@ export interface RuleAreaView {
   setErrors(errors: readonly RuleError[]): void;
   setPatterns(items: readonly PatternItem[]): void;
   setOpen(open: boolean): void;
+  /** Shows or hides "Reset to the example rule" (hidden for the Upload_Device). */
+  setResetShown(on: boolean): void;
+  /** Shows or hides "Edit rule" (hidden while the editor stays open for the Upload_Device). */
+  setEditShown(on: boolean): void;
   /** While busy the Rule_Box is read-only and its buttons are disabled. */
   setBusy(busy: boolean): void;
 }
@@ -152,6 +156,12 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
       paintBusy();
     },
     setOpen,
+    setResetShown(on) {
+      reset.hidden = !on;
+    },
+    setEditShown(on) {
+      edit.hidden = !on;
+    },
     setBusy(b) {
       busy = b;
       paintBusy();
