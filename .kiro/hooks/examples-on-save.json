@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "examples-on-save",
+      "trigger": "PostFileSave",
+      "action": {
+        "type": "command",
+        "command": "cmd /c \"echo hook ran in %CD% at %TIME% > C:\\Users\\Lain\\dev\\Hexorcist\\hook-check.txt\""
+      },
+      "matcher": "buggy\\.ino$",
+      "timeout": 600,
+      "enabled": true
+    }
+  ]
+}
