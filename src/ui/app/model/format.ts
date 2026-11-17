@@ -42,10 +42,6 @@ export function candidatesText(k: number): string {
   return `Candidates tried: ${String(k)}`;
 }
 
-export function runCountText(n: number): string {
-  return n === 1 ? "1 run" : `${String(n)} runs`;
-}
-
 export function levelText(v: PinValue | undefined): "0" | "1" | "not driven" {
   if (v === 0) return "0";
   if (v === 1) return "1";

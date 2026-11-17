@@ -22,19 +22,22 @@ describe("plain tables", () => {
   it("EXAMPLE_COPY (Req 4.1 to 4.3)", () => {
     exact(EXAMPLE_COPY, {
       crosswalk: {
-        card: "Crosswalk: a traffic light with a walk button",
+        title: "Crosswalk",
+        line: "Cars and walkers must never both see green.",
         headline: "Cars and walkers must never get a green at the same time.",
         broke: "The light gave cars and walkers a green at the same time.",
       },
       garage: {
-        card: "Garage door: a door that must stop when something blocks the beam",
+        title: "Garage door",
+        line: "Something in the doorway? The door must stop.",
         headline: "When the beam is blocked, the door must stop closing within 20 ms.",
         broke: "After the beam was blocked, the door kept closing for more than 20 ms.",
       },
       heartbeat: {
-        card: "Heartbeat: a light that must keep blinking",
-        headline: "The heartbeat light must never freeze on or off for 600 ms.",
-        broke: "The heartbeat light froze for 600 ms or longer.",
+        title: "I'm-alive light",
+        line: "A light that must keep blinking to show the program is running.",
+        headline: "The I'm-alive light must never freeze on or off for 600 ms.",
+        broke: "The I'm-alive light froze for 600 ms or longer.",
       },
     });
   });
@@ -52,8 +55,8 @@ describe("plain tables", () => {
       MOTOR_CLOSE: "Motor: closing",
       MOTOR_OPEN: "Motor: opening",
       LAMP: "Warning lamp",
-      PULSE: "Pulse input",
-      HEARTBEAT: "Heartbeat light",
+      PULSE: "Sensor",
+      HEARTBEAT: "I'm-alive light",
     });
     const signals = new Set(["crosswalk", "garage", "heartbeat"].flatMap((id) => fixtureOf(id).pins.map((p) => p.signal)));
     expect([...Object.keys(FRIENDLY_LABELS)].sort()).toEqual([...signals].sort());
@@ -76,7 +79,7 @@ describe("plain tables", () => {
         inactive: "cleared the beam",
         held: "blocked the beam and kept it blocked",
       },
-      PULSE: { active: "started a pulse", inactive: "ended the pulse", held: "held the pulse input on" },
+      PULSE: { active: "turned the sensor on", inactive: "turned the sensor off", held: "held the sensor on" },
     });
   });
 
@@ -97,19 +100,19 @@ describe("plain tables", () => {
       },
       PULSE: {
         full: EXAMPLE_STORY_LABELS.PULSE,
-        short: { active: "started another pulse", held: "held it on", inactive: "ended it" },
+        short: { active: "turned it on again", held: "held it on", inactive: "turned it off" },
       },
     });
   });
 
   it("GREMLIN_LEGEND (Req 11.13)", () => {
     exact(GREMLIN_LEGEND, {
-      masher: "masher: a gremlin that presses buttons over and over",
-      bouncer: "bouncer: a gremlin that makes a contact flicker on and off very fast",
-      stuck: "stuck: a gremlin that holds an input on and does not let go",
-      dropout: "dropout: a gremlin that briefly cuts an input that is normally on",
-      spike: "spike: a gremlin that makes one sudden jump on an analog input",
-      drifter: "drifter: a gremlin that slowly ramps an analog input up or down",
+      masher: "Masher: a gremlin that presses a button over and over, fast",
+      bouncer: "Bouncer: a gremlin that makes a button or sensor flicker on and off for a split second, like a loose wire",
+      stuck: "Stuck: a gremlin that holds a button down and never lets go",
+      dropout: "Dropout: a gremlin that makes a signal that is normally on cut out for a moment",
+      spike: "Spike: a gremlin that makes a dial-type reading (like a temperature sensor) jump suddenly",
+      drifter: "Drifter: a gremlin that slowly pushes a dial-type reading up or down",
     });
   });
 
@@ -134,8 +137,8 @@ describe("plain tables", () => {
           "Within 20 ms after BEAM_CLEAR is 0 becomes true, MOTOR_CLOSE is 0 must be true.",
           "the door was still closing, 20 ms after the gremlin blocked the beam.",
         ],
-        ["HEARTBEAT is 1 must never last 600 ms or longer.", "the heartbeat light had been stuck on for 600 ms."],
-        ["HEARTBEAT is 0 must never last 600 ms or longer.", "the heartbeat light had been stuck off for 600 ms."],
+        ["HEARTBEAT is 1 must never last 600 ms or longer.", "the I'm-alive light had been stuck on for 600 ms."],
+        ["HEARTBEAT is 0 must never last 600 ms or longer.", "the I'm-alive light had been stuck off for 600 ms."],
       ]),
     );
     // The fifth entry is the "any other rule" text, whatever its key.

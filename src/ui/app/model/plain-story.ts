@@ -1,6 +1,7 @@
 // The plain story sentence for a BROKE card. Pure, integer maths.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
+import { PICKER_TEXT } from "./gremlin-picker";
 import { friendlyLabel, PLAIN_STORY_LABELS } from "./labels";
 
 /** Cycles to whole milliseconds at 16 MHz, rounded half up. */
@@ -8,6 +9,11 @@ export function plainMs(cycles: number): string {
   const k = Math.floor((cycles + 8000) / 16000);
   const digits = String(k);
   return `${k >= 1000 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits} ms`;
+}
+
+/** Capitalised name of a gremlin; an id without a picker entry is capitalised as is. */
+function gremlinName(id: string): string {
+  return Object.prototype.hasOwnProperty.call(PICKER_TEXT, id) ? PICKER_TEXT[id].name : id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 type Kind = "active" | "held" | "inactive";
@@ -37,14 +43,19 @@ export function plainStory(a: {
     }
     const label = Object.prototype.hasOwnProperty.call(PLAIN_STORY_LABELS, e.signal) ? PLAIN_STORY_LABELS[e.signal] : undefined;
     const same = i > 0 && g[i - 1].signal === e.signal;
-    if (label === undefined) return same ? "changed it" : `changed ${friendlyLabel(e.signal).text}`;
-    return (same ? label.short : label.full)[kind];
+    const text =
+      label === undefined
+        ? same
+          ? "changed it"
+          : `changed ${friendlyLabel(e.signal).text}`
+        : (same ? label.short : label.full)[kind];
+    // The gremlin is named on the opening move and again whenever it differs from the previous move's.
+    return i === 0 || g[i - 1].gremlinId !== e.gremlinId ? `${gremlinName(e.gremlinId)} ${text}` : text;
   });
   const joined = phrases.length === 1 ? phrases[0] : `${phrases.slice(0, -1).join(", ")}, then ${phrases[phrases.length - 1]}`;
   const last = g[g.length - 1].cycle;
-  const subject = g.every((e) => e.gremlinId === g[0].gremlinId) ? "The gremlin" : "The gremlins";
   const within = g.length >= 2 ? `, all within ${plainMs(last - Math.min(...g.map((e) => e.cycle)))}` : "";
-  const out = [`${subject} ${joined}${within}.`, `${plainMs(a.v - last)} later, ${a.storyEnding}`];
+  const out = [`${joined}${within}.`, `${plainMs(a.v - last)} later, ${a.storyEnding}`];
   if (a.span !== undefined) {
     out.push(
       a.span.cut

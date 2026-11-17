@@ -207,7 +207,14 @@ const verdict: Schema = (v, path) => {
 
 const coverage: Schema = obj({ triggerCounts: arr(nullable(nat)), gremlinEvents: nat });
 
-const compactResult: Schema = obj({
+const peripheralUse: Schema = obj({
+  peripheral: str,
+  register: str,
+  cycle: nat,
+  access: literal("read", "write"),
+});
+
+const compactBase: Schema = obj({
   runsCompleted: nat,
   requestedRuns: nat,
   violatingRunIndex: nullable(nat),
@@ -215,6 +222,18 @@ const compactResult: Schema = obj({
   coverage,
   totalCycles: nat,
 });
+
+const peripheralUsesField: Schema = obj({ runIndex: nat, uses: arr(peripheralUse) });
+
+/** The compact result, with the optional peripheralUses object checked when present. */
+const compactResult: Schema = (v, path) => {
+  const base = compactBase(v, path) as { [k: string]: JsonValue };
+  const raw = v as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(raw, "peripheralUses") && raw.peripheralUses !== undefined) {
+    base.peripheralUses = peripheralUsesField(raw.peripheralUses, join(path, "peripheralUses"));
+  }
+  return base;
+};
 
 const reducerResult: Schema = obj({
   originalEventCount: nat,

@@ -14,8 +14,8 @@ export const FRIENDLY_LABELS: Readonly<Record<string, string>> = {
   MOTOR_CLOSE: "Motor: closing",
   MOTOR_OPEN: "Motor: opening",
   LAMP: "Warning lamp",
-  PULSE: "Pulse input",
-  HEARTBEAT: "Heartbeat light",
+  PULSE: "Sensor",
+  HEARTBEAT: "I'm-alive light",
 };
 
 /** The plain name of a signal; an unknown signal keeps its own name with known false. */
@@ -41,9 +41,9 @@ export const EXAMPLE_STORY_LABELS: Readonly<Record<string, StoryLabel>> = {
     held: "blocked the beam and kept it blocked",
   },
   PULSE: {
-    active: "started a pulse",
-    inactive: "ended the pulse",
-    held: "held the pulse input on",
+    active: "turned the sensor on",
+    inactive: "turned the sensor off",
+    held: "held the sensor on",
   },
 };
 
@@ -76,15 +76,15 @@ export const PLAIN_STORY_LABELS: Readonly<Record<string, PlainStoryLabel>> = {
   },
   PULSE: {
     full: EXAMPLE_STORY_LABELS.PULSE,
-    short: short("started another pulse", "held it on", "ended it"),
+    short: short("turned it on again", "held it on", "turned it off"),
   },
 };
 
 export const GREMLIN_LEGEND: Readonly<Record<string, string>> = {
-  masher: "masher: a gremlin that presses buttons over and over",
-  bouncer: "bouncer: a gremlin that makes a contact flicker on and off very fast",
-  stuck: "stuck: a gremlin that holds an input on and does not let go",
-  dropout: "dropout: a gremlin that briefly cuts an input that is normally on",
-  spike: "spike: a gremlin that makes one sudden jump on an analog input",
-  drifter: "drifter: a gremlin that slowly ramps an analog input up or down",
+  masher: "Masher: a gremlin that presses a button over and over, fast",
+  bouncer: "Bouncer: a gremlin that makes a button or sensor flicker on and off for a split second, like a loose wire",
+  stuck: "Stuck: a gremlin that holds a button down and never lets go",
+  dropout: "Dropout: a gremlin that makes a signal that is normally on cut out for a moment",
+  spike: "Spike: a gremlin that makes a dial-type reading (like a temperature sensor) jump suddenly",
+  drifter: "Drifter: a gremlin that slowly pushes a dial-type reading up or down",
 };

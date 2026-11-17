@@ -32,15 +32,15 @@ const WANT: Record<
 // Requirements 11.16 to 11.18, each with its span sentence.
 const PINNED_STORY: Record<ExampleId, string> = {
   crosswalk:
-    "The gremlin pressed the walk button, let go, then pressed and held it, all within 131 ms. " +
+    "Masher pressed the walk button, let go, then pressed and held it, all within 131 ms. " +
     "319 ms later, the light gave cars and walkers a green at the same time. " +
     "It was still that way 1,000 ms later, when the replay stopped.",
   garage:
-    "The gremlin blocked the beam, cleared it, then blocked it and kept it blocked, all within 4 ms. " +
+    "Bouncer blocked the beam, cleared it, then blocked it and kept it blocked, all within 4 ms. " +
     "16 ms later, the door was still closing, 20 ms after the gremlin blocked the beam. " +
     "The door kept closing for another 240 ms.",
   heartbeat:
-    "The gremlin held the pulse input on. 505 ms later, the heartbeat light had been stuck on for 600 ms. " +
+    "Stuck held the sensor on. 505 ms later, the I'm-alive light had been stuck on for 600 ms. " +
     "It was still that way 1,000 ms later, when the replay stopped.",
 };
 

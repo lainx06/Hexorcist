@@ -4,17 +4,26 @@ import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
 import { friendlyLabel, PLAIN_STORY_LABELS } from "./labels";
 
-/** Full phrase of a Gremlin_Event: active for a press with a later release, held for a press without one, else inactive. */
-export function movePhrase(list: readonly ReducerEvent[], index: number, fixture: Fixture): string {
+export type MoveKind = "active" | "held" | "inactive";
+
+/** Kind of a Gremlin_Event: active for a press with a later release, held for a press without one, else inactive. */
+export function moveKind(list: readonly ReducerEvent[], index: number, fixture: Fixture): MoveKind {
   const e = list[index] as ReducerEvent;
   const pin = fixture.pins.find((p) => p.signal === e.signal);
   const press = pin !== undefined && pin.kind !== "analog" && pin.activeLevel === "high" ? 1 : 0;
-  let kind: "active" | "held" | "inactive" = "inactive";
+  let kind: MoveKind = "inactive";
   if ("value" in e && e.value === press) {
     kind = list.some((o, j) => j > index && o.signal === e.signal && "value" in o && o.value === "release")
       ? "active"
       : "held";
   }
+  return kind;
+}
+
+/** Full phrase of a Gremlin_Event, chosen by its `moveKind`. */
+export function movePhrase(list: readonly ReducerEvent[], index: number, fixture: Fixture): string {
+  const e = list[index] as ReducerEvent;
+  const kind = moveKind(list, index, fixture);
   const label = Object.prototype.hasOwnProperty.call(PLAIN_STORY_LABELS, e.signal) ? PLAIN_STORY_LABELS[e.signal] : undefined;
   if (label === undefined) return `changed ${friendlyLabel(e.signal).text}`;
   return label.full[kind] ?? label.full.active;

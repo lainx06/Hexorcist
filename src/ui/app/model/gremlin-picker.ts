@@ -36,7 +36,7 @@ export function isCompatible(def: GremlinDefinition, fixture: Fixture): boolean 
 
 export function incompatibleReason(def: GremlinDefinition): string {
   const t = def.targets[0];
-  if (t.kind === "analog") return "Needs an analog input";
+  if (t.kind === "analog") return "Needs a dial-type input, like a temperature sensor";
   return t.restState === "active" ? "Needs an input that is normally on" : "Needs a button or switch input";
 }
 

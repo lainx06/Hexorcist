@@ -4,7 +4,7 @@ import type { Violation } from "../../../engine/checker";
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import type { RuleSet } from "../../../engine/rules/ir";
 import type { ReducerEvent, ReducerResult } from "../../../engine/reducer/types";
-import type { Fixture, OutputEvent, Verdict } from "../../../engine/types";
+import type { Fixture, OutputEvent, PeripheralDiagnostic, Verdict } from "../../../engine/types";
 import type { Coverage } from "../model/coverage";
 
 export interface JobError {
@@ -25,6 +25,8 @@ export interface CompactCampaignResult {
   coverage: Coverage;
   /** Sum of RunResult.endCycle over the completed runs. */
   totalCycles: number;
+  /** Present only for COULDN'T TELL: the unmodelled-peripheral uses of the lowest-index run that has any. */
+  peripheralUses?: { runIndex: number; uses: PeripheralDiagnostic[] };
 }
 
 export interface CampaignRequest {

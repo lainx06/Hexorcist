@@ -1,11 +1,12 @@
-// Gremlin_Picker: six toggle tiles in catalogue order, one per row. Callbacks and state setters only.
+// Gremlin_Picker: one chip per Compatible gremlin, and a link that lists the others as disabled chips
+// with their plain reasons. Callbacks and state setters only; the page owns the selection.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { Fixture } from "../../../engine/types";
 import { pickerTile } from "../model/gremlin-picker";
 import type { PickerTile } from "../model/gremlin-picker";
-import { friendlyLabel } from "../model/labels";
-import { signalLabel, techOnly } from "./details";
+import { moreNeedText } from "../model/stage-copy";
 import { el, setChildren } from "./dom";
+import { gremlinIcon } from "./icons";
 
 export const PICKER_COPY = {
   title: "Gremlins",
@@ -15,72 +16,92 @@ export const PICKER_COPY = {
 } as const;
 
 export interface PickerView {
+  /** The chip row, the "N more need other inputs" link, the disabled list and the message. */
   node: HTMLElement;
-  /** Rebuilds the six tiles for a fixture and sets the selected ids. */
+  /** Rebuilds the chips for a fixture and sets the selected ids. */
   setFixture(fixture: Fixture, selected: readonly string[]): void;
   setSelected(selected: readonly string[]): void;
   setBusy(busy: boolean): void;
 }
 
+interface Chip {
+  tile: PickerTile;
+  btn: HTMLButtonElement;
+  mark: HTMLElement;
+}
+
+const iconNameOf = (id: string): string => GREMLIN_CATALOGUE.find((d) => d.id === id)?.iconName ?? "";
+
 export function picker(onToggle: (id: string) => void): PickerView {
-  const grid = el("div", { class: "pick-grid" });
+  const row = el("div", { class: "chip-row" });
+  const more = el("button", { type: "button", class: "more-link", "aria-expanded": "false", hidden: true });
+  const list = el("ul", { class: "incompatible-list", hidden: true });
   const message = el("p", { class: "field-msg pick-msg", "aria-live": "polite" });
-  const node = el("section", { class: "panel", "aria-labelledby": "picker-title" }, [
-    el("h2", { class: "region-title", id: "picker-title" }, [PICKER_COPY.title]),
-    grid,
-    message,
-  ]);
-  let tiles: { tile: PickerTile; btn: HTMLButtonElement; mark: HTMLElement }[] = [];
+  const node = el("div", { class: "picker" }, [row, more, list, message]);
+  let chips: Chip[] = [];
   let selected: string[] = [];
   let busy = false;
+  let listOpen = false;
 
   const paint = (): void => {
-    for (const t of tiles) {
-      const on = t.tile.compatible && selected.includes(t.tile.id);
-      t.btn.setAttribute("aria-pressed", on ? "true" : "false");
-      t.btn.classList.toggle("is-selected", on);
-      t.mark.hidden = !on;
-      t.btn.disabled = !t.tile.compatible || busy;
+    for (const c of chips) {
+      const on = selected.includes(c.tile.id);
+      c.btn.setAttribute("aria-pressed", on ? "true" : "false");
+      c.btn.classList.toggle("is-selected", on);
+      c.mark.textContent = on ? PICKER_COPY.mark : "";
+      c.btn.disabled = busy;
     }
+    more.disabled = busy;
+    more.setAttribute("aria-expanded", listOpen ? "true" : "false");
+    list.hidden = !listOpen || list.childElementCount === 0;
     message.textContent = selected.length === 0 ? PICKER_COPY.pickOne : "";
   };
+
+  more.addEventListener("click", () => {
+    if (busy) return;
+    listOpen = !listOpen;
+    paint();
+  });
 
   return {
     node,
     setFixture(fixture, sel) {
       selected = [...sel];
-      tiles = GREMLIN_CATALOGUE.map((def) => {
-        const tile = pickerTile(def, fixture);
-        const signals = fixture.pins.map((p) => p.signal).filter((s) => tile.targets.includes(friendlyLabel(s).text));
-        const mark = el("span", { class: "pick-mark", "aria-hidden": "true" }, [PICKER_COPY.mark]);
-        const btn = el(
-          "button",
-          { type: "button", class: tile.compatible ? "pick-tile" : "pick-tile is-incompatible", "aria-pressed": "false", "data-gremlin": tile.id },
-          [
-          el("span", { class: "tile-head" }, [el("span", { class: "tile-name" }, [tile.name]), mark]),
-          tile.compatible ? el("span", { class: "meta pick-line" }, [tile.behaviour]) : null,
-          tile.compatible
-            ? el("span", { class: "meta pick-line pick-targets" }, signals.map((s) => signalLabel(s)))
-            : el("span", { class: "pick-reason" }, [tile.reason ?? ""]),
-          tile.compatible && tile.ranges.length > 0
-            ? techOnly(
-                el("span", { class: "meta mono pick-ranges" }, [
-                  el("span", { class: "pick-ranges-title" }, [PICKER_COPY.ranges]),
-                  ...tile.ranges.map((r) => el("span", { class: "pick-range" }, [r])),
-                ]),
-              )
-            : null,
-          ],
-        );
-        btn.addEventListener("click", () => {
-          if (tile.compatible && !busy) onToggle(tile.id);
+      listOpen = false;
+      const tiles = GREMLIN_CATALOGUE.map((def) => pickerTile(def, fixture));
+      chips = tiles
+        .filter((t) => t.compatible)
+        .map((tile) => {
+          const mark = el("span", { class: "chip-check", "aria-hidden": "true" }, [""]);
+          const btn = el("button", { type: "button", class: "chip", "aria-pressed": "false", "data-gremlin": tile.id }, [
+            gremlinIcon(iconNameOf(tile.id)),
+            el("span", { class: "chip-name" }, [tile.name]),
+            mark,
+          ]);
+          btn.addEventListener("click", () => {
+            if (!busy) onToggle(tile.id);
+          });
+          return { tile, btn, mark };
         });
-        return { tile, btn, mark };
-      });
+      const others = tiles.filter((t) => !t.compatible);
       setChildren(
-        grid,
-        tiles.map((t) => t.btn),
+        row,
+        chips.map((c) => c.btn),
       );
+      setChildren(
+        list,
+        others.map((t) =>
+          el("li", { class: "incompatible-item" }, [
+            el("button", { type: "button", class: "chip is-incompatible", disabled: true, "data-gremlin": t.id }, [
+              gremlinIcon(iconNameOf(t.id), { dimmed: true }),
+              el("span", { class: "chip-name" }, [t.name]),
+            ]),
+            el("span", { class: "meta pick-reason" }, [t.reason ?? ""]),
+          ]),
+        ),
+      );
+      more.hidden = others.length === 0;
+      more.textContent = others.length === 0 ? "" : moreNeedText(others.length);
       paint();
     },
     setSelected(sel) {

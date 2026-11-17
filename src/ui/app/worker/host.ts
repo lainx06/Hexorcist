@@ -15,7 +15,7 @@ import type { ReducerEvent, ReducerResult } from "../../../engine/reducer/types"
 import { compileRuleSet } from "../../../engine/rules/compile";
 import { buildCampaignConfig } from "../../../engine/rules/config-builder";
 import type { RuleSet } from "../../../engine/rules/ir";
-import type { Fixture, OutputEvent, ScheduledInput } from "../../../engine/types";
+import type { Fixture, OutputEvent, PeripheralDiagnostic, ScheduledInput } from "../../../engine/types";
 import { coverageCounts } from "../model/coverage";
 import { displayRunCycles } from "../model/display";
 import type { CompactCampaignResult, JobError } from "./messages";
@@ -84,6 +84,16 @@ export function runCampaignJob(input: CampaignJobInput, hooks: CampaignHooks = {
       coverage: coverageCounts(input.ruleSet, input.fixture, p.runs, input.runCycles),
       totalCycles,
     };
+    if (p.result.verdict.verdict === "COULDN'T TELL") {
+      let best: { runIndex: number; uses: PeripheralDiagnostic[] } | null = null;
+      for (const r of p.runs) {
+        if (r.peripheralUses === undefined) continue;
+        if (best === null || r.runIndex < best.runIndex) {
+          best = { runIndex: r.runIndex, uses: r.peripheralUses.map((u) => ({ ...u })) };
+        }
+      }
+      if (best !== null) result.peripheralUses = best;
+    }
     return { ok: true, runsCompleted: p.runsCompleted, total: p.total, result };
   }
 }

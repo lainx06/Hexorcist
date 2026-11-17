@@ -2,26 +2,30 @@
 import type { ExampleId } from "../data/examples";
 
 export interface CopyEntry {
-  card: string;
+  title: string;
+  line: string;
   headline: string;
   broke: string;
 }
 
 export const EXAMPLE_COPY: Readonly<Record<ExampleId, CopyEntry>> = {
   crosswalk: {
-    card: "Crosswalk: a traffic light with a walk button",
+    title: "Crosswalk",
+    line: "Cars and walkers must never both see green.",
     headline: "Cars and walkers must never get a green at the same time.",
     broke: "The light gave cars and walkers a green at the same time.",
   },
   garage: {
-    card: "Garage door: a door that must stop when something blocks the beam",
+    title: "Garage door",
+    line: "Something in the doorway? The door must stop.",
     headline: "When the beam is blocked, the door must stop closing within 20 ms.",
     broke: "After the beam was blocked, the door kept closing for more than 20 ms.",
   },
   heartbeat: {
-    card: "Heartbeat: a light that must keep blinking",
-    headline: "The heartbeat light must never freeze on or off for 600 ms.",
-    broke: "The heartbeat light froze for 600 ms or longer.",
+    title: "I'm-alive light",
+    line: "A light that must keep blinking to show the program is running.",
+    headline: "The I'm-alive light must never freeze on or off for 600 ms.",
+    broke: "The I'm-alive light froze for 600 ms or longer.",
   },
 };
 
@@ -35,8 +39,8 @@ export const STORY_ENDING: Readonly<Record<string, string>> = {
   "all of (CAR_GREEN is 1, WALK is 1) must never happen.": "the light gave cars and walkers a green at the same time.",
   "Within 20 ms after BEAM_CLEAR is 0 becomes true, MOTOR_CLOSE is 0 must be true.":
     "the door was still closing, 20 ms after the gremlin blocked the beam.",
-  "HEARTBEAT is 1 must never last 600 ms or longer.": "the heartbeat light had been stuck on for 600 ms.",
-  "HEARTBEAT is 0 must never last 600 ms or longer.": "the heartbeat light had been stuck off for 600 ms.",
+  "HEARTBEAT is 1 must never last 600 ms or longer.": "the I'm-alive light had been stuck on for 600 ms.",
+  "HEARTBEAT is 0 must never last 600 ms or longer.": "the I'm-alive light had been stuck off for 600 ms.",
   [OTHER_RULE_KEY]: "the program broke your rule.",
 };
 

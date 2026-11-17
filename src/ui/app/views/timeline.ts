@@ -41,7 +41,7 @@ import { el, prefersReducedMotion, setChildren, svg } from "./dom";
 import { nextIcon, pauseIcon, playIcon, prevIcon } from "./icons";
 import { UI_COPY } from "./panels";
 
-export type RunLabel = "Original run" | "Reduced replay" | typeof UI_COPY.trialRun;
+export type RunLabel = "Original run" | "Reduced replay" | "Fixed program" | typeof UI_COPY.trialRun;
 
 export interface ReplayView {
   label: RunLabel;
@@ -58,7 +58,7 @@ export interface TimelineView {
   show(view: ReplayView | null): void;
   /** Removes GREMLINS markers that a smaller best list no longer holds. */
   dropMarkers(bestGremlinCount: number, bestList: readonly ReducerEvent[]): void;
-  setToggle(selected: RunLabel, reducedEnabled: boolean): void;
+  setToggle(selected: RunLabel, reducedEnabled: boolean, fixedEnabled?: boolean): void;
   /** Lanes, labels and Lane_Words for the Current_Example fixture. Call before show(). */
   setFixture(fixture: Fixture): void;
   /** Gremlin_Event counts for the note under the Timeline while "Original run" is selected; null clears it. */
@@ -101,12 +101,17 @@ export function createTimeline(): TimelineView {
   let toggleFn: (l: RunLabel) => void = () => undefined;
 
   const runLabel = el("p", { class: "run-label region-title" }, ["No replay yet."]);
-  const originalBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "true" }, ["Original run"]);
+  // "Original run" is a Technical_View control; "Reduced replay" and "Fixed program" show in both views.
+  const originalBtn = techOnly(el("button", { type: "button", class: "toggle", "aria-pressed": "true" }, ["Original run"]));
   const reducedBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "false", disabled: true }, [
     "Reduced replay",
   ]);
+  const fixedBtn = el("button", { type: "button", class: "toggle", "aria-pressed": "false", disabled: true }, [
+    "Fixed program",
+  ]);
   originalBtn.addEventListener("click", () => toggleFn("Original run"));
   reducedBtn.addEventListener("click", () => toggleFn("Reduced replay"));
+  fixedBtn.addEventListener("click", () => toggleFn("Fixed program"));
 
   const labels = el("div", { class: "lane-labels", "aria-hidden": "true" }, []);
   const drawLabels = (): void =>
@@ -172,7 +177,7 @@ export function createTimeline(): TimelineView {
   ]);
 
   const node = el("section", { class: "panel timeline-region", "aria-label": "Timeline" }, [
-    el("div", { class: "timeline-head" }, [runLabel, el("div", { class: "toggle-row" }, [originalBtn, reducedBtn])]),
+    el("div", { class: "timeline-head" }, [runLabel, el("div", { class: "toggle-row" }, [originalBtn, reducedBtn, fixedBtn])]),
     timeline,
     legend,
     runNote,
@@ -463,10 +468,12 @@ export function createTimeline(): TimelineView {
         }
       }
     },
-    setToggle(sel, reducedEnabled) {
+    setToggle(sel, reducedEnabled, fixedEnabled = false) {
       originalBtn.setAttribute("aria-pressed", String(sel === "Original run"));
       reducedBtn.setAttribute("aria-pressed", String(sel === "Reduced replay"));
+      fixedBtn.setAttribute("aria-pressed", String(sel === "Fixed program"));
       reducedBtn.disabled = !reducedEnabled;
+      fixedBtn.disabled = !fixedEnabled;
       selection = sel;
       refreshNote();
     },

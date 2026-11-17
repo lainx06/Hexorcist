@@ -9,7 +9,7 @@ const tiles = (f: Fixture) =>
   Object.fromEntries(GREMLIN_CATALOGUE.map((d) => [d.id, pickerTile(d, f)] as const));
 
 const DROPOUT_REASON = "Needs an input that is normally on";
-const ANALOG_REASON = "Needs an analog input";
+const ANALOG_REASON = "Needs a dial-type input, like a temperature sensor";
 
 describe("gremlin picker compatibility", () => {
   it.each(["crosswalk", "garage", "heartbeat"])("%s fixture", (id) => {

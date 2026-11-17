@@ -7,7 +7,7 @@ The screenshots show the **target**. This file is the **contract**. Where they d
 ## 0. Non-negotiables (from the project rules)
 
 - **Three verdicts only:** BROKE, HELD and COULDN'T TELL. The HELD sentence is always computeVerdict's exact text. Plain sentences may be added around a verdict; they never replace it.
-- **No banned word in UI copy:** safe, safety, secure, guaranteed, certified, real-time, first (also as an ordinal), unique, shortest. No board-maker brand names.
+- **No banned word in UI copy:** safe, safety, secure, guaranteed, certified, real-time, first (also as an ordinal), unique, shortest. No board-maker brand names. <!-- guard-allow -->
 - **Scenes are illustrative** and driven only by replay output edges and recorded input events. Each scene carries an "Illustrative" badge. Nothing living is ever drawn being hit, touched or crushed. The car never moves while the walker is on the crossing, in any view, at any cursor position or speed.
 - **Never change event times, lengths or values for display.** The player changes only speed and position, and any speed other than 1x shows a badge.
 - **Every number shown is computed from the current run:** elapsed time, cycles per second, counts, try numbers. Nothing is hard-coded.

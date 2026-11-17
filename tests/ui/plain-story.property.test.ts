@@ -10,6 +10,8 @@ const SIGNALS = ["REQUEST", "CLOSE", "BEAM_CLEAR", "PULSE"] as const;
 const GREMLINS = ["masher", "bouncer", "stuck", "dropout", "rest"] as const;
 const NO_MOVE = "No gremlin move was needed: the program broke the rule on its own.";
 
+const NAMES: Record<string, string> = { masher: "Masher", bouncer: "Bouncer", stuck: "Stuck", dropout: "Dropout" };
+
 const commas = (n: number): string => String(n).replace(/\B(?=(\d{3})+$)/g, ",");
 const ms = (cycles: number): string => `${commas(Math.floor((cycles + 8000) / 16000))} ms`;
 
@@ -60,14 +62,16 @@ function reference(c: { list: ReducerEvent[]; fixture: Fixture; v: number; endin
     const released = c.list.slice(c.list.indexOf(e) + 1).some((o) => o.signal === e.signal && "value" in o && o.value === "release");
     const kind = !isPress ? "inactive" : released ? "active" : "held";
     const label = PLAIN_STORY_LABELS[e.signal];
-    return (i > 0 && g[i - 1].signal === e.signal ? label.short : label.full)[kind];
+    const text = (i > 0 && g[i - 1].signal === e.signal ? label.short : label.full)[kind];
+    // Property 21: name the gremlin on the opening move and on every move whose gremlin differs from the previous one.
+    return i === 0 || g[i - 1].gremlinId !== e.gremlinId ? `${NAMES[e.gremlinId]} ${text}` : text;
   });
   const joined =
     phrases.length === 1 ? phrases[0] : phrases.length === 2 ? `${phrases[0]}, then ${phrases[1]}` : `${phrases.slice(0, -1).join(", ")}, then ${phrases[phrases.length - 1]}`;
   const cycles = g.map((e) => e.cycle);
   const last = Math.max(...cycles);
   const within = g.length >= 2 ? `, all within ${ms(last - Math.min(...cycles))}` : "";
-  const parts = [`${g.every((e) => e.gremlinId === g[0].gremlinId) ? "The gremlin" : "The gremlins"} ${joined}${within}.`, `${ms(c.v - last)} later, ${c.ending}`];
+  const parts = [`${joined}${within}.`, `${ms(c.v - last)} later, ${c.ending}`];
   if (c.span) {
     parts.push(
       c.span.cut
@@ -79,9 +83,9 @@ function reference(c: { list: ReducerEvent[]; fixture: Fixture; v: number; endin
 }
 
 describe("Plain_Story_Builder", () => {
-  it("Property 1: Plain story follows the stated sentence rules", () => {
-    // Feature: bench-ui-examples, Property 1: Plain story follows the stated sentence rules
-    // **Validates: Requirements 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10, 22.6**
+  it("Property 21: Plain story naming", () => {
+    // Feature: bench-ui-stage, Property 21: Plain story naming
+    // **Validates: Requirements 16.4**
     fc.assert(
       fc.property(caseArb, (c) => {
         const input = { reducedList: c.list, fixture: c.fixture, v: c.v, storyEnding: c.ending, spanSentence: c.spanText, span: c.span };

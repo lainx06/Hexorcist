@@ -1,51 +1,69 @@
-// App controller: Example gallery, rule box, gremlin picker, campaign, reduction, replays, apply fix.
-// One job at a time. Every Technical_Element is toggled with the hidden attribute only.
+// App controller: setup, stage, tabs, and the job sequence behind them. One job at a time.
+//
+// Phase flow (model/stage.ts):
+//   idle -> running -> shrinking -> broke -> fix        (buggy Campaign BROKE)
+//                   -> held | couldnt-tell              (no reduction, no fix button)
+//                   shrinking -> reduce-error           (reducer failed)
+// Job order after BROKE: reduce, then the reduced replay and its Display_Replay, then the original
+// replay and its Display_Replay. "See the fix work" runs the reduced replay on the fixed build, its
+// Display_Replay (violationCycle = the buggy break cycle), then the Fixed_Campaign.
+// Every Display_Replay is its own worker job, so each one starts on a fresh EmulatorBridge.
+// Nothing the UI clock, the Slow_Factor or the speed slider produce is put in a worker message.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import { failureStory } from "../../../engine/reducer/story";
 import type { ReducerEvent, ReducerResult } from "../../../engine/reducer/types";
 import type { RuleSet } from "../../../engine/rules/ir";
-import type { Verdict } from "../../../engine/types";
+import type { BuildLabel } from "../model/verdict-text";
 import { EXAMPLE_IDS, loadExample } from "../data/examples";
 import type { ExampleBundle, ExampleId, LoadedExample } from "../data/examples";
 import { diffHunks } from "../model/diff";
 import { displayAgrees, displaySpan, displayWindowEnd } from "../model/display";
-import { copyFor, isCustomRuleSet, spanSentenceFor, storyEndingFor } from "../model/example-copy";
-import { fixedReplayText, tryRemovingText, withoutEvent } from "../model/fix-text";
+import { CUSTOM_COPY, copyFor, isCustomRuleSet, spanSentenceFor, storyEndingFor } from "../model/example-copy";
 import type { FlowState } from "../model/flow";
 import { canApplyFix, canReplayAgain, canTryRemoving, canUnleash, initialFlow } from "../model/flow";
-import { inputValueText, ms, runCountText } from "../model/format";
-import { defaultSelection } from "../model/gremlin-picker";
-import { movePhrase } from "../model/moves";
+import { fixedDisplayAgrees } from "../model/fix-view";
+import { fixedReplayText, tryRemovingText, withoutEvent } from "../model/fix-text";
+import { inputValueText, ms } from "../model/format";
+import { PICKER_TEXT, defaultSelection } from "../model/gremlin-picker";
+import { buildPlan } from "../model/pacing";
+import type { PacingPlan } from "../model/pacing";
 import { plainStory } from "../model/plain-story";
+import { limitMsOf, presetFor, presetHeadline, presetRuleText } from "../model/presets";
 import { checkRuleBox, sentencePatterns } from "../model/rule-box";
 import type { RuleError } from "../model/rule-box";
 import { ruleBySentence } from "../model/rules";
-import { sceneAt } from "../model/scene";
-import { garageSceneAt, heartbeatSceneAt } from "../model/scenes";
 import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
+import { stageFlags } from "../model/stage";
+import type { StagePhase } from "../model/stage";
+import { cyclesRateText, reductionCard } from "../model/stage-copy";
+import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
-import type { BuildLabel } from "../model/verdict-text";
 import { announcement, findingText } from "../model/verdict-text";
 import type { CampaignDoneMsg, ReplayDoneMsg } from "../worker/messages";
-import { el, setChildren } from "./dom";
-import { gallery } from "./gallery";
-import { plainOnly, techOnly } from "./details";
+import { el, prefersReducedMotion, setChildren } from "./dom";
+import type { FixView } from "./fix-view";
+import { createFixView } from "./fix-view";
+import { createHero } from "./hero";
 import { createLiveRegion } from "./live";
-import { controls, counter, header, SHRINK_LABEL, sendsText, UI_COPY } from "./panels";
-import { picker } from "./picker";
-import { appendSentence, ruleArea } from "./rule-box";
-import { createScene } from "./scene";
-import { createGarageScene } from "./scene-garage";
-import { createHeartbeatScene } from "./scene-heartbeat";
+import { controls, UI_COPY } from "./panels";
+import { createPlayback } from "./playback";
+import { createSetup } from "./setup";
+import { createStage } from "./stage";
+import { createTabs, REPLAY_AGAIN } from "./tabs";
 import type { ReplayView, RunLabel } from "./timeline";
 import { createTimeline } from "./timeline";
-import type { CardStory } from "./verdict-card";
-import { verdictCard, violatedRule } from "./verdict-card";
+import type { StageCardInput, StoryState } from "./verdict-card";
+import { stageVerdictCard, violatedRule } from "./verdict-card";
 import type { JobOutcome } from "./worker-client";
 import { createEngineClient } from "./worker-client";
+
+/** The Shrink_View collapse lasts this long (UI milliseconds); the replay auto-plays after it. */
+const COLLAPSE_MS = 400;
+
+const REDUCED_NO_BREAK = "The reduced replay did not reach the break.";
 
 interface CampaignRecord {
   build: BuildLabel;
@@ -53,19 +71,38 @@ interface CampaignRecord {
   runs: number;
   seed: number;
   done: CampaignDoneMsg | null;
+  /** UI_Clock milliseconds from the Campaign request to its `campaign-done` message (Elapsed_Seconds). */
+  elapsedMs: number;
 }
 
-/** What the running Campaign and every job after it use; a snapshot taken when "Unleash gremlins" is pressed. */
+/** What the running Campaign and every job after it use; a snapshot taken when a run starts. */
 interface RunContext {
   example: ExampleBundle;
   ruleSet: RuleSet;
+  /** Canonical_Sentence of each rule of the rule set. */
+  sentences: string[];
   custom: boolean;
   gremlinSet: GremlinSpec[];
+  /** The time limit of the rule set in whole ms (garage, I'm-alive light); null for the crosswalk. */
+  limitMs: number | null;
 }
 
 interface ReplayResult {
   replay: ReplayDoneMsg;
   display: ReplayDoneMsg | null;
+}
+
+/** Plain_Story and Exact_Story of the Reduced_List. */
+interface CardStory {
+  plain: string;
+  exact: string | null;
+}
+
+/** What the Stage and the Fix_View share about the broke replay. */
+interface ShownBroke {
+  edges: ReplayDoneMsg["outputEdges"];
+  v: number;
+  plan: PacingPlan;
 }
 
 const PATTERN_LABELS: Readonly<Record<string, string>> = {
@@ -96,50 +133,20 @@ function orderedSelection(ids: readonly string[], example: ExampleBundle): Greml
   return [...base, ...added];
 }
 
+function sameList(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((s, i) => s === b[i]);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function mountApp(root: HTMLElement): void {
   const live = createLiveRegion();
   const errors = el("div", { class: "errors" }, []);
   const showError = (text: string) => errors.appendChild(el("p", { class: "error-text" }, [text]));
   const client = createEngineClient();
-
-  const ctl = controls(24, 0);
-  const count = counter();
-  const crosswalkScene = createScene();
-  const garageScene = createGarageScene();
-  const heartbeatScene = createHeartbeatScene();
-  const sceneHost = el("div", { class: "scene-host" }, []);
-  const timeline = createTimeline();
-  const gal = gallery((id) => selectExample(id));
-  const rules = ruleArea({
-    onText: (t) => applyRuleText(t),
-    onInsert: (s) => {
-      const t = appendSentence(rules.getText(), s);
-      rules.setText(t);
-      applyRuleText(t);
-    },
-    onReset: () => {
-      if (current === null) return;
-      rules.setText(current.rulesText);
-      applyRuleText(current.rulesText);
-    },
-  });
-  const pick = picker((id) => toggleGremlin(id));
-  const verdictArea = el("div", { class: "verdict-area", "aria-label": "Verdict" }, []);
-  const fixPanel = el("section", { class: "panel fix", hidden: true, "aria-labelledby": "fix-title" }, []);
-  const removeList = el("section", { class: "panel try-removing", hidden: true, "aria-labelledby": "try-title" }, []);
-  const replayAgainBtn = el("button", { type: "button", class: "secondary" }, ["Replay again"]);
-  const replayAgainOut = el("p", { class: "mono meta replay-again-out" }, [""]);
-  const replayAgainRow = el("div", { class: "replay-again", hidden: true }, [replayAgainBtn, replayAgainOut]);
-  // The result area before any result: a large copy of the sidebar button and the line under it.
-  const bigUnleash = el("button", { type: "button", class: "primary primary-large" }, [UI_COPY.unleash]);
-  const sendsLine = el("p", { class: "sends-line meta" }, [""]);
-  const placeholderNode = el("div", { class: "placeholder" }, [
-    techOnly(el("p", { class: "meta" }, [UI_COPY.emptyTech])),
-    plainOnly(el("p", { class: "meta" }, [UI_COPY.emptyPlain])),
-    bigUnleash,
-    sendsLine,
-  ]);
-  const placeholder = (): HTMLElement => placeholderNode;
+  const playback = createPlayback();
 
   // Example state.
   let currentId: ExampleId = EXAMPLE_IDS[0];
@@ -152,6 +159,11 @@ export function mountApp(root: HTMLElement): void {
 
   // Run state.
   let flow: FlowState = initialFlow(false);
+  let phase: StagePhase = "idle";
+  let hasReplay = false;
+  /** True from the press of "Unleash gremlins" (or "See the fix work") to the end of its last job. */
+  let working = false;
+  let setupCollapsed = false;
   let ctx: RunContext | null = null;
   let buggy: CampaignRecord | null = null;
   let fixed: CampaignRecord | null = null;
@@ -159,123 +171,191 @@ export function mountApp(root: HTMLElement): void {
   let cardStory: CardStory | null = null;
   let original: ReplayView | null = null;
   let reduced: ReplayView | null = null;
+  let fixedView: ReplayView | null = null;
+  let shownBroke: ShownBroke | null = null;
+  let targetRule: string | null = null;
   let previousFingerprint: string | null = null;
   let shown: RunLabel = "Original run";
-  let applyFixBtn: HTMLButtonElement | null = null;
-  const logOpen: Record<BuildLabel, boolean> = { "Buggy build": false, "Fixed build": false };
+  let fixView: FixView | null = null;
+  let cardInput: StageCardInput | null = null;
+  let cardShown = false;
+  let reductionInput: ReductionInput | null = null;
   const removeButtons: HTMLButtonElement[] = [];
+
+  const ctl = controls(24, 0);
+  const timeline = createTimeline();
+  const tabs = createTabs(timeline);
+  tabs.setFields(ctl.node);
+  const heroView = createHero();
+  const setup = createSetup({
+    onDevice: (id) => selectExample(id),
+    onToggleGremlin: (id) => toggleGremlin(id),
+    onRuleText: (t) => applyRuleText(t),
+    onUnleash: () => void unleash(),
+    onExpandChange: () => paintPrimary(),
+  });
+  const stage = createStage(playback, currentId);
+  stage.aside.onSeeFix(() => void seeFix());
+
+  const lockedNow = (): boolean => flow.busy !== null || working;
+
+  const canSeeFix = (): boolean =>
+    buggy !== null &&
+    buggy.done !== null &&
+    buggy.done.result.verdict.verdict === "BROKE" &&
+    reduction !== null &&
+    reduced !== null &&
+    shownBroke !== null &&
+    canApplyFix(flow) &&
+    !working;
+
+  /** "See the fix work →" shows only for the broke phase, and never while the setup is re-expanded. */
+  const paintPrimary = (): void => {
+    const btn = stage.aside.fixButton();
+    const show = stageFlags(phase, hasReplay).primary === "fix" && !setup.expanded();
+    if (btn !== null) {
+      btn.hidden = !show;
+      btn.disabled = !canSeeFix();
+    }
+    stage.aside.actions.hidden = btn === null || !show;
+  };
 
   const refresh = (): void => {
     const vals = ctl.values();
     flow = { ...flow, dataOk: loadedOk, runsOk: vals.runsOk, seedOk: vals.seedOk };
-    const unleashOff = !(canUnleash(flow) && ruleErrors.length === 0 && selectedIds.length > 0);
-    ctl.unleash.disabled = unleashOff;
-    bigUnleash.disabled = unleashOff;
-    sendsLine.textContent = vals.runsOk ? sendsText(vals.runs) : UI_COPY.sendsInvalid;
-    if (applyFixBtn !== null) applyFixBtn.disabled = !canApplyFix(flow);
-    replayAgainBtn.disabled = !canReplayAgain(flow);
-    for (const b of removeButtons) b.disabled = !canTryRemoving(flow);
+    const unleashOff = !(canUnleash(flow) && !working && ruleErrors.length === 0 && selectedIds.length > 0);
+    setup.setUnleashEnabled(!unleashOff);
+    setup.setTries(vals.runsOk ? vals.runs : null, current === null ? 0 : current.meta.runCycles);
+    tabs.setReplayAgainEnabled(canReplayAgain(flow) && !working);
+    const removable = canTryRemoving(flow) && !working;
+    for (const b of removeButtons) b.disabled = !removable;
+    paintPrimary();
   };
   ctl.onFieldChange(refresh);
 
   const paintLocks = (): void => {
-    const locked = flow.busy !== null || !loadedOk;
-    gal.setBusy(flow.busy !== null);
-    rules.setBusy(locked);
-    pick.setBusy(locked);
+    const locked = lockedNow() || !loadedOk;
+    setup.setBusy(lockedNow());
+    setup.rules.setBusy(locked);
+    setup.gremlins.setBusy(locked);
   };
 
   const setBusy = (busy: FlowState["busy"]): void => {
     flow = { ...flow, busy };
-    count.activity.textContent = busy === "replay" ? "Replaying" : "";
     paintLocks();
     refresh();
   };
 
-  // Scene of the Current_Example, drawn at the Cursor of the shown replay.
-  const renderScene = (c: number, view: ReplayView | null): void => {
-    const r = view === null ? null : { outputEdges: view.outputEdges, events: view.events, violation: view.violation };
-    if (currentId === "garage") garageScene.render(garageSceneAt(r, c));
-    else if (currentId === "heartbeat") heartbeatScene.render(heartbeatSceneAt(r, view === null ? null : view.span, c));
-    else crosswalkScene.render(sceneAt(view === null ? null : { outputEdges: view.outputEdges, violation: view.violation }, c));
+  const setWorking = (on: boolean): void => {
+    working = on;
+    paintLocks();
+    refresh();
   };
-  timeline.onCursor((c, view) => renderScene(c, view));
+
+  const gremlinNames = (): string[] =>
+    ctx === null ? [] : ctx.gremlinSet.map((g) => PICKER_TEXT[g.id]?.name ?? g.id);
+
+  /** Applies a phase: the hero and the setup follow it (the setup is re-collapsed only when the phase asks). */
+  const setPhase = (p: StagePhase): void => {
+    phase = p;
+    const f = stageFlags(p, hasReplay);
+    heroView.setCollapsed(!f.hero);
+    const collapse = !f.setupExpanded;
+    if (collapse !== setupCollapsed) {
+      setupCollapsed = collapse;
+      setup.setCollapsed(collapse, collapse ? gremlinNames() : []);
+    }
+    paintPrimary();
+  };
+
+  const renderAside = (): void => {
+    let card: HTMLElement | null = null;
+    if (cardInput !== null) {
+      card = stageVerdictCard(cardInput);
+      // A card that is rebuilt with more text (story, cause line) must not fade in a second time.
+      if (cardShown) card.style.animation = "none";
+      cardShown = true;
+    } else cardShown = false;
+    stage.aside.render({ card, reduction: reductionInput, fixBusy: !canSeeFix() });
+    paintPrimary();
+  };
+
+  const paintToggle = (): void => timeline.setToggle(shown, reduced !== null, fixedView !== null);
+
   timeline.onToggle((label) => {
-    if (label === "Reduced replay" && reduced === null) return;
+    const view = label === "Original run" ? original : label === "Reduced replay" ? reduced : label === "Fixed program" ? fixedView : null;
+    if (view === null) return;
     shown = label;
-    timeline.setToggle(shown, reduced !== null);
-    timeline.show(label === "Reduced replay" ? reduced : original);
+    paintToggle();
+    timeline.show(view);
   });
 
-  /** The view of a Replay; with an agreeing Display_Replay it uses the display edges, span and window. */
+  /** The view of a Replay; with a Display_Replay that agrees (`d` not null) it uses the display edges, span and window. */
   const viewOf = (label: RunLabel, events: ReducerEvent[], r: ReplayDoneMsg, d: ReplayDoneMsg | null): ReplayView => {
     const c = ctx as RunContext;
     const v = r.violation;
-    const agrees = d !== null && displayAgrees(r, d);
-    const src = agrees ? d : r;
+    const src = d ?? r;
     let span: Span | null = null;
-    let end = r.reachedEnd;
+    let end = src.reachedEnd;
     if (v !== null) {
       const found = ruleBySentence(c.ruleSet, v.rule);
-      if (found !== null) span = agrees ? displaySpan(found.rule, v.cycle, src) : spanFor(found.rule, v.cycle, r.outputEdges, r.reachedEnd);
-      end = agrees ? displayWindowEnd(span, v.cycle, src.reachedEnd) : windowEnd(v.cycle, r.reachedEnd);
+      if (found !== null) span = d !== null ? displaySpan(found.rule, v.cycle, d) : spanFor(found.rule, v.cycle, r.outputEdges, r.reachedEnd);
+      end = d !== null ? displayWindowEnd(span, v.cycle, d.reachedEnd) : windowEnd(v.cycle, r.reachedEnd);
     }
     return { label, events, outputEdges: src.outputEdges, violation: v, reachedEnd: src.reachedEnd, windowEnd: end, span };
   };
 
-  /**
-   * Puts a replay of `events` on the timeline and scene. The Cursor starts at the violation cycle (or 0
-   * when the replay has none), paused. The same callback serves the core view and the later display view.
-   */
-  const showReplayView = (label: RunLabel, events: ReducerEvent[]) => (r: ReplayDoneMsg, d: ReplayDoneMsg | null): void => {
-    const v = viewOf(label, events, r, d);
-    if (label === "Reduced replay") reduced = v;
-    shown = label;
-    timeline.setToggle(shown, reduced !== null);
-    timeline.show(v);
+  const replayJob = async (hex: string, events: ReducerEvent[]): Promise<ReplayDoneMsg | string> => {
+    const c = ctx as RunContext;
+    const o = await client.run({
+      kind: "replay",
+      hex,
+      fixture: c.example.fixture,
+      ruleSet: c.ruleSet,
+      events,
+      runCycles: c.example.meta.runCycles,
+    });
+    const err = outcomeError(o);
+    return err !== null ? err : (o as { message: ReplayDoneMsg }).message;
   };
 
-  /**
-   * One Replay, then, when it has a violation, one Display_Replay of the same list. The Replay result is
-   * the one the caller uses for fingerprints and texts; onView gets the core view at once and the display view later.
-   */
-  const doReplay = async (
-    hex: string,
-    events: ReducerEvent[],
-    onView?: (replay: ReplayDoneMsg, display: ReplayDoneMsg | null) => void,
-  ): Promise<ReplayResult | string> => {
+  const displayJob = async (hex: string, events: ReducerEvent[], violationCycle: number): Promise<ReplayDoneMsg | string> => {
     const c = ctx as RunContext;
+    const o = await client.runDisplay({ hex, fixture: c.example.fixture, ruleSet: c.ruleSet, events, violationCycle });
+    const err = outcomeError(o);
+    return err !== null ? err : (o as { message: ReplayDoneMsg }).message;
+  };
+
+  /** One Replay, then, when it has a violation, one Display_Replay of the same list on a fresh bridge. */
+  const doReplay = async (hex: string, events: ReducerEvent[]): Promise<ReplayResult | string> => {
     setBusy("replay");
     try {
-      const o = await client.run({
-        kind: "replay",
-        hex,
-        fixture: c.example.fixture,
-        ruleSet: c.ruleSet,
-        events,
-        runCycles: c.example.meta.runCycles,
-      });
-      const err = outcomeError(o);
-      if (err !== null) return err;
-      const replay = (o as { message: ReplayDoneMsg }).message;
-      onView?.(replay, null);
+      const replay = await replayJob(hex, events);
+      if (typeof replay === "string") return replay;
       if (replay.violation === null) return { replay, display: null };
-      const od = await client.runDisplay({
-        hex,
-        fixture: c.example.fixture,
-        ruleSet: c.ruleSet,
-        events,
-        violationCycle: replay.violation.cycle,
-      });
-      const derr = outcomeError(od);
-      if (derr !== null) {
-        showError(derr);
+      const display = await displayJob(hex, events, replay.violation.cycle);
+      if (typeof display === "string") {
+        showError(display);
         return { replay, display: null };
       }
-      const display = (od as { message: ReplayDoneMsg }).message;
-      if (!displayAgrees(replay, display)) return { replay, display: null };
-      onView?.(replay, display);
-      return { replay, display };
+      return { replay, display: displayAgrees(replay, display) ? display : null };
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** The reduced replay on the fixed build and its Display_Replay, whose violationCycle is the buggy break cycle. */
+  const doFixedReplay = async (hex: string, events: ReducerEvent[], v: number): Promise<ReplayResult | string> => {
+    setBusy("replay");
+    try {
+      const replay = await replayJob(hex, events);
+      if (typeof replay === "string") return replay;
+      const display = await displayJob(hex, events, v);
+      if (typeof display === "string") {
+        showError(display);
+        return { replay, display: null };
+      }
+      return { replay, display: fixedDisplayAgrees(replay, display) ? display : null };
     } finally {
       setBusy(null);
     }
@@ -303,61 +383,18 @@ export function mountApp(root: HTMLElement): void {
       spanSentence: spanSentenceFor(c.example.id, c.custom),
       ...(view.span !== null ? { span: { lengthCycles: view.span.lengthCycles, cut: view.span.cut } } : {}),
     });
-    return {
-      plain,
-      exact: typeof exact === "string" ? exact : null,
-      reducedList: res.reducedList,
-      reducedEventCount: res.reducedEventCount,
-      originalEventCount: res.originalEventCount,
-    };
+    return { plain, exact: typeof exact === "string" ? exact : null };
   };
 
-  const renderCards = (): void => {
-    const cards: HTMLElement[] = [];
-    const both = fixed !== null && fixed.done !== null;
-    for (const rec of [buggy, fixed]) {
-      if (rec === null || rec.done === null || ctx === null) continue;
-      const c = ctx;
-      const isBuggy = rec.build === "Buggy build";
-      const actions: HTMLElement[] = [];
-      if (isBuggy && rec.done.result.verdict.verdict === "BROKE" && flow.fix !== "hidden") {
-        applyFixBtn = el("button", { type: "button", class: "secondary" }, [UI_COPY.applyFix]);
-        applyFixBtn.addEventListener("click", () => void applyFix());
-        actions.push(applyFixBtn);
-      }
-      cards.push(
-        verdictCard({
-          build: rec.build,
-          verdict: rec.done.result.verdict,
-          ruleSet: c.ruleSet,
-          runCount: rec.runs,
-          seed: rec.seed,
-          runCycles: c.example.meta.runCycles,
-          coverage: rec.done.result.coverage,
-          showBuildLabel: both,
-          actions,
-          plainBroke: copyFor(c.example.id, c.custom).broke,
-          fixture: c.example.fixture,
-          reducedList: isBuggy && reduction !== null ? reduction.reducedList : null,
-          story: isBuggy ? cardStory : null,
-          logOpen: logOpen[rec.build],
-          onLogToggle: (open) => {
-            logOpen[rec.build] = open;
-          },
-        }),
-      );
-    }
-    setChildren(verdictArea, cards.length === 0 ? [placeholder()] : cards);
-    verdictArea.classList.toggle("has-two", cards.length > 1);
-    refresh();
-  };
-
-  const runCampaign = async (rec: CampaignRecord): Promise<CampaignDoneMsg | null> => {
+  const runCampaign = async (
+    rec: CampaignRecord,
+    onProgress: (runsCompleted: number) => void,
+    onError: (message: string) => void,
+  ): Promise<CampaignDoneMsg | null> => {
     const c = ctx as RunContext;
-    live.announce(`${rec.build}: campaign of ${runCountText(rec.runs)} started.`);
-    ctl.setProgress(0, rec.runs);
-    ctl.startTimer();
+    live.announce(`${rec.build}: campaign of ${String(rec.runs)} ${rec.runs === 1 ? "try" : "tries"} started.`);
     setBusy("campaign");
+    const t0 = performance.now();
     const o = await client.run(
       {
         kind: "campaign",
@@ -371,22 +408,20 @@ export function mountApp(root: HTMLElement): void {
         measure: false,
       },
       (m) => {
-        if (m.kind === "campaign-progress") ctl.setProgress(m.runsCompleted, rec.runs);
+        if (m.kind === "campaign-progress") onProgress(m.runsCompleted);
       },
     );
-    ctl.stopTimer();
+    rec.elapsedMs = Math.round(performance.now() - t0);
     setBusy(null);
     const err = outcomeError(o);
     if (err !== null) {
-      showError(err);
+      onError(err);
       return null;
     }
     const done = (o as { message: CampaignDoneMsg }).message;
     rec.done = done;
-    const v: Verdict = done.result.verdict;
-    ctl.setFinished(done.runsCompleted, rec.runs, v.verdict === "BROKE" ? v.trace.runIndex + 1 : null);
+    const v = done.result.verdict;
     live.announce(announcement(rec.build, v, findingText(v, violatedRule(c.ruleSet, v))));
-    ctl.showViewResult(true);
     return done;
   };
 
@@ -396,156 +431,141 @@ export function mountApp(root: HTMLElement): void {
     const rows = list.map((e, i) => {
       const result = el("span", { class: "try-result meta" }, [""]);
       const cells: (HTMLElement | string)[] = [
-        techOnly(el("span", { class: "mono" }, [`${ms(e.cycle)} \u00b7 ${e.signal} = ${inputValueText(eventValue(e))}`])),
+        el("span", { class: "mono" }, [`${ms(e.cycle)} \u00b7 ${e.signal} = ${inputValueText(eventValue(e))}`]),
       ];
       if (e.gremlinId === "rest") {
         cells.push(el("span", { class: "meta" }, ["rest state"]));
       } else {
-        cells.push(plainOnly(el("span", {}, [`${ms(e.cycle)}: ${movePhrase(list, i, c.example.fixture)}`])));
         const b = el("button", { type: "button", class: "secondary" }, ["Try removing"]);
         removeButtons.push(b);
         b.addEventListener("click", () => {
           void (async () => {
             const without = withoutEvent(list, i);
-            const r = await doReplay(c.example.buggyHex, without, showReplayView(UI_COPY.trialRun, without));
-            result.textContent = typeof r === "string" ? r : tryRemovingText(target, r.replay.violation);
-            result.classList.toggle("error-text", typeof r === "string");
+            const r = await doReplay(c.example.buggyHex, without);
+            if (typeof r === "string") {
+              result.textContent = r;
+              result.classList.add("error-text");
+              return;
+            }
+            result.classList.remove("error-text");
+            result.textContent = tryRemovingText(target, r.replay.violation);
+            shown = UI_COPY.trialRun;
+            paintToggle();
+            timeline.show(viewOf(UI_COPY.trialRun, without, r.replay, r.display));
           })();
         });
         cells.push(b);
       }
       cells.push(result);
-      // A rest state is not a gremlin move, so the plain view leaves its row out.
-      const row = el("li", { class: "try-row" }, cells);
-      return e.gremlinId === "rest" ? techOnly(row) : row;
+      return el("li", { class: "try-row" }, cells);
     });
-    setChildren(removeList, [
-      el("h2", { class: "region-title", id: "try-title" }, [
-        techOnly(el("span", {}, [UI_COPY.tryHeading])),
-        plainOnly(el("span", {}, [UI_COPY.plainTryHeading])),
+    tabs.setTryRemoving(
+      el("section", { class: "try-removing", "aria-labelledby": "try-title" }, [
+        el("h3", { class: "region-title", id: "try-title" }, [UI_COPY.plainTryHeading]),
+        el("ul", { class: "try-list" }, rows),
       ]),
-      el("ul", { class: "try-list" }, rows),
-    ]);
-    removeList.hidden = false;
+    );
     refresh();
-  };
-
-  const applyFix = async (): Promise<void> => {
-    if (buggy === null || reduction === null || buggy.done === null || ctx === null) return;
-    const c = ctx;
-    const v = buggy.done.result.verdict;
-    if (v.verdict !== "BROKE") return;
-    flow = { ...flow, fix: "used" };
-    const hunks = diffHunks(c.example.buggySketch, c.example.fixedSketch);
-    const replayText = el("p", { class: "fix-replay" }, [""]);
-    setChildren(fixPanel, [
-      el("h2", { class: "region-title", id: "fix-title" }, [UI_COPY.fixTitle]),
-      el("p", { class: "meta mono" }, [UI_COPY.sketchLine]),
-      el(
-        "div",
-        { class: "diff mono", tabindex: 0, role: "region", "aria-label": UI_COPY.fixRegion },
-        hunks.map((h) =>
-          el("div", { class: "hunk" }, [
-            el("p", { class: "hunk-head meta" }, [
-              `@@ -${String(h.oldStart)},${String(h.oldCount)} +${String(h.newStart)},${String(h.newCount)} @@`,
-            ]),
-            ...h.lines.map((l) =>
-              el("p", { class: `diff-line diff-line--${l.type}` }, [
-                `${l.type === "removed" ? "- " : l.type === "added" ? "+ " : "  "}${l.text}`,
-              ]),
-            ),
-          ]),
-        ),
-      ),
-      replayText,
-    ]);
-    fixPanel.hidden = false;
-    refresh();
-    const r = await doReplay(c.example.fixedHex, reduction.reducedList);
-    if (typeof r === "string") {
-      replayText.textContent = r;
-      replayText.classList.add("error-text");
-      return;
-    }
-    replayText.textContent = fixedReplayText(v.trace.violation.rule, r.replay.violation);
-    fixed = { build: "Fixed build", hex: c.example.fixedHex, runs: buggy.runs, seed: buggy.seed, done: null };
-    const done = await runCampaign(fixed);
-    if (done === null) fixed = null;
-    renderCards();
   };
 
   const replayAgain = async (): Promise<void> => {
     if (reduction === null || ctx === null) return;
-    const r = await doReplay(ctx.example.buggyHex, reduction.reducedList, showReplayView("Reduced replay", reduction.reducedList));
+    const out = tabs.replayAgain.out;
+    const r = await doReplay(ctx.example.buggyHex, reduction.reducedList);
     if (typeof r === "string") {
-      replayAgainOut.textContent = r;
+      out.textContent = r;
       return;
     }
     const same = previousFingerprint !== null && r.replay.fingerprint === previousFingerprint;
-    replayAgainOut.textContent = `Fingerprint ${r.replay.fingerprint} \u00b7 ${same ? "matches" : "differs"}`;
+    out.textContent = REPLAY_AGAIN.line(r.replay.fingerprint, same);
     previousFingerprint = r.replay.fingerprint;
+    reduced = viewOf("Reduced replay", reduction.reducedList, r.replay, r.display);
+    if (shown === "Reduced replay") timeline.show(reduced);
   };
-  replayAgainBtn.addEventListener("click", () => void replayAgain());
+  tabs.replayAgain.button.addEventListener("click", () => void replayAgain());
 
-  /** Clears verdicts, Reduction_Row, stories, Replay, Scene and Timeline. The elapsed text is left alone. */
+  /** Closes the Fix_View: the one Player goes back under the Move_Strip. */
+  const leaveFix = (): void => {
+    if (fixView === null) return;
+    fixView.dispose();
+    fixView = null;
+    stage.setFixMode(false);
+  };
+
+  /** Clears verdicts, the reduction, stories, replays, the Scene and the Timeline. */
   const clearOutputs = (): void => {
     setChildren(errors, []);
+    playback.pause();
     buggy = null;
     fixed = null;
     reduction = null;
     cardStory = null;
     original = null;
     reduced = null;
+    fixedView = null;
+    shownBroke = null;
+    targetRule = null;
     previousFingerprint = null;
-    applyFixBtn = null;
-    logOpen["Buggy build"] = false;
-    logOpen["Fixed build"] = false;
+    cardInput = null;
+    reductionInput = null;
+    hasReplay = false;
     flow = { ...flow, reduction: "none", reducedReplayOk: false, fix: "hidden" };
-    count.reset();
-    fixPanel.hidden = true;
-    removeList.hidden = true;
     removeButtons.length = 0;
-    replayAgainRow.hidden = true;
-    replayAgainOut.textContent = "";
-    ctl.showViewResult(false);
+    tabs.setReplay(null);
+    tabs.setFixChange(null);
+    tabs.setTryRemoving(null);
+    tabs.setCyclesRate(null);
+    tabs.replayAgain.out.textContent = "";
     shown = "Original run";
-    timeline.setToggle(shown, false);
     timeline.setRunNote(null);
     timeline.show(null);
-    renderScene(0, null);
-    setChildren(verdictArea, [placeholder()]);
+    paintToggle();
+    renderAside();
   };
 
-  const unleash = async (): Promise<void> => {
-    const vals = ctl.values();
-    if (current === null || !loadedOk || !vals.runsOk || !vals.seedOk || ruleErrors.length > 0 || selectedIds.length === 0) return;
-    const example = current;
-    ctx = {
-      example,
-      ruleSet: activeRuleSet,
-      custom: isCustomRuleSet(activeSentences, example.sentences),
-      gremlinSet: orderedSelection(selectedIds, example),
-    };
-    const c = ctx;
+  /** The stage goes back to idle (Requirement 3.1) and the setup opens. */
+  const resetToIdle = (): void => {
+    if (phase === "idle" && buggy === null) return;
+    leaveFix();
     clearOutputs();
-    buggy = { build: "Buggy build", hex: example.buggyHex, runs: vals.runs, seed: vals.seed, done: null };
+    ctx = null;
+    setPhase("idle");
+    stage.showIdle();
+    refresh();
+  };
 
-    const done = await runCampaign(buggy);
-    renderCards();
-    if (done === null) return;
-    const v = done.result.verdict;
-    if (v.verdict !== "BROKE") return;
+  const brokeCard = (fingerprint: string | null, story: StoryState): StageCardInput => {
+    const c = ctx as RunContext;
+    const rec = buggy as CampaignRecord;
+    const v = (rec.done as CampaignDoneMsg).result.verdict;
+    return {
+      kind: "BROKE",
+      exampleId: c.example.id,
+      plainBroke: copyFor(c.example.id, c.custom).broke,
+      violatingRunIndex: (rec.done as CampaignDoneMsg).result.violatingRunIndex ?? (v.verdict === "BROKE" ? v.trace.runIndex : 0),
+      tries: rec.runs,
+      elapsedMs: rec.elapsedMs,
+      fingerprint,
+      story,
+    };
+  };
 
-    // Original run on the scene and timeline while the reducer works.
-    const originalList = v.trace.eventList;
-    const orig = await doReplay(example.buggyHex, originalList, (r, d) => {
-      original = viewOf("Original run", originalList, r, d);
-      if (shown === "Original run") timeline.show(original);
-    });
-    if (typeof orig === "string") showError(orig);
+  /** After a BROKE verdict: reduce, then the reduced replay, then the original replay. */
+  const brokeFlow = async (c: RunContext): Promise<void> => {
+    const rec = buggy as CampaignRecord;
+    const verdict = (rec.done as CampaignDoneMsg).result.verdict;
+    if (verdict.verdict !== "BROKE") return;
+    const example = c.example;
+    const originalList = verdict.trace.eventList;
+    targetRule = verdict.trace.violation.rule;
 
-    const x = originalList.filter((e) => e.gremlinId !== "rest").length;
-    count.running(x, x, 0);
+    // The BROKE card and the Shrink_View appear in the same step, before any reduce-progress message.
+    cardInput = brokeCard(null, { kind: "pending" });
+    setPhase("shrinking");
+    let faded: ReadonlySet<number> = new Set<number>();
+    stage.showShrinking(originalList, null, faded);
+    renderAside();
+
     flow = { ...flow, reduction: "running" };
     setBusy("reduce");
     const o = await client.run(
@@ -555,79 +575,248 @@ export function mountApp(root: HTMLElement): void {
         fixture: example.fixture,
         ruleSet: c.ruleSet,
         originalList,
-        violation: v.trace.violation,
+        violation: verdict.trace.violation,
         runCycles: example.meta.runCycles,
         measure: false,
       },
       (m) => {
         if (m.kind !== "reduce-progress") return;
-        count.running(x, m.bestGremlinCount, m.candidatesTried);
-        if (shown === "Original run") timeline.dropMarkers(m.bestGremlinCount, m.bestList);
+        faded = stage.reduceProgress(originalList, m.candidatesTried, m.bestList, faded);
       },
     );
     setBusy(null);
     const err = outcomeError(o);
     if (err !== null) {
       flow = { ...flow, reduction: "error" };
-      count.fail();
+      setPhase("reduce-error");
+      stage.showReduceError();
+      cardInput = brokeCard(null, { kind: "none" });
+      reductionInput = { ok: false, message: err };
+      renderAside();
       showError(`Reduction error: ${err}`);
       live.announce(`Reduction error: ${err}`);
-      refresh();
       return;
     }
     const res = (o as { message: { kind: "reduce-done"; result: ReducerResult } }).message.result;
     reduction = res;
     flow = { ...flow, reduction: "result", fix: "available" };
-    count.done(res.originalEventCount, res.reducedEventCount, res.candidatesTried, res.stoppedAtBudget);
+
+    // Collapse the dots (400 ms), show the Reduction_Card and the fix button.
+    stage.showShrinking(originalList, res.candidatesTried, faded, res.reducedList);
+    const collapsedAt = performance.now();
+    setPhase("broke");
+    reductionInput = {
+      ok: true,
+      originalEventCount: res.originalEventCount,
+      reducedEventCount: res.reducedEventCount,
+      stoppedAtBudget: res.stoppedAtBudget,
+    };
+    cardInput = brokeCard(null, { kind: "pending" });
+    renderAside();
     timeline.setRunNote({
       original: originalList.filter((e) => e.gremlinId !== "rest").length,
       reduced: res.reducedList.filter((e) => e.gremlinId !== "rest").length,
     });
-    live.announce(`${count.summary()} ${SHRINK_LABEL}`);
-    renderCards();
+    const card = reductionCard(reductionInput);
+    if (!("error" in card)) live.announce(`${card.summary} ${card.smallest}`);
 
-    const red = await doReplay(example.buggyHex, res.reducedList, (r, d) => {
-      reduced = viewOf("Reduced replay", res.reducedList, r, d);
-      cardStory = buildCardStory(res, reduced);
-      renderCards();
-      if (d === null) {
-        previousFingerprint = r.fingerprint;
-        flow = { ...flow, reducedReplayOk: true };
-        shown = "Reduced replay";
-      }
-      timeline.setToggle(shown, true);
-      if (shown === "Reduced replay") timeline.show(reduced);
+    // Reduced replay and its Display_Replay on the buggy build.
+    const red = await doReplay(example.buggyHex, res.reducedList);
+    const rv = typeof red === "string" ? null : red.replay.violation;
+    if (typeof red === "string" || rv === null) {
+      showError(typeof red === "string" ? red : REDUCED_NO_BREAK);
+      stage.showReduceError();
+      cardInput = brokeCard(null, { kind: "none" });
+      renderAside();
+      return;
+    }
+    const view = viewOf("Reduced replay", res.reducedList, red.replay, red.display);
+    reduced = view;
+    previousFingerprint = red.replay.fingerprint;
+    flow = { ...flow, reducedReplayOk: true };
+    cardStory = buildCardStory(res, view);
+    cardInput = brokeCard(
+      red.replay.fingerprint,
+      cardStory === null ? { kind: "none" } : { kind: "ready", text: cardStory.plain },
+    );
+    hasReplay = true;
+    tabs.setReplay({
+      story: cardStory === null ? null : cardStory.plain,
+      list: res.reducedList,
+      fixture: example.fixture,
+      exactStory: cardStory === null ? null : cardStory.exact,
+      canonical: c.sentences,
     });
-    if (typeof red === "string") showError(red);
-    else replayAgainRow.hidden = false;
-    renderTryRemoving(res.reducedList, v.trace.violation.rule);
-    refresh();
-  };
-  ctl.unleash.addEventListener("click", () => void unleash());
-  bigUnleash.addEventListener("click", () => void unleash());
+    shown = "Reduced replay";
+    paintToggle();
+    timeline.show(view);
+    renderAside();
+    renderTryRemoving(res.reducedList, verdict.trace.violation.rule);
 
-  ctl.viewResult.addEventListener("click", () => {
-    const cards = verdictArea.querySelectorAll<HTMLElement>(".verdict");
-    const last = cards.item(cards.length - 1) as HTMLElement | null;
-    if (last === null) return;
-    last.querySelector(".verdict-heading")?.scrollIntoView({ block: "start" });
-    last.focus();
-  });
+    // The collapse finishes before the auto-play starts.
+    if (!prefersReducedMotion()) {
+      const wait = COLLAPSE_MS - (performance.now() - collapsedAt);
+      if (wait > 0) await sleep(wait);
+    }
+    const cycles = res.reducedList.filter((e) => e.gremlinId !== "rest").map((e) => e.cycle);
+    const plan = buildPlan(cycles, rv.cycle);
+    const edges = (red.display ?? red.replay).outputEdges;
+    shownBroke = { edges, v: rv.cycle, plan };
+    stage.showBroke({
+      edges,
+      events: res.reducedList,
+      fixture: example.fixture,
+      start: plan.start,
+      v: rv.cycle,
+      ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
+      imAliveRuleBroke: true,
+    });
+    // Under Reduced_Motion the Playback shows the frame at v and does not play.
+    playback.load(plan, true);
+    renderAside();
+
+    // The original replay, for the Signals tab.
+    const orig = await doReplay(example.buggyHex, originalList);
+    if (typeof orig === "string") showError(orig);
+    else {
+      original = viewOf("Original run", originalList, orig.replay, orig.display);
+      paintToggle();
+    }
+  };
+
+  const unleash = async (): Promise<void> => {
+    const vals = ctl.values();
+    if (flow.busy !== null || working) return;
+    if (current === null || !loadedOk || !vals.runsOk || !vals.seedOk || ruleErrors.length > 0 || selectedIds.length === 0) return;
+    if (setup.limitInvalid()) return;
+    const example = current;
+    leaveFix();
+    clearOutputs();
+    ctx = {
+      example,
+      ruleSet: activeRuleSet,
+      sentences: [...activeSentences],
+      custom: isCustomRuleSet(activeSentences, example.sentences),
+      gremlinSet: orderedSelection(selectedIds, example),
+      limitMs: limitMsOf(example.id, activeRuleSet),
+    };
+    const c = ctx;
+    setWorking(true);
+    try {
+      setPhase("running");
+      stage.showRunning(null, vals.runs);
+      const rec: CampaignRecord = { build: "Buggy build", hex: example.buggyHex, runs: vals.runs, seed: vals.seed, done: null, elapsedMs: 0 };
+      buggy = rec;
+      const done = await runCampaign(rec, (n) => stage.showRunning(n, rec.runs), showError);
+      if (done === null) {
+        setPhase("idle");
+        stage.showIdle();
+        return;
+      }
+      tabs.setCyclesRate(cyclesRateText(done.result.totalCycles, rec.elapsedMs));
+      const v = done.result.verdict;
+      if (v.verdict === "HELD") {
+        cardInput = { kind: "HELD", text: v.text };
+        setPhase("held");
+        stage.showIdle();
+        renderAside();
+      } else if (v.verdict === "COULDN'T TELL") {
+        const uses = done.result.peripheralUses;
+        cardInput = { kind: "COULDN'T TELL", reason: v.reason, ...(uses === undefined ? {} : { peripheralUses: uses }) };
+        setPhase("couldnt-tell");
+        stage.showIdle();
+        renderAside();
+      } else {
+        await brokeFlow(c);
+      }
+    } finally {
+      setWorking(false);
+      renderAside();
+    }
+  };
+
+  const seeFix = async (): Promise<void> => {
+    if (!canSeeFix()) return;
+    const c = ctx as RunContext;
+    const b = buggy as CampaignRecord;
+    const res = reduction as ReducerResult;
+    const sb = shownBroke as ShownBroke;
+    const target = targetRule as string;
+    setWorking(true);
+    try {
+      flow = { ...flow, fix: "used" };
+      setPhase("fix");
+      const hunks = diffHunks(c.example.buggySketch, c.example.fixedSketch);
+      const fv = createFixView(playback, stage.playerNode);
+      fixView = fv;
+      stage.setFixMode(true, fv.root);
+      fv.begin({
+        exampleId: c.example.id,
+        fixture: c.example.fixture,
+        k: res.reducedEventCount,
+        v: sb.v,
+        ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
+        hunks,
+      });
+      tabs.setFixChange(c.example.id, hunks);
+      renderAside();
+
+      const fr = await doFixedReplay(c.example.fixedHex, res.reducedList, sb.v);
+      if (typeof fr === "string") showError(fr);
+      else {
+        const src = fr.display ?? fr.replay;
+        fixedView = viewOf("Fixed program", res.reducedList, fr.replay, fr.display);
+        paintToggle();
+        const outcome: FixOutcome = fr.replay.violation === null ? "none" : fr.replay.violation.rule === target ? "target" : "other";
+        fv.ready({
+          plan: sb.plan,
+          original: { edges: sb.edges, events: res.reducedList },
+          fixed: { edges: src.outputEdges, events: res.reducedList, reachedEnd: src.reachedEnd },
+          outcome,
+          autoPlay: true,
+        });
+        live.announce(fixedReplayText(target, fr.replay.violation));
+      }
+
+      const rec: CampaignRecord = { build: "Fixed build", hex: c.example.fixedHex, runs: b.runs, seed: b.seed, done: null, elapsedMs: 0 };
+      fixed = rec;
+      fv.showCampaignProgress(null, rec.runs);
+      const done = await runCampaign(rec, (n) => fv.showCampaignProgress(n, rec.runs), (m) => fv.showCampaignError(m));
+      if (done === null) fixed = null;
+      else {
+        const v = done.result.verdict;
+        fv.showCampaignDone(v, rec.runs, done.result.violatingRunIndex, copyFor(c.example.id, c.custom).broke);
+      }
+    } finally {
+      setWorking(false);
+      renderAside();
+    }
+  };
 
   // Rule_Box: check before the next render; the Active_Rule_Set changes only when the check passes.
+  /** The Rule_Headline of the active rule set: the preset text with its limit, or "Custom rule". */
+  const headlineFor = (ex: ExampleBundle): string => {
+    const limit = limitMsOf(ex.id, activeRuleSet);
+    if (limit === null) return copyFor(ex.id, isCustomRuleSet(activeSentences, ex.sentences)).headline;
+    const def = presetFor(ex.id).limitDefault;
+    const expected = limit === def ? ex.sentences : presetRuleText(ex, limit).split("\n").filter((s) => s !== "");
+    return isCustomRuleSet(activeSentences, expected) ? CUSTOM_COPY.headline : presetHeadline(ex.id, limit);
+  };
   const paintRule = (): void => {
     if (current === null) return;
-    rules.setHeadline(copyFor(currentId, isCustomRuleSet(activeSentences, current.sentences)).headline);
-    rules.setSentences(activeSentences);
-    rules.setErrors(ruleErrors);
+    setup.setHeadline(headlineFor(current));
+    setup.rules.setSentences(activeSentences);
+    setup.rules.setErrors(ruleErrors);
   };
   const applyRuleText = (text: string): void => {
     if (current === null) return;
     const r = checkRuleBox(text, current.fixture);
     if (r.ok) {
+      const changed = !sameList(activeSentences, r.sentences);
       activeRuleSet = r.ruleSet;
       activeSentences = r.sentences;
       ruleErrors = [];
+      if (changed) resetToIdle();
     } else {
       ruleErrors = r.errors;
     }
@@ -636,31 +825,35 @@ export function mountApp(root: HTMLElement): void {
   };
 
   const toggleGremlin = (id: string): void => {
-    if (flow.busy !== null || !loadedOk) return;
+    if (lockedNow() || !loadedOk) return;
     selectedIds = selectedIds.includes(id) ? selectedIds.filter((s) => s !== id) : [...selectedIds, id];
-    pick.setSelected(selectedIds);
+    setup.gremlins.setSelected(selectedIds);
+    resetToIdle();
     refresh();
   };
 
   // Example selection: ignored while busy and for the Current_Example.
   const applyExample = (id: ExampleId, loaded: LoadedExample): void => {
     currentId = id;
-    ctx = null;
+    leaveFix();
     clearOutputs();
-    gal.setSelected(id);
-    ctl.clearStatus();
+    ctx = null;
+    stage.setExample(id);
+    setup.setSelectedDevice(id);
+    setPhase("idle");
+    stage.showIdle();
     if (!loaded.ok) {
       loadedOk = false;
       current = null;
-      gal.setProblems(loaded.problems);
-      rules.setHeadline("");
-      rules.setSentences([]);
-      rules.setText("");
-      rules.setErrors([]);
-      rules.setPatterns([]);
+      setup.setExample(null);
+      setup.setProblems(loaded.problems);
+      setup.setHeadline("");
+      setup.rules.setSentences([]);
+      setup.rules.setText("");
+      setup.rules.setErrors([]);
+      setup.rules.setPatterns([]);
       selectedIds = [];
-      pick.setSelected([]);
-      setChildren(sceneHost, [crosswalkScene.node]);
+      setup.gremlins.setSelected([]);
       paintLocks();
       refresh();
       return;
@@ -668,43 +861,30 @@ export function mountApp(root: HTMLElement): void {
     const ex = loaded.example;
     loadedOk = true;
     current = ex;
-    gal.setProblems([]);
+    setup.setProblems([]);
+    setup.setExample(ex);
     activeRuleSet = ex.ruleSet;
     activeSentences = [...ex.sentences];
     ruleErrors = [];
-    rules.setText(ex.rulesText);
-    rules.setPatterns(sentencePatterns(ex.fixture).map((p) => ({ label: PATTERN_LABELS[p.form] ?? p.form, sentence: p.sentence })));
+    setup.rules.setText(ex.rulesText);
+    setup.rules.setPatterns(
+      sentencePatterns(ex.fixture).map((p) => ({ label: PATTERN_LABELS[p.form] ?? p.form, sentence: p.sentence })),
+    );
     paintRule();
     selectedIds = defaultSelection(ex.meta.gremlinSet, ex.fixture).map((g) => g.id);
-    pick.setFixture(ex.fixture, selectedIds);
+    setup.gremlins.setFixture(ex.fixture, selectedIds);
     ctl.setValues(ex.meta.runs, ex.meta.campaignSeed);
     timeline.setFixture(ex.fixture);
-    setChildren(sceneHost, [id === "garage" ? garageScene.node : id === "heartbeat" ? heartbeatScene.node : crosswalkScene.node]);
-    renderScene(0, null);
     paintLocks();
     refresh();
   };
   const selectExample = (id: ExampleId): void => {
-    if (flow.busy !== null || id === currentId) return;
+    if (lockedNow() || id === currentId) return;
     applyExample(id, loadExample(id));
   };
 
-  const sceneRegion = el("section", { class: "panel scene-region", "aria-label": "Scene" }, [
-    sceneHost,
-    el("div", { class: "activity-row" }, [count.activity]),
-  ]);
-  const counterRow = el("div", { class: "counter-row" }, [count.node, replayAgainRow]);
-
   setChildren(root, [
-    el("div", { class: "page" }, [
-      header(),
-      gal.node,
-      el("main", { class: "workspace" }, [
-        el("div", { class: "config" }, [rules.node, ctl.node, pick.node]),
-        el("div", { class: "evidence" }, [verdictArea, errors, sceneRegion, counterRow, timeline.node, removeList, fixPanel]),
-      ]),
-      live.node,
-    ]),
+    el("div", { class: "page" }, [heroView.header, heroView.hero, setup.node, errors, stage.root, tabs.root, live.node]),
   ]);
   // The crosswalk Example is selected on load; no Campaign starts.
   applyExample(currentId, loadExample(currentId));
