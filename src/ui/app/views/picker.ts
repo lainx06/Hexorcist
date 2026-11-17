@@ -1,5 +1,5 @@
-// Gremlin_Picker: one chip per Compatible gremlin, and a link that lists the others as disabled chips
-// with their plain reasons. Callbacks and state setters only; the page owns the selection.
+// Gremlin_Picker: one chip per Compatible gremlin and, on the same row, a link that lists the others as
+// disabled chips with their plain reasons beside them, the reasons lined up in one column. Callbacks and state setters only; the page owns the selection.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { Fixture } from "../../../engine/types";
 import { pickerTile } from "../model/gremlin-picker";
@@ -37,7 +37,7 @@ export function picker(onToggle: (id: string) => void): PickerView {
   const more = el("button", { type: "button", class: "more-link", "aria-expanded": "false", hidden: true });
   const list = el("ul", { class: "incompatible-list", hidden: true });
   const message = el("p", { class: "field-msg pick-msg", "aria-live": "polite" });
-  const node = el("div", { class: "picker" }, [row, more, list, message]);
+  const node = el("div", { class: "picker" }, [row, list, message]);
   let chips: Chip[] = [];
   let selected: string[] = [];
   let busy = false;
@@ -84,10 +84,7 @@ export function picker(onToggle: (id: string) => void): PickerView {
           return { tile, btn, mark };
         });
       const others = tiles.filter((t) => !t.compatible);
-      setChildren(
-        row,
-        chips.map((c) => c.btn),
-      );
+      setChildren(row, [...chips.map((c) => c.btn), more]);
       setChildren(
         list,
         others.map((t) =>

@@ -135,6 +135,48 @@ export function shrinkDots(
   return out;
 }
 
+/** Dots on the move strip are never closer than this, in CSS px. */
+export const STRIP_MIN_GAP_PX = 90;
+
+export interface StripLayout {
+  /** Left offset in px of each dot, in the order of `dotCycles`. */
+  dots: number[];
+  /** Left offset in px of the break mark: always the right end of the track. */
+  mark: number;
+  /** True when the dots were spaced evenly because real time would have put two closer than the minimum gap. */
+  even: boolean;
+}
+
+/**
+ * Where the dots and the break mark sit on a track `usable` px wide. By real time, the earliest dot is at 0
+ * and the break (cycle v) at `usable`. If any two neighbours (the mark included) would be closer than
+ * `minGap`, every dot is placed evenly in time order instead: rank k of n at usable * k / n. Display only;
+ * the labels keep the real times.
+ */
+export function stripLayout(
+  dotCycles: readonly number[],
+  v: number,
+  usable: number,
+  minGap: number = STRIP_MIN_GAP_PX,
+): StripLayout {
+  const n = dotCycles.length;
+  const width = Math.max(0, usable);
+  if (n === 0) return { dots: [], mark: width, even: false };
+  const order = dotCycles.map((c, i) => ({ c, i })).sort((a, b) => a.c - b.c || a.i - b.i);
+  const e0 = (order[0] as { c: number }).c;
+  const span = Math.max(1, v - e0);
+  const real = dotCycles.map((c) => (width * Math.max(0, Math.min(span, c - e0))) / span);
+  const sorted = [...order.map((o) => real[o.i] as number), width];
+  let bunched = false;
+  for (let k = 1; k < sorted.length; k++) if ((sorted[k] as number) - (sorted[k - 1] as number) < minGap) bunched = true;
+  if (!bunched) return { dots: real, mark: width, even: false };
+  const dots = new Array<number>(n).fill(0);
+  order.forEach((o, rank) => {
+    dots[o.i] = (width * rank) / n;
+  });
+  return { dots, mark: width, even: true };
+}
+
 /** Indexes of the cycles with prevCursor < cycle <= nextCursor, in input order. */
 export function crossed(prevCursor: number, nextCursor: number, cycles: readonly number[]): number[] {
   const out: number[] = [];

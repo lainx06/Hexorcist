@@ -17,7 +17,7 @@ import { tabAfterKey, tabIndexes } from "../model/tabs";
 import { EMPTY_TRACE_TEXT, traceRows } from "../model/verdict-text";
 import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
-import { createCodeChange } from "./fix-view";
+import { createFixTab } from "./fix-view";
 import { gremlinIcon } from "./icons";
 import type { TimelineView } from "./timeline";
 
@@ -67,7 +67,15 @@ export interface TabsView {
   panels(): readonly HTMLElement[];
   /** A replay exists (data) or not (null: idle text in "What happened" and "Signals"). */
   setReplay(data: ReplayTabData | null): void;
-  /** The code change alone in "The fix" (the explanation is in the Fix_View); null shows "Press See the fix work to compare.". */
+  /**
+   * While something broke and the replay is not ready yet (the BROKE card says "Working out what happened…"),
+   * "What happened" and "Signals" say the same instead of "Nothing has broken yet.".
+   */
+  setPending(pending: boolean): void;
+  /**
+   * "The fix" while the Fix_View is open: the explanation and a button to the "What the fix changed" panel, which
+   * is the one place the code change shows. Null shows "Press See the fix work to compare.".
+   */
   setFixChange(id: ExampleId | null, hunks?: readonly DiffHunk[]): void;
   /** Cycles_Rate_Text of the Details tab; null shows none (Technical_View only). */
   setCyclesRate(text: string | null): void;
@@ -145,6 +153,7 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
 
   // What happened
   const happenedIdle = el("p", { class: "tab-idle" }, [TAB_TEXT.idle]);
+  let pending = false;
   const happenedBody = el("div", { class: "happened-body" });
 
   // Signals
@@ -184,6 +193,9 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
 
   function paintReplay(): void {
     const d = replayData;
+    const idleText = pending ? STAGE_TEXT.storyPlaceholder : TAB_TEXT.idle;
+    happenedIdle.textContent = idleText;
+    signalsIdle.textContent = idleText;
     happenedIdle.hidden = hasReplay;
     happenedBody.hidden = !hasReplay;
     signalsIdle.hidden = hasReplay;
@@ -264,8 +276,12 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
       hasReplay = data !== null;
       paintReplay();
     },
-    setFixChange(id, hunks = []) {
-      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createCodeChange(hunks)]);
+    setPending(on) {
+      pending = on;
+      paintReplay();
+    },
+    setFixChange(id) {
+      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createFixTab(id)]);
     },
     setCyclesRate(text) {
       rateText.textContent = text ?? "";

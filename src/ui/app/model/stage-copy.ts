@@ -100,6 +100,7 @@ export const FIX_TEXT = {
   badgePrefix: "Same moves, same moment \u00b7 ",
   whatChanged: "What the fix changed",
   showCode: "Show the code change \u25be",
+  replayBoth: "Replay both",
 } as const;
 
 export const TAB_TEXT = {

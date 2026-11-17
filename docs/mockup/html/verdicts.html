@@ -1,0 +1,51 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The three verdict cards</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="width: 1200px; height: 520px; box-sizing: border-box; padding: 28px; background: #0C1110; display: flex; flex-direction: column; gap: 18px">
+<span style="font-size: 15px; color: #A9BAB4">Only three verdicts exist. Each card leads with a plain sentence; the exact wording is always shown.</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; flex: 1">
+<div style="background: #1C1513; border: 1px solid #5A2E28; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 30px; font-weight: 700">BROKE</span>
+<span style="font-size: 17px; font-weight: 600; line-height: 1.35">Cars and walkers both got a green.</span>
+<span style="font-size: 14px; color: #D9B8B2">Two quick presses, the second one held, did it.</span>
+<span style="font-size: 13px; color: #A9BAB4; margin-top: auto">Broke on try 4 of 24 · found in 0.9 s</span>
+</div>
+<div style="background: #121D19; border: 1px solid #2D5A43; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 30px; font-weight: 700">HELD</span>
+<span style="font-size: 17px; font-weight: 600; line-height: 1.35">No gremlin broke the fixed program in 24 tries.</span>
+<span style="font-size: 14px; color: #B8D9C8">No violation found in 24 emulated runs of this gremlin set. Not a proof.</span>
+<span style="font-size: 13px; color: #A9BAB4; margin-top: auto">Different gremlins or more tries could still find something.</span>
+</div>
+<div style="background: #17181C; border: 1px solid #3E4352; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 30px; font-weight: 700">COULDN'T TELL</span>
+<span style="font-size: 17px; font-weight: 600; line-height: 1.35">This program can't be judged here.</span>
+<span style="font-size: 14px; color: #C3C8D6; line-height: 1.5">It uses the serial port, a part this simulated chip doesn't model, so the rule cannot be checked.</span>
+<span style="font-size: 13px; color: #A9BAB4; margin-top: auto">No result is better than a wrong one. Technical details show which register it touched and when.</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":520}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

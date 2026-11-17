@@ -1,8 +1,11 @@
 // Fix view: the original program and the fixed program side by side on one shared Cursor, across the full
-// width of the stage. One Playback (views/playback.ts) drives both Scenes, so the one Replay button replays
-// both. The plan is the Pacing_Plan of the broke replay plus the 4x tail (pacing.withTail), so the right
-// Scene follows the Cursor up to its own end and stops. The one speed pill sits in the heading; the Scenes
-// carry no speed badge of their own.
+// width of the stage. Each Scene sits in its own bordered card (coral for the original, mint for the fixed
+// program) with its title chip at top left and one state badge at bottom left. Under the Scenes, the BROKE
+// card and the fixed-program card sit side by side at equal height, then the Player, then the "What the
+// fix changed" panel with "Show the code change" and "Replay both". One Playback (views/playback.ts)
+// drives both Scenes. The plan is the Pacing_Plan of the broke replay plus the 4x tail (pacing.withTail),
+// so the right Scene follows the Cursor up to its own end and stops. The one speed pill sits in the
+// heading; the Scenes and the Player carry no speed badge of their own here.
 // This file draws what it is given. Copy comes from model/stage-copy.ts, cursors and badges from
 // model/fix-view.ts. It reads no clock and posts nothing to the Engine_Worker.
 import type { ReducerEvent } from "../../../engine/reducer/types";
@@ -29,6 +32,8 @@ import { createCrosswalkScene } from "./scene-crosswalk";
 import { createGarageScene } from "./scene-garage";
 import { createHeartbeatScene } from "./scene-heartbeat";
 
+/** Id of the "What the fix changed" panel; "The fix" tab points to it. */
+export const FIX_PANEL_ID = "fix-change-panel";
 /** What is known when the Fix_View opens: the same for both sides. */
 export interface FixBegin {
   exampleId: ExampleId;
@@ -71,6 +76,7 @@ export interface FixView {
 
 interface Scene {
   node: HTMLElement;
+  frame: HTMLElement;
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: Record<string, unknown>): void;
 }
 
@@ -104,33 +110,59 @@ export function diffView(hunks: readonly DiffHunk[]): HTMLElement {
   );
 }
 
-/** "What the fix changed", the explanation and the collapsed "Show the code change" disclosure. */
-export function createFixChange(id: ExampleId, hunks: readonly DiffHunk[]): HTMLElement {
-  return el("section", { class: "fix-change", "aria-label": FIX_TEXT.whatChanged }, [
-    el("h3", { class: "region-title" }, [FIX_TEXT.whatChanged]),
+/**
+ * The "What the fix changed" panel: the explanation, then a row with "Show the code change ▾" and
+ * "Replay both". The code change opens inside the panel. This is the only place the code change shows.
+ */
+export function createFixChange(id: ExampleId, hunks: readonly DiffHunk[], onReplayBoth: () => void): HTMLElement {
+  const diffId = `${FIX_PANEL_ID}-diff`;
+  const diff = diffView(hunks);
+  diff.id = diffId;
+  diff.hidden = true;
+  const show = el("button", { type: "button", class: "secondary fix-show-code", "aria-expanded": "false", "aria-controls": diffId }, [
+    FIX_TEXT.showCode,
+  ]);
+  show.addEventListener("click", () => {
+    const open = diff.hidden;
+    diff.hidden = !open;
+    show.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  const replay = el("button", { type: "button", class: "secondary fix-replay-both" }, [FIX_TEXT.replayBoth]);
+  replay.addEventListener("click", onReplayBoth);
+  return el("section", { class: "fix-change", id: FIX_PANEL_ID, "aria-labelledby": `${FIX_PANEL_ID}-title` }, [
+    el("h3", { class: "fix-change-title", id: `${FIX_PANEL_ID}-title` }, [FIX_TEXT.whatChanged]),
     el("p", { class: "fix-explain" }, [FIX_EXPLAIN[id]]),
-    el("details", { class: "code-change" }, [el("summary", {}, [FIX_TEXT.showCode]), diffView(hunks)]),
+    el("div", { class: "fix-change-actions" }, [show, replay]),
+    diff,
   ]);
 }
 
-/** The code change alone, with no explanation: what "The fix" tab shows while the Fix_View holds the explanation. */
-export function createCodeChange(hunks: readonly DiffHunk[]): HTMLElement {
-  return el("section", { class: "fix-change fix-change--code", "aria-label": FIX_TEXT.showCode }, [
-    el("details", { class: "code-change", open: true }, [el("summary", {}, [FIX_TEXT.showCode]), diffView(hunks)]),
-  ]);
+/**
+ * What "The fix" tab shows while the Fix_View is open: the explanation, and a button that takes the
+ * focus to the panel's "Show the code change" button. The code change itself shows only in the panel.
+ */
+export function createFixTab(id: ExampleId): HTMLElement {
+  const go = el("button", { type: "button", class: "secondary fix-tab-go" }, [FIX_TEXT.whatChanged]);
+  go.addEventListener("click", () => {
+    const panel = document.getElementById(FIX_PANEL_ID);
+    const target = panel?.querySelector<HTMLButtonElement>(".fix-show-code") ?? null;
+    if (panel === null || target === null) return;
+    panel.scrollIntoView({ block: "center" });
+    target.focus();
+  });
+  return el("section", { class: "fix-tab", "aria-label": FIX_TEXT.whatChanged }, [el("p", { class: "fix-explain" }, [FIX_EXPLAIN[id]]), go]);
 }
 
 export function createFixView(playback: Playback, playerNode?: HTMLElement): FixView {
   const heading = el("h2", { class: "fix-heading" }, [""]);
   // The one speed pill of the Fix_View. It sits in the heading row and is as wide as its text.
-  const badgeLine = el("span", { class: "fix-badge-line badge badge--speed" }, [""]);
+  const badgeLine = el("span", { class: "fix-badge-line" }, [""]);
   badgeLine.hidden = true;
 
-  const leftHost = el("div", { class: "scene-card" });
-  const rightHost = el("div", { class: "scene-card" });
-  const fixState = el("p", { class: "badge fix-state" }, [""]);
-  fixState.hidden = true;
-  const leftCard = el("div", { class: "card fix-card fix-card--left", hidden: true }, [
+  const leftHost = el("div", { class: "scene-card fix-scene fix-scene--original" });
+  const rightHost = el("div", { class: "scene-card fix-scene fix-scene--fixed" });
+  // The BROKE card keeps its place before the break (it is only invisible), so both cards stay level.
+  const leftCard = el("div", { class: "card fix-card fix-card--left is-waiting" }, [
     el("p", { class: "fix-left-text" }, [FIX_TEXT.leftCard]),
   ]);
   const replayLine = el("p", { class: "fix-replay" }, [""]);
@@ -138,23 +170,15 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
   const rightCard = el("div", { class: "card fix-card fix-card--right", "aria-live": "polite" }, [replayLine, campaignBox]);
   replayLine.hidden = true;
 
-  const leftSide = el("div", { class: "fix-side fix-side--original" }, [
-    el("h3", { class: "fix-side-title" }, [FIX_TEXT.leftTitle]),
-    leftHost,
-    leftCard,
-  ]);
-  const rightSide = el("div", { class: "fix-side fix-side--fixed" }, [
-    el("h3", { class: "fix-side-title" }, [FIX_TEXT.rightTitle]),
-    rightHost,
-    fixState,
-    rightCard,
-  ]);
+  const leftSide = el("div", { class: "fix-side fix-side--original", role: "group", "aria-label": FIX_TEXT.leftTitle }, [leftHost]);
+  const rightSide = el("div", { class: "fix-side fix-side--fixed", role: "group", "aria-label": FIX_TEXT.rightTitle }, [rightHost]);
   const player = playerNode ?? createPlayerBar(playback).root;
+  const controls = el("div", { class: "replay-panel fix-controls" }, [player]);
   const changeHost = el("div", { class: "fix-change-host" });
   const root = el("section", { class: "fix-view", "aria-label": "Fix view" }, [
     el("div", { class: "fix-heading-row" }, [heading, badgeLine]),
-    el("div", { class: "fix-grid" }, [leftSide, rightSide]),
-    el("div", { class: "fix-controls" }, [player]),
+    el("div", { class: "fix-grid" }, [leftSide, rightSide, leftCard, rightCard]),
+    controls,
     changeHost,
   ]);
 
@@ -172,11 +196,17 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     const frozen = c >= i.v;
     const lc = leftCursor(c, i.v);
     const rc = Math.min(c, rightEnd);
-    // No per-Scene speed badge here: the speed pill in the heading says it for both.
-    const left = { speed: null, atBreak: frozen, stopped: frozen };
-    const right = { speed: null, atBreak: false, stopped: false };
-    const lo: Record<string, unknown> = { ...left };
-    const ro: Record<string, unknown> = { ...right };
+    const rightOver = c >= rightEnd && !playback.playing();
+    // No per-Scene speed badge: the speed pill in the heading says it for both.
+    const lo: Record<string, unknown> = { layout: "fix", title: FIX_TEXT.leftTitle, atBreak: frozen, stopped: frozen, ended: frozen };
+    const ro: Record<string, unknown> = {
+      layout: "fix",
+      title: FIX_TEXT.rightTitle,
+      state: fixBadge(i.exampleId, r.fixed.edges, rc),
+      atBreak: false,
+      stopped: false,
+      ended: rightOver,
+    };
     if (i.exampleId === "garage") {
       Object.assign(lo, { fixture: i.fixture, kind: "reduced-buggy", v: i.v, limitMs: i.limitMs });
       Object.assign(ro, { fixture: i.fixture, kind: "reduced-fixed", v: i.v, limitMs: i.limitMs });
@@ -188,9 +218,7 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     rightScene.update(r.fixed.edges, r.fixed.events, rc, ro);
     leftSide.classList.toggle("is-frozen", frozen);
     leftHost.classList.toggle("is-broke", frozen);
-    leftCard.hidden = !frozen;
-    fixState.textContent = fixBadge(i.exampleId, r.fixed.edges, rc);
-    fixState.hidden = false;
+    leftCard.classList.toggle("is-waiting", !frozen);
     if (slow !== null) {
       badgeLine.textContent = fixBadgeText(speedBadge(slow));
       badgeLine.hidden = false;
@@ -207,6 +235,12 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     return el("p", { class: cls }, [text]);
   }
 
+  function cardTone(tone: "held" | "broke" | "tell" | null): void {
+    rightCard.classList.toggle("fix-card--held", tone === "held");
+    rightCard.classList.toggle("fix-card--broke", tone === "broke");
+    rightCard.classList.toggle("fix-card--tell", tone === "tell");
+  }
+
   return {
     root,
     begin(next) {
@@ -221,18 +255,19 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
       setChildren(rightHost, [rightScene.node]);
       leftHost.classList.add("is-dim");
       rightHost.classList.add("is-dim");
-      leftCard.hidden = true;
-      fixState.hidden = true;
+      leftCard.classList.add("is-waiting");
       replayLine.hidden = true;
       replayLine.textContent = "";
+      cardTone(null);
       setChildren(campaignBox, []);
-      setChildren(changeHost, [createFixChange(next.exampleId, next.hunks)]);
+      setChildren(changeHost, [createFixChange(next.exampleId, next.hunks, () => playback.replay())]);
     },
     showCampaignProgress(runsCompleted, tries) {
       setChildren(campaignBox, [campaignParagraph(fixedProgressText(runsCompleted, tries), "fix-progress")]);
     },
     showCampaignDone(verdict, tries, violatingRunIndex, plainBroke) {
       const t = fixedCampaignText(verdict, tries, violatingRunIndex, plainBroke);
+      cardTone(verdict.verdict === "HELD" ? "held" : verdict.verdict === "BROKE" ? "broke" : "tell");
       setChildren(campaignBox, [
         campaignParagraph(t.prefix, "fix-campaign-prefix"),
         ...t.lines.map((l) => campaignParagraph(l, "fix-campaign-line")),

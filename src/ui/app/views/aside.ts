@@ -29,6 +29,13 @@ export interface AsideView {
   fixButton(): HTMLButtonElement | null;
 }
 
+/** "<X> moves → <Y> needed" with the "<Y> needed" part in its own span (pumpkin); the text is unchanged. */
+function countParts(summary: string): (string | HTMLElement)[] {
+  const at = summary.indexOf(" \u2192 ");
+  if (at < 0) return [summary];
+  return [summary.slice(0, at + 3), el("span", { class: "reduction-needed" }, [summary.slice(at + 3)])];
+}
+
 /** The Reduction_Card for a reduction outcome. */
 export function reductionCardView(r: ReductionInput): HTMLElement {
   const t = reductionCard(r);
@@ -38,7 +45,7 @@ export function reductionCardView(r: ReductionInput): HTMLElement {
     ]);
   }
   return el("section", { class: "card reduction-card", "aria-label": "Shrink result" }, [
-    el("p", { class: "reduction-count" }, [t.summary]),
+    el("p", { class: "reduction-count" }, countParts(t.summary)),
     // The "smallest replay" line is a technical detail: it shows only with technical details on.
     techOnly(el("p", { class: "reduction-smallest" }, [t.smallest])),
     el("p", { class: "reduction-note meta" }, [t.note]),

@@ -1,8 +1,11 @@
 // Setup: "1 · PICK A DEVICE", "2 · RULE", "3 · GREMLINS", the primary button and the Setup_Summary.
+// The open setup is one card. Collapsed, the card has zero height and is inert and hidden from assistive
+// tech (model/setup-state.ts), so nothing of it shows or takes focus under the summary bar.
 // DOM builder with callbacks and state setters only; the page owns the state.
 import { EXAMPLE_IDS } from "../data/examples";
 import type { ExampleBundle, ExampleId, FileProblem } from "../data/examples";
 import { EXAMPLE_COPY } from "../model/example-copy";
+import { setupBodyState } from "../model/setup-state";
 import { checkLimit, presetFor, presetHeadline, presetRuleText } from "../model/presets";
 import { SETUP, WHY, setupSummary, triesLine } from "../model/stage-copy";
 import { UI_COPY } from "../model/ui-copy";
@@ -108,7 +111,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   // Empty (and so not drawn) unless the rule is custom. The technical view lists the sentences in its own area.
   const customList = plainOnly(el("ul", { class: "custom-rules" }));
   const why = el("p", { class: "why-line" });
-  const menuBtn = el("button", { type: "button", class: "secondary", "aria-expanded": "false", "aria-controls": "preset-menu" }, [
+  const menuBtn = el("button", { type: "button", class: "secondary rule-menu-button", "aria-expanded": "false", "aria-controls": "preset-menu" }, [
     SETUP.changeRule,
   ]);
   const presetLine = el("p", { class: "meta preset-line" });
@@ -147,7 +150,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   const gremlins = picker((id) => cb.onToggleGremlin(id));
 
   // Primary button and the tries line.
-  const unleash = el("button", { type: "button", class: "primary" }, [UI_COPY.unleash]);
+  const unleash = el("button", { type: "button", class: "primary primary-unleash" }, [UI_COPY.unleash]);
   const triesNode = el("p", { class: "meta tries-line" }, [""]);
   const action = el("div", { class: "setup-action" }, [unleash, triesNode]);
   unleash.addEventListener("click", () => cb.onUnleash());
@@ -157,7 +160,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   const changeBtn = el("button", { type: "button", class: "secondary", "aria-expanded": "false", "aria-controls": "setup-body" }, [
     SETUP.changeSetup,
   ]);
-  const againBtn = el("button", { type: "button", class: "secondary" }, [SETUP.runAgain]);
+  const againBtn = el("button", { type: "button", class: "secondary run-again" }, [SETUP.runAgain]);
   const summary = el("div", { class: "setup-summary", hidden: true }, [
     summaryText,
     el("div", { class: "setup-summary-actions" }, [changeBtn, againBtn]),
@@ -169,7 +172,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     cb.onExpandChange?.(!collapsed || userOpen);
   });
 
-  const inner = el("div", { class: "setup-inner" }, [
+  const card = el("div", { class: "setup-card" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-device-title" }, [
       sectionTitle("setup-device-title", SETUP.deviceHeading),
       el("div", { class: "device-grid" }, [...cards.values(), slot]),
@@ -178,10 +181,8 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     el("div", { class: "setup-columns" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-rule-title" }, [
       sectionTitle("setup-rule-title", SETUP.ruleHeading),
-      headlineNode,
-      customList,
-      why,
-      menuBtn,
+      // One boxed row: the headline and "Why it matters" on the left, "Change rule ▾" on the right.
+      el("div", { class: "rule-row" }, [el("div", { class: "rule-row-text" }, [headlineNode, customList, why]), menuBtn]),
       menu,
       techOnly(rules.node),
     ]),
@@ -192,6 +193,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     ]),
     action,
   ]);
+  const inner = el("div", { class: "setup-inner" }, [card]);
   const body = el("div", { id: "setup-body", class: "setup-body" }, [inner]);
   const node = el("section", { class: "setup" }, [summary, body]);
 
@@ -203,19 +205,29 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     invalid = false;
   }
 
+  /** The Setup_Summary text, in parts so each can have its own colour; the text is setupSummary's. */
   function paintSummary(): void {
-    summaryText.textContent = setupSummary(EXAMPLE_COPY[selected].title, headline, names);
+    const parts = setupSummary(EXAMPLE_COPY[selected].title, headline, names).split(" \u00b7 ");
+    const cls = ["summary-device", "summary-rule", "summary-gremlins", "summary-note"];
+    const kids: HTMLElement[] = [];
+    parts.forEach((part, i) => {
+      if (i > 0) kids.push(el("span", { class: "summary-sep" }, [" \u00b7 "]));
+      kids.push(el("span", { class: cls[Math.min(i, cls.length - 1)] as string }, [part]));
+    });
+    setChildren(summaryText, kids);
   }
 
   function paint(): void {
-    const closed = collapsed && !userOpen;
-    node.classList.toggle("is-collapsed", closed);
+    const s = setupBodyState(collapsed, userOpen);
+    node.classList.toggle("is-collapsed", s.closed);
     node.classList.toggle("is-locked", busy);
     // A collapsed body stays in the page for the height transition, so it must not take focus.
-    if (closed) inner.setAttribute("inert", "");
+    if (s.inert) inner.setAttribute("inert", "");
     else inner.removeAttribute("inert");
-    summary.hidden = !collapsed;
-    action.hidden = closed;
+    if (s.ariaHidden) inner.setAttribute("aria-hidden", "true");
+    else inner.removeAttribute("aria-hidden");
+    summary.hidden = !s.summaryShown;
+    action.hidden = !s.actionShown;
     changeBtn.setAttribute("aria-expanded", collapsed && userOpen ? "true" : "false");
     for (const [id, btn] of cards) {
       const on = id === selected;

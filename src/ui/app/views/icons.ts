@@ -183,19 +183,6 @@ export function masherIcon(opts: IconOptions = {}): SVGElement {
   return icon(SIZE, [...head(), ...accessory("gremlin-masher")], opts, "icon-gremlin");
 }
 
-/** A small crossing motif for the example card. */
-export function crossingMotif(): SVGElement {
-  return icon(32, [
-    svg("path", { d: "M2 24h28" }),
-    svg("path", { d: "M8 24v-4" }),
-    svg("path", { d: "M14 24v-4" }),
-    svg("path", { d: "M20 24v-4" }),
-    svg("rect", { x: 23, y: 4, width: 6, height: 12, rx: 2 }),
-    svg("circle", { cx: 26, cy: 8, r: 1, fill: "currentColor", stroke: "none" }),
-    svg("circle", { cx: 26, cy: 12, r: 1, fill: "currentColor", stroke: "none" }),
-  ]);
-}
-
 export function playIcon(): SVGElement {
   return icon(24, [svg("path", { d: "M8 5l11 7-11 7z" })]);
 }
@@ -212,31 +199,42 @@ export function nextIcon(): SVGElement {
   return icon(24, [svg("path", { d: "M18 5v14" }), svg("path", { d: "M6 6l8 6-8 6z" })]);
 }
 
-/** A small garage motif for the example card: a frame with a slatted door half down. */
-export function garageMotif(): SVGElement {
-  return icon(32, [
-    svg("path", { d: "M3 28V10l13-6 13 6v18" }),
-    svg("path", { d: "M8 28V13h16v15" }),
-    svg("path", { d: "M8 17h16" }),
-    svg("path", { d: "M8 21h16" }),
-    svg("path", { d: "M2 28h28" }),
-  ]);
-}
-
-/** A small I'm-alive light motif for the example card: a lamp with a pulse line under it. */
-export function aliveLightMotif(): SVGElement {
-  return icon(32, [
-    svg("circle", { cx: 16, cy: 11, r: 6 }),
-    svg("path", { d: "M16 2v2" }),
-    svg("path", { d: "M5 6l1.5 1.5" }),
-    svg("path", { d: "M27 6l-1.5 1.5" }),
-    svg("path", { d: "M3 25h7l2-5 3 9 3-7 2 3h9" }),
-  ]);
-}
-
-/** The illustration of a Device_Card by example id. Decorative. */
+/**
+ * The illustration of a Device_Card by example id: a small scene 120 x 64 in its own units, shown 48 px
+ * tall across the top of the card. Decorative. Colours come from app.css (.device-art classes).
+ */
 export function deviceArt(id: string): SVGElement {
-  const motif = id === "garage" ? garageMotif() : id === "heartbeat" ? aliveLightMotif() : crossingMotif();
-  motif.classList.add("device-art");
-  return motif;
+  let parts: SVGElement[];
+  if (id === "garage") {
+    // Frame, a door rolled up at the top, the beam and the pumpkin in the doorway.
+    parts = [
+      svg("path", { d: "M36 60V6h48v54", class: "art-frame" }),
+      svg("rect", { x: 39, y: 8, width: 42, height: 12, class: "art-line" }),
+      svg("line", { x1: 30, y1: 56, x2: 90, y2: 56, class: "art-beam" }),
+      svg("ellipse", { cx: 60, cy: 50, rx: 7, ry: 6, class: "art-gremlin" }),
+    ];
+  } else if (id === "heartbeat") {
+    // A ring that fills around a lit light.
+    parts = [
+      svg("circle", { cx: 60, cy: 32, r: 22, class: "art-ring" }),
+      svg("path", { d: "M60 10a22 22 0 0 1 19 11", class: "art-ring-fill" }),
+      svg("circle", { cx: 60, cy: 32, r: 11, class: "art-lit" }),
+    ];
+  } else {
+    // A road with stripes, a car facing right, a walk light and the walk button.
+    parts = [
+      svg("rect", { x: 0, y: 18, width: 120, height: 28, class: "art-road" }),
+      svg("rect", { x: 66, y: 18, width: 5, height: 28, class: "art-stripe" }),
+      svg("rect", { x: 75, y: 18, width: 5, height: 28, class: "art-stripe" }),
+      svg("rect", { x: 84, y: 18, width: 5, height: 28, class: "art-stripe" }),
+      svg("path", { d: "M24 26h22c4 0 7 3 8 6c-1 3-4 6-8 6H24z", class: "art-line" }),
+      svg("circle", { cx: 58, cy: 10, r: 3.5, class: "art-lit" }),
+      svg("circle", { cx: 100, cy: 10, r: 3.5, class: "art-gremlin-fill" }),
+    ];
+  }
+  return svg(
+    "svg",
+    { viewBox: "0 0 120 64", preserveAspectRatio: "xMidYMid meet", class: "device-art", "aria-hidden": "true", focusable: "false" },
+    parts,
+  );
 }

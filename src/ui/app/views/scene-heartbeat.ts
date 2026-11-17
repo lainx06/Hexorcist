@@ -1,6 +1,6 @@
 // I'm-alive scene: a sensor, a "Program" box and a light with a ring. update() maps heartbeatSceneAt,
-// ringAt, stuckHoldsPulse and forgotLine output to SVG attributes and HTML labels. Names sit in an HTML
-// row under the art, in three columns that line up with the three drawn parts.
+// ringAt, stuckHoldsPulse and forgotLine output to SVG attributes and HTML labels. Each part's name sits
+// under it, inside the scene; the ring label and the ring caption sit under the light.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { OutputEvent } from "../../../engine/types";
 import { friendlyLabel } from "../model/labels";
@@ -22,6 +22,7 @@ export interface HeartbeatOpts extends SceneCommonOpts {
 
 export interface HeartbeatSceneView {
   node: HTMLElement;
+  frame: HTMLElement;
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: HeartbeatOpts): void;
 }
 
@@ -38,18 +39,20 @@ export function ringCaption(limitMs: number): string {
   return `Ring: time since the last blink (limit ${String(limitMs)} ms)`;
 }
 
-/** The viewBox is 960 wide; the three parts sit at 1/6, 3/6 and 5/6 of it. */
-const SENSOR_X = 160;
-const PROGRAM_X = 480;
-const LIGHT_X = 800;
-const LIGHT_Y = 190;
+const VIEW_W = 830;
+const VIEW_H = 460;
+const SENSOR_X = 140;
+const SENSOR_Y = 200;
+const PROGRAM_X = 400;
+const LIGHT_X = 650;
+const LIGHT_Y = 170;
 const RING_R = 62;
 
 export function createHeartbeatScene(): HeartbeatSceneView {
-  const lever = svg("line", { x1: SENSOR_X + 20, y1: 220, x2: SENSOR_X - 10, y2: 242, class: "switch-lever" });
+  const lever = svg("line", { x1: SENSOR_X + 20, y1: SENSOR_Y, x2: SENSOR_X - 10, y2: SENSOR_Y + 22, class: "switch-lever" });
   const stuckIcon = gremlinIcon("gremlin-stuck", { className: "sensor-stuck" }) as SVGElement;
   stuckIcon.setAttribute("x", String(SENSOR_X - 40));
-  stuckIcon.setAttribute("y", "140");
+  stuckIcon.setAttribute("y", String(SENSOR_Y - 80));
   stuckIcon.setAttribute("width", "80");
   stuckIcon.setAttribute("height", "80");
   stuckIcon.setAttribute("visibility", "hidden");
@@ -68,12 +71,12 @@ export function createHeartbeatScene(): HeartbeatSceneView {
   });
 
   const scenery = svg("g", { class: "scene-dimmable" }, [
-    svg("rect", { x: 0, y: 330, width: 960, height: 30, class: "road" }),
-    svg("rect", { x: SENSOR_X - 60, y: 220, width: 120, height: 56, rx: 8, class: "housing" }),
-    svg("circle", { cx: SENSOR_X + 20, cy: 220, r: 8, class: "switch-pivot" }),
+    svg("rect", { x: 0, y: 430, width: VIEW_W, height: 30, class: "road" }),
+    svg("rect", { x: SENSOR_X - 60, y: SENSOR_Y, width: 120, height: 56, rx: 8, class: "housing" }),
+    svg("circle", { cx: SENSOR_X + 20, cy: SENSOR_Y, r: 8, class: "switch-pivot" }),
     lever,
-    svg("line", { x1: SENSOR_X + 60, y1: 248, x2: PROGRAM_X - 80, y2: 248, class: "wire" }),
-    svg("rect", { x: PROGRAM_X - 80, y: 170, width: 160, height: 156, rx: 10, class: "chip-body" }),
+    svg("line", { x1: SENSOR_X + 60, y1: SENSOR_Y + 28, x2: PROGRAM_X - 80, y2: SENSOR_Y + 28, class: "wire" }),
+    svg("rect", { x: PROGRAM_X - 80, y: LIGHT_Y - 20, width: 160, height: 156, rx: 10, class: "chip-body" }),
     svg("line", { x1: PROGRAM_X + 80, y1: LIGHT_Y, x2: LIGHT_X - RING_R, y2: LIGHT_Y, class: "wire" }),
     stuckIcon,
   ]);
@@ -95,7 +98,7 @@ export function createHeartbeatScene(): HeartbeatSceneView {
   const art = svg(
     "svg",
     {
-      viewBox: "0 0 960 360",
+      viewBox: `0 0 ${String(VIEW_W)} ${String(VIEW_H)}`,
       preserveAspectRatio: "xMidYMid meet",
       class: "scene-svg",
       role: "img",
@@ -104,49 +107,56 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     [scenery, light],
   );
 
-  const column = (name: string, techName: string, extra: HTMLElement | null, caption: HTMLElement | null = null): HTMLElement =>
-    el("div", { class: "scene-column" }, [
+  const column = (name: string, techName: string | null, extra: readonly HTMLElement[]): HTMLElement =>
+    el("span", { class: "scene-column" }, [
       el("span", {}, [name]),
-      markDetail(el("span", { class: "signal-name" }, [techName]), "tech"),
-      extra,
-      caption,
+      techName === null ? null : markDetail(el("span", { class: "signal-name" }, [techName]), "tech"),
+      ...extra,
     ]);
   const ringLabel = el("span", { class: "scene-ring-label" }, [HEARTBEAT_TEXT.blinking]);
   const ringNote = el("span", { class: "scene-ring-caption" }, [ringCaption(600)]);
-  const labelRow = el("div", { class: "scene-label-row scene-label-row--three" }, [
-    column(HEARTBEAT_TEXT.sensor, "PULSE", null),
-    el("div", { class: "scene-column" }, [el("span", {}, [HEARTBEAT_TEXT.program])]),
-    column(HEARTBEAT_TEXT.light, "HEARTBEAT", ringLabel, ringNote),
-  ]);
   const line = el("p", { class: "scene-line", hidden: true }, [HEARTBEAT_TEXT.forgot]);
   const summary = el("p", { class: "visually-hidden" }, [""]);
-  const chrome = createChrome([art, labelRow, line, summary]);
+  const chrome = createChrome({
+    art,
+    width: VIEW_W,
+    height: VIEW_H,
+    labels: [
+      { node: column(HEARTBEAT_TEXT.sensor, "PULSE", []), x: SENSOR_X, y: SENSOR_Y + 66 },
+      { node: column(HEARTBEAT_TEXT.program, null, []), x: PROGRAM_X, y: LIGHT_Y + 146 },
+      { node: column(HEARTBEAT_TEXT.light, "HEARTBEAT", [ringLabel, ringNote]), x: LIGHT_X, y: LIGHT_Y + RING_R + 10, maxWidth: 0.36 },
+    ],
+    below: [line, summary],
+  });
 
-  return {
-    node: chrome.node,
-    update(edges, events, cursor, opts = {}) {
-      const state = heartbeatSceneAt({ outputEdges: edges, events, violation: null }, null, cursor);
-      const limit = opts.limitMs ?? 600;
-      const ring = ringAt(edges, cursor, limit);
-      ringNote.textContent = ringCaption(limit);
+  function update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts: HeartbeatOpts = {}): void {
+    const state = heartbeatSceneAt({ outputEdges: edges, events, violation: null }, null, cursor);
+    const limit = opts.limitMs ?? 600;
+    const ring = ringAt(edges, cursor, limit);
+    ringNote.textContent = ringCaption(limit);
 
-      lamp.setAttribute("class", state.lampLit ? "status-lamp is-lit" : "status-lamp");
-      lampGlow.setAttribute("class", state.lampLit ? "lamp-glow is-lit" : "lamp-glow");
-      lever.setAttribute("class", state.pulseOn ? "switch-lever is-on" : "switch-lever");
-      lever.setAttribute("y2", state.pulseOn ? "196" : "242");
-      stuckIcon.setAttribute("visibility", stuckHoldsPulse(events, cursor) ? "visible" : "hidden");
+    lamp.setAttribute("class", state.lampLit ? "status-lamp is-lit" : "status-lamp");
+    lampGlow.setAttribute("class", state.lampLit ? "lamp-glow is-lit" : "lamp-glow");
+    lever.setAttribute("class", state.pulseOn ? "switch-lever is-on" : "switch-lever");
+    lever.setAttribute("y2", String(state.pulseOn ? SENSOR_Y - 24 : SENSOR_Y + 22));
+    stuckIcon.setAttribute("visibility", stuckHoldsPulse(events, cursor) ? "visible" : "hidden");
 
-      ringFill.setAttribute("stroke-dasharray", `${((1000 * ring.num) / ring.den).toFixed(1)} 1000`);
-      ringFill.setAttribute("class", ring.stuck === null ? "ring-fill" : "ring-fill is-stuck");
-      ringLabel.textContent = ring.label;
-      ringLabel.classList.toggle("scene-flag", ring.stuck !== null);
+    ringFill.setAttribute("stroke-dasharray", `${((1000 * ring.num) / ring.den).toFixed(1)} 1000`);
+    ringFill.setAttribute("class", ring.stuck === null ? "ring-fill" : "ring-fill is-stuck");
+    ringLabel.textContent = ring.label;
+    ringLabel.classList.toggle("scene-flag", ring.stuck !== null);
 
-      const forgot = forgotLine(opts.imAliveRuleBroke === true, opts.build ?? "buggy");
-      line.textContent = forgot ?? "";
-      line.toggleAttribute("hidden", forgot === null);
+    const forgot = forgotLine(opts.imAliveRuleBroke === true, opts.build ?? "buggy");
+    line.textContent = forgot ?? "";
+    line.toggleAttribute("hidden", forgot === null);
 
-      summary.textContent = state.summary;
-      chrome.apply(opts);
-    },
-  };
+    summary.textContent = state.summary;
+    chrome.setLine([HEARTBEAT_TEXT.light, ring.label]);
+    chrome.apply(opts);
+  }
+
+  // The idle frame: the light off, the ring empty, the sensor off.
+  update([], [], 0);
+
+  return { node: chrome.node, frame: chrome.frame, update };
 }

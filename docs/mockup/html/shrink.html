@@ -1,0 +1,76 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stage while finding the moves that matter</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="width: 1200px; height: 640px; box-sizing: border-box; padding: 20px; background: #0C1110">
+<div style="height: 100%; box-sizing: border-box; background: #101715; border: 1px solid #22302C; border-radius: 18px; padding: 20px; display: flex; gap: 20px">
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<div style="position: relative; flex: 1; background: #0E1513; border: 1px solid #22302C; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 720 380" style="width: 100%; height: auto; opacity: 0.35" aria-hidden="true">
+<rect x="0" y="0" width="720" height="110" fill="#1A2421"></rect><rect x="0" y="270" width="720" height="110" fill="#1A2421"></rect><rect x="0" y="110" width="720" height="160" fill="#232E2B"></rect>
+<rect x="420" y="114" width="16" height="152" fill="#57685F"></rect><rect x="448" y="114" width="16" height="152" fill="#57685F"></rect><rect x="476" y="114" width="16" height="152" fill="#57685F"></rect><rect x="504" y="114" width="16" height="152" fill="#57685F"></rect><rect x="532" y="114" width="16" height="152" fill="#57685F"></rect>
+<rect x="300" y="206" width="88" height="46" rx="10" fill="#2E3B37" stroke="#C9D6D1" stroke-width="2"></rect>
+</svg>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+<span class="head" style="font-size: 22px; font-weight: 600">Finding the moves that matter…</span>
+<span style="font-size: 15px; color: #A9BAB4">tried <span style="color: #F2A541; font-weight: 600">12</span> shorter versions of the attack so far</span>
+</div>
+</div>
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 14px; color: #C9D6D1">The gremlins made 8 moves. Finding which ones the break really needs:</span>
+<div style="position: relative; height: 26px">
+<div style="position: absolute; left: 0; right: 0; top: 12px; height: 2px; background: #2A3733"></div>
+<span style="position: absolute; left: 0%; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #F2A541"></span>
+<span style="position: absolute; left: 14%; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #F2A541"></span>
+<span style="position: absolute; left: 29%; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #F2A541"></span>
+<span style="position: absolute; left: 39%; top: 3px; width: 20px; height: 20px; border-radius: 10px; border: 2px dashed #6B5530; box-sizing: border-box"></span>
+<span style="position: absolute; left: 48%; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #F2A541; opacity: 0.3; outline: 2px solid #F2A541; outline-offset: 3px"></span>
+<span style="position: absolute; left: 57%; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #F2A541; opacity: 0.3; outline: 2px solid #F2A541; outline-offset: 3px"></span>
+<span style="position: absolute; left: 66%; top: 3px; width: 20px; height: 20px; border-radius: 10px; border: 2px dashed #6B5530; box-sizing: border-box"></span>
+<span style="position: absolute; left: 75%; top: 3px; width: 20px; height: 20px; border-radius: 10px; border: 2px dashed #6B5530; box-sizing: border-box"></span>
+</div>
+<div style="display: flex; gap: 18px; font-size: 13px; color: #A9BAB4; flex-wrap: wrap">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #F2A541"></span>needed</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #F2A541; opacity: 0.3; outline: 2px solid #F2A541; outline-offset: 2px"></span>testing now</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 6px; border: 2px dashed #6B5530; box-sizing: border-box"></span>not needed</span>
+</div>
+</div>
+</div>
+<aside style="flex: 0 0 300px; display: flex; flex-direction: column; gap: 14px">
+<div style="background: #1C1513; border: 1px solid #5A2E28; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 32px; font-weight: 700; letter-spacing: 0.02em">BROKE</span>
+<span style="font-size: 18px; font-weight: 600; line-height: 1.35">Cars and walkers both got a green.</span>
+<span style="font-size: 13px; color: #A9BAB4">Broke on try 4 of 24 · found in 0.9 s</span>
+</div>
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<span style="height: 12px; width: 80%; border-radius: 6px; background: #1E2926"></span>
+<span style="height: 12px; width: 60%; border-radius: 6px; background: #1E2926"></span>
+<span style="font-size: 13px; color: #7F948D">The story appears when the moves are found.</span>
+</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

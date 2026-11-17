@@ -1,11 +1,12 @@
-// Stage view: the Scene_Area (scene, status text, Move_Strip, Player) and the Aside.
+// Stage view: the Scene_Area (scene, then one panel with the Move_Strip and the Player) and the Aside.
+// Idle and running text sits in the right column, where the verdict card goes later. Shrink and note text
+// is laid over the dimmed Scene.
 // States: idle, running, shrinking, broke, held, couldn't tell, reduce-error. The page controller (app-page.ts) calls one
 // show* method per phase; this file draws what it is given and holds no rule or timing logic.
 // Copy comes from model/stage-copy.ts. Playback comes from a Playback the caller owns.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent } from "../../../engine/types";
 import type { ExampleId } from "../data/examples";
-import type { Ratio } from "../model/pacing";
 import type { ShownKind } from "../model/scenes";
 import { STAGE_TEXT, shorterText, tryProgress } from "../model/stage-copy";
 import { fadeShrinkDots } from "../model/strip";
@@ -51,7 +52,7 @@ export interface StageView {
    * the Player node goes back under the Move_Strip (it was moved into the Fix_View).
    */
   setFixMode(on: boolean, fixRoot?: HTMLElement): void;
-  /** Idle: 60% Scene, two lines, no timeline. */
+  /** Idle: 60% Scene, its two lines in the right column, no timeline. */
   showIdle(): void;
   /** Running: "Try N of M" and the slim progress bar. `runsCompleted` is null before any progress message. */
   showRunning(runsCompleted: number | null, tries: number): void;
@@ -88,6 +89,8 @@ export interface StageView {
 
 type Scene = {
   node: HTMLElement;
+  /** The rounded card of the art; the stage lays its shrink and note text over it. */
+  frame: HTMLElement;
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: Record<string, unknown>): void;
 };
 
@@ -108,12 +111,16 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
   const strip = createMoveStrip();
   const playerBar: PlayerBar = createPlayerBar(playback);
   const sceneCard = el("div", { class: "scene-card is-idle" });
-  const status = el("div", { class: "stage-status", "aria-live": "polite" });
+  // Text over the Scene (shrink view, notes) and text in the right column (idle, running).
+  const overlay = el("div", { class: "stage-overlay", "aria-live": "polite" });
+  const sideStatus = el("div", { class: "stage-status", "aria-live": "polite" });
   const tryLabel = el("p", { class: "scene-try-label", hidden: true });
-  const sceneArea = el("div", { class: "scene-area" }, [tryLabel, sceneCard, status]);
+  const sceneArea = el("div", { class: "scene-area" }, [tryLabel, sceneCard]);
+  // The Move_Strip and the Player share one panel under the Scene.
+  const replayPanel = el("div", { class: "replay-panel", hidden: true }, [strip.root, playerBar.root]);
   const fixSlot = el("div", { class: "stage-fix", hidden: true });
-  const main = el("div", { class: "stage-main" }, [sceneArea, strip.root, playerBar.root, fixSlot]);
-  const side = el("div", { class: "stage-aside" }, [aside.root, aside.actions]);
+  const main = el("div", { class: "stage-main" }, [sceneArea, replayPanel, fixSlot]);
+  const side = el("div", { class: "stage-aside" }, [sideStatus, aside.root, aside.actions]);
   const root = el("section", { class: "stage", "aria-label": "Stage" }, [main, side]);
 
   let exampleId: ExampleId = initial;
@@ -124,6 +131,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
 
   function mountScene(): void {
     setChildren(sceneCard, [scene.node]);
+    scene.frame.appendChild(overlay);
   }
 
   /** Scene look: "idle" 60%, "dim" for the Shrink_View and errors, "live" for the replay. */
@@ -133,11 +141,13 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     sceneCard.classList.toggle("is-broke", false);
   }
 
-  function drawScene(cursor: number, slow: Ratio | null): void {
+  function drawScene(cursor: number): void {
     if (shown === null) return;
     const s = shown;
     const atBreak = cursor >= s.v;
-    const common = { speed: slow, atBreak, stopped: atBreak && !playback.playing() };
+    const plan = playback.plan();
+    const ended = !playback.playing() && plan !== null && cursor >= plan.end;
+    const common = { atBreak, stopped: atBreak && !playback.playing(), ended };
     let opts: Record<string, unknown> = common;
     if (exampleId === "garage") {
       opts = { ...common, fixture: s.fixture, kind: s.kind ?? "reduced-buggy", v: s.v, limitMs: s.limitMs };
@@ -149,25 +159,53 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     strip.setCursor(cursor);
   }
 
-  const offCursor = playback.onCursor((c, f) => drawScene(c, f));
+  const offCursor = playback.onCursor((c) => drawScene(c));
   const offState = playback.onState(() => {
-    if (shown !== null) drawScene(playback.cursor(), null);
+    if (shown !== null) drawScene(playback.cursor());
   });
 
-  function text(title: string | null, lines: readonly (string | HTMLElement)[], cls: string): void {
-    setChildren(status, [
-      el("div", { class: cls }, [title === null ? null : el("p", { class: "stage-title" }, [title]), ...lines.map((l) => (typeof l === "string" ? el("p", { class: "stage-note" }, [l]) : l))]),
+  function block(title: string | null, lines: readonly (string | HTMLElement)[], cls: string): HTMLElement {
+    return el("div", { class: cls }, [
+      title === null ? null : el("p", { class: "stage-title" }, [title]),
+      ...lines.map((l) => (typeof l === "string" ? el("p", { class: "stage-note" }, [l]) : l)),
     ]);
+  }
+
+  /** Text in the right column (idle, running); clears the text over the Scene. */
+  function sideText(title: string | null, lines: readonly (string | HTMLElement)[], cls: string): void {
+    setChildren(overlay, []);
+    setChildren(sideStatus, [block(title, lines, cls)]);
+    sideStatus.hidden = false;
+  }
+
+  /** Text over the dimmed Scene (shrink view, notes); clears the right-column text. */
+  function overlayText(title: string | null, lines: readonly (string | HTMLElement)[], cls: string): void {
+    clearText();
+    if (title === null && lines.length === 0) return;
+    setChildren(overlay, [block(title, lines, cls)]);
+  }
+
+  function clearText(): void {
+    setChildren(overlay, []);
+    setChildren(sideStatus, []);
+    sideStatus.hidden = true;
+  }
+
+  /** The panel shows while the strip or the Player has something to show. */
+  function paintPanel(): void {
+    replayPanel.hidden = fixMode || (strip.root.hidden && playerBar.root.hidden);
   }
 
   function hidePlayer(hidden: boolean): void {
     playerBar.root.hidden = hidden;
+    paintPanel();
   }
 
   /** The move strip shows only while it has something to show: never empty, never in the fix view. */
   function stripVisible(on: boolean): void {
     stripWanted = on;
     strip.root.hidden = fixMode || !on;
+    paintPanel();
   }
 
   function showLabel(text: string | null): void {
@@ -187,7 +225,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     showLabel(null);
     stripVisible(true);
     strip.showShrink(original, faded, reduced);
-    text(
+    overlayText(
       reduced === null ? STAGE_TEXT.shrinkTitle : null,
       reduced === null ? [el("p", { class: "stage-note shrink-count" }, [shorterText(candidatesTried === null ? 0 : candidatesTried)])] : [],
       "stage-shrink",
@@ -197,6 +235,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
   mountScene();
   hidePlayer(true);
   stripVisible(false);
+  clearText();
 
   return {
     root,
@@ -215,9 +254,10 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
         setChildren(fixSlot, fixRoot === undefined ? [] : [fixRoot]);
       } else {
         setChildren(fixSlot, []);
-        // The Fix_View held the Player; put it back before the slot.
-        main.insertBefore(playerBar.root, fixSlot);
+        // The Fix_View held the Player; put it back in the panel, after the strip.
+        replayPanel.appendChild(playerBar.root);
       }
+      paintPanel();
     },
     setExample(id) {
       if (id === exampleId) return;
@@ -233,7 +273,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       stripVisible(false);
       showLabel(null);
       hidePlayer(true);
-      text(STAGE_TEXT.idleTitle, [STAGE_TEXT.idleLine], "stage-idle");
+      sideText(STAGE_TEXT.idleTitle, [STAGE_TEXT.idleLine], "stage-idle");
     },
     showRunning(runsCompleted, tries) {
       shown = null;
@@ -250,7 +290,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
         { class: "progress-bar", role: "progressbar", "aria-label": p.text, "aria-valuemin": 0, "aria-valuemax": tries, "aria-valuenow": Math.round(p.fill * tries) },
         [fillNode],
       );
-      text(null, [el("p", { class: "stage-note" }, [p.text]), bar], "stage-running");
+      sideText(null, [el("p", { class: "stage-title" }, [p.text]), bar], "stage-running");
     },
     showShrinking,
     reduceProgress(original, candidatesTried, bestList, faded) {
@@ -262,21 +302,21 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       shown = replay;
       look("live");
       showLabel(null);
-      setChildren(status, []);
+      clearText();
       stripVisible(true);
       strip.showMoves(replay.events, replay.fixture, replay.start, replay.v);
       hidePlayer(false);
-      drawScene(playback.cursor(), null);
+      drawScene(playback.cursor());
     },
     showHeld(replay, label) {
       shown = replay;
       look("live");
       showLabel(label);
-      setChildren(status, []);
+      clearText();
       strip.clear();
       stripVisible(false);
       hidePlayer(false);
-      drawScene(playback.cursor(), null);
+      drawScene(playback.cursor());
     },
     showNote(line, dim) {
       shown = null;
@@ -285,7 +325,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       stripVisible(false);
       showLabel(null);
       hidePlayer(true);
-      text(null, [line], "stage-idle");
+      overlayText(null, [line], "stage-note-block");
     },
     showReduceError() {
       shown = null;
@@ -294,7 +334,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       stripVisible(false);
       showLabel(null);
       hidePlayer(true);
-      setChildren(status, []);
+      clearText();
     },
     dispose() {
       offCursor();

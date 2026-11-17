@@ -523,6 +523,7 @@ export function mountApp(root: HTMLElement): void {
     flow = { ...flow, reduction: "none", reducedReplayOk: false, fix: "hidden" };
     removeButtons.length = 0;
     tabs.setReplay(null);
+    tabs.setPending(false);
     tabs.setFixChange(null);
     tabs.setTryRemoving(null);
     tabs.setCyclesRate(null);
@@ -572,6 +573,8 @@ export function mountApp(root: HTMLElement): void {
 
     // The BROKE card and the Shrink_View appear in the same step, before any reduce-progress message.
     cardInput = brokeCard(null, { kind: "pending" });
+    // The tabs say "Working out what happened…" too, until the replay is ready.
+    tabs.setPending(true);
     setPhase("shrinking");
     let faded: ReadonlySet<number> = new Set<number>();
     stage.showShrinking(originalList, null, faded);
@@ -599,6 +602,7 @@ export function mountApp(root: HTMLElement): void {
     const err = outcomeError(o);
     if (err !== null) {
       flow = { ...flow, reduction: "error" };
+      tabs.setPending(false);
       setPhase("reduce-error");
       stage.showReduceError();
       cardInput = brokeCard(null, { kind: "none" });
@@ -636,6 +640,7 @@ export function mountApp(root: HTMLElement): void {
     const rv = typeof red === "string" ? null : red.replay.violation;
     if (typeof red === "string" || rv === null) {
       showError(typeof red === "string" ? red : REDUCED_NO_BREAK);
+      tabs.setPending(false);
       stage.showReduceError();
       cardInput = brokeCard(null, { kind: "none" });
       renderAside();
@@ -651,6 +656,7 @@ export function mountApp(root: HTMLElement): void {
       cardStory === null ? { kind: "none" } : { kind: "ready", text: cardStory.plain },
     );
     hasReplay = true;
+    tabs.setPending(false);
     tabs.setReplay({
       story: cardStory === null ? null : cardStory.plain,
       list: res.reducedList,

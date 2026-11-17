@@ -1,0 +1,79 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hexorcist on a phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+a{color:#7EE2A8}
+button{font-family:inherit;cursor:pointer}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="width: 390px; height: 1320px; box-sizing: border-box; padding: 16px; background: #0C1110; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: flex; align-items: center; gap: 8px"><svg width="26" height="26" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3c-6.6 0-11 5-11 11.5V30l3.7-2.6L13.3 30l3.7-2.6 3.7 2.6 3.6-2.6L28 30V14.5C28 8 23.6 3 17 3z" fill="none" stroke="#7EE2A8" stroke-width="2.2"></path><circle cx="13" cy="15" r="1.8" fill="#7EE2A8"></circle><circle cx="21" cy="15" r="1.8" fill="#7EE2A8"></circle></svg><span class="head" style="font-size: 19px; font-weight: 700">Hexorcist</span></span>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #C9D6D1">Details: Off<button aria-label="Technical details" role="switch" aria-checked="false" style="width: 44px; height: 24px; border-radius: 12px; border: 1px solid #3A4A45; background: #18211F; position: relative; padding: 0"><span style="position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 8px; background: #9FB2AB"></span></button></label>
+</header>
+<h1 class="head" style="margin: 0; font-size: 26px; line-height: 1.15">AI wrote your gadget's code. <span style="color: #7EE2A8">Let gremlins break it here, before it breaks for real.</span></h1>
+<div style="display: flex; gap: 8px">
+<button style="flex: 1; display: flex; align-items: center; justify-content: space-between; background: #121917; border: 1px solid #22302C; border-radius: 12px; padding: 10px 12px; color: #E7EEEB; font-size: 14px; text-align: left; min-height: 48px"><span>Crosswalk · never both green · Masher</span><span style="color: #9FB2AB">Change ▾</span></button>
+<button style="background: transparent; color: #7EE2A8; border: 1px solid #2D5A43; border-radius: 12px; padding: 0 12px; font-size: 14px; min-height: 48px">Run again</button>
+</div>
+<p style="margin: 0; font-size: 13px; color: #9FB2AB">Gremlins are scripted pests, not AI.</p>
+<div style="position: relative; background: #0E1513; border: 1px solid #22302C; border-radius: 14px; overflow: hidden">
+<svg viewBox="0 0 560 300" style="display: block; width: 100%; height: auto" role="img" aria-label="Top-down crosswalk: both lights green, the car waits at the stop line, the walker is on the crossing">
+<rect x="0" y="0" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="210" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="90" width="560" height="120" fill="#232E2B"></rect>
+<rect x="330" y="94" width="12" height="112" fill="#57685F"></rect><rect x="352" y="94" width="12" height="112" fill="#57685F"></rect><rect x="374" y="94" width="12" height="112" fill="#57685F"></rect><rect x="396" y="94" width="12" height="112" fill="#57685F"></rect>
+<rect x="312" y="152" width="5" height="54" fill="#C9D6D1"></rect>
+<rect x="228" y="160" width="70" height="36" rx="8" fill="#2E3B37" stroke="#C9D6D1" stroke-width="2"></rect>
+<g transform="translate(362 116)"><circle cx="8" cy="0" r="7" fill="#E7EEEB"></circle><path d="M8 7v18M8 13l-8 6M8 13l8-4M8 25l-6 12M8 25l6 12" stroke="#E7EEEB" stroke-width="3" stroke-linecap="round" fill="none"></path></g>
+<g transform="translate(290 214)"><rect x="-4" y="-4" width="26" height="58" rx="8" fill="none" stroke="#FF7A6B" stroke-width="2"></rect><rect width="18" height="50" rx="5" fill="#0E1513" stroke="#6F837C"></rect><circle cx="9" cy="10" r="5" fill="#3A2523"></circle><circle cx="9" cy="25" r="5" fill="#3A3323"></circle><circle cx="9" cy="40" r="5" fill="#7EE2A8"></circle></g>
+<g transform="translate(340 30)"><rect x="-4" y="-4" width="36" height="36" rx="8" fill="none" stroke="#FF7A6B" stroke-width="2"></rect><rect width="28" height="28" rx="5" fill="#0E1513" stroke="#6F837C"></rect><circle cx="14" cy="8" r="2.5" fill="#7EE2A8"></circle><path d="M14 11v7M14 13l-4 3M14 13l4-2M14 18l-3 6M14 18l3 6" stroke="#7EE2A8" stroke-width="1.8" fill="none" stroke-linecap="round"></path></g>
+<g transform="translate(460 40)"><rect width="22" height="18" rx="4" fill="#0E1513" stroke="#6F837C"></rect><circle cx="11" cy="9" r="5" fill="#F2A541"></circle><circle cx="34" cy="2" r="9" fill="#2A2113" stroke="#F2A541" stroke-width="2"></circle></g>
+</svg>
+<span style="position: absolute; top: 8px; left: 8px; background: #FF7A6B; color: #1A0E0C; font-weight: 700; font-size: 13px; border-radius: 6px; padding: 4px 8px">Both have a green!</span>
+</div>
+<p style="margin: 0; font-size: 14px; color: #A9BAB4">Car light: green · Walk sign: on · Illustrative</p>
+<div style="background: #1C1513; border: 1px solid #5A2E28; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<span class="head" style="font-size: 28px; font-weight: 700">BROKE</span>
+<span style="font-size: 17px; font-weight: 600">Cars and walkers both got a green.</span>
+<span style="font-size: 14px; color: #D9B8B2">Two quick presses, the second one held, did it.</span>
+<span style="font-size: 13px; color: #A9BAB4">Broke on try 4 of 24 · found in 0.9 s · 8 moves → 3 needed</span>
+</div>
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<span><span class="mono" style="color: #9FB2AB">+0 ms</span> pressed</span>
+<span><span class="mono" style="color: #9FB2AB">+65 ms</span> let go</span>
+<span><span class="mono" style="color: #9FB2AB">+131 ms</span> pressed and held</span>
+<span style="color: #FFB1A7"><span class="mono">+450 ms</span> broke</span>
+</div>
+<div style="display: flex; gap: 10px">
+<button style="height: 48px; border-radius: 12px; background: #E7EEEB; color: #0C1110; border: 0; display: flex; align-items: center; gap: 8px; padding: 0 14px; font-size: 15px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="#0C1110"></path></svg>Replay</button>
+<button style="flex: 1; background: #7EE2A8; color: #0C1110; border: 0; border-radius: 12px; font-size: 16px; font-weight: 700; min-height: 48px">See the fix work →</button>
+</div>
+<div role="tablist" style="display: flex; gap: 2px; border-bottom: 1px solid #22302C; overflow-x: auto">
+<button role="tab" aria-selected="true" style="background: transparent; border: 0; border-bottom: 2px solid #7EE2A8; color: #E7EEEB; padding: 12px 12px; font-size: 14px; font-weight: 600; min-height: 44px">What happened</button>
+<button role="tab" aria-selected="false" style="background: transparent; border: 0; color: #A9BAB4; padding: 12px 12px; font-size: 14px; min-height: 44px">Signals</button>
+<button role="tab" aria-selected="false" style="background: transparent; border: 0; color: #A9BAB4; padding: 12px 12px; font-size: 14px; min-height: 44px">The fix</button>
+<button role="tab" aria-selected="false" style="background: transparent; border: 0; color: #A9BAB4; padding: 12px 12px; font-size: 14px; min-height: 44px">Details</button>
+</div>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #D5E0DC">Masher pressed the walk button, let go, then pressed and held it, all within 131 ms. 319 ms later, the light gave cars and walkers a green at the same time.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1320}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

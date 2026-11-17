@@ -53,7 +53,7 @@
   /* Type */
   --font-ui: system-ui, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
-  --fs-h1: 34px;
+  --fs-h1: 46px;
   --fs-verdict: 32px;
   --fs-body: 16px;
   --fs-meta: 13px;
@@ -116,13 +116,14 @@ code,
   border: 0;
 }
 
+/* The page is at most 1200 px wide, like the mockup; nothing inside may be wider. */
 .page {
-  max-width: 1760px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: var(--s-5) var(--s-6);
+  padding: 24px 32px 64px;
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-5);
 }
 
 p,
@@ -178,15 +179,16 @@ h3,
 .hero {
   display: flex;
   flex-direction: column;
-  gap: var(--s-3);
-  max-width: 1100px;
-  padding: var(--s-2) 0;
+  gap: 14px;
+  padding-top: var(--s-2);
 }
 
 .hero h1 {
+  max-width: 840px;
   font-size: var(--fs-h1);
-  line-height: 1.1;
+  line-height: 1.08;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .hero-accent {
@@ -195,8 +197,10 @@ h3,
 }
 
 .hero-text {
-  color: var(--text-2);
-  font-size: var(--fs-body);
+  max-width: 760px;
+  color: #B8C7C1;
+  font-size: 17px;
+  line-height: 1.55;
 }
 
 .hero-chips {
@@ -207,12 +211,11 @@ h3,
 
 /* Chips in the hero are plain labels, not controls. */
 .hero-chip {
-  padding: var(--s-1) var(--s-3);
+  padding: 6px var(--s-3);
   font-size: var(--fs-meta);
   color: var(--text-2);
-  background: var(--surface-3);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border: 1px solid #2A3733;
+  border-radius: 999px;
 }
 
 .hero.is-compact {
@@ -303,16 +306,18 @@ h3,
   grid-template-rows: 0fr;
 }
 
+/* Closed: not visible once the height transition has run (and not focusable: the body is inert). */
+.setup.is-collapsed .setup-inner {
+  visibility: hidden;
+  transition: visibility 0s linear var(--t-setup);
+}
+
 .setup-inner {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  /* Room for the 3 px focus ring and its 2 px offset, so the ring is never clipped. */
-  padding: var(--s-2);
-  margin: calc(-1 * var(--s-2));
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-4);
+  /* No padding or margin here: a closed body must have zero height. The card inside has the padding
+     that keeps focus rings clear of this clipping box. */
 }
 
 .setup.is-locked .setup-inner {
@@ -371,67 +376,66 @@ h3,
 /* Device cards: horizontal and compact. Art on the left, title and line on the right. */
 .device-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s-3);
 }
 
-.device-slot {
-  display: none;
-}
-
+/* Device cards: vertical, art on top, then the title and the line. */
 .device-card {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--s-3);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   min-width: 0;
   min-height: var(--target);
-  max-height: 120px;
-  padding: var(--s-2) var(--s-3);
+  padding: var(--s-3);
   color: var(--text);
   font: inherit;
   text-align: left;
   background: var(--surface-3);
-  border: 2px solid var(--line);
+  border: 1px solid #2A3733;
   border-radius: var(--r-md);
   cursor: pointer;
 }
 
+/* Selected: a 2 px pumpkin edge (1 px border plus a 1 px inset ring, so the card does not shift). */
 .device-card.is-selected,
 .device-card[aria-pressed="true"] {
+  background: #172320;
   border-color: var(--pumpkin);
+  box-shadow: inset 0 0 0 1px var(--pumpkin);
 }
 
 .device-art {
-  flex: none;
-  width: 60px;
-  height: 60px;
-  color: var(--text-2);
+  display: block;
+  width: 100%;
+  height: 48px;
 }
 
 .device-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .card-title,
 .device-title {
   font-weight: 600;
+  font-size: 15px;
 }
 
 .device-line {
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: var(--fs-meta);
+  line-height: 1.4;
 }
 
 /* Rule and Gremlins side by side from 1024 px up. */
 .setup-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--s-4) var(--s-6);
+  gap: var(--s-4);
 }
 
 @media (min-width: 1024px) {
@@ -513,12 +517,13 @@ h3,
 
 /* ---------- Rule area ---------- */
 .rule-headline {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .why-line {
-  color: var(--text-2);
+  font-size: var(--fs-meta);
+  color: var(--muted);
 }
 
 .rule-lines,
@@ -909,10 +914,10 @@ button:disabled {
 /* ---------- Stage ---------- */
 .stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--s-4);
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--s-5);
   align-items: start;
-  padding: var(--s-4);
+  padding: var(--s-5);
   background: var(--surface-1);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
@@ -949,18 +954,12 @@ button:disabled {
   min-width: 0;
 }
 
+/* The card itself is drawn by .scene-frame (scene-chrome.ts); this wrapper only carries the look classes. */
 .scene-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
   min-width: 0;
-  padding: var(--s-3);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
 }
 
-.scene-card.is-broke {
+.scene-card.is-broke .scene-frame {
   border-color: var(--coral);
 }
 
@@ -1017,13 +1016,11 @@ button:disabled {
   color: var(--text-2);
 }
 
+/* The art fills its card edge to edge (830 x 460 units). */
 .scene-svg {
   display: block;
   width: 100%;
   height: auto;
-  /* Capped so the stage and the tab row fit one screen. The art keeps its aspect ratio and is centred. */
-  max-height: min(48vh, 520px);
-  margin: 0 auto;
 }
 
 .scene-svg .scene-dimmable {
@@ -2516,4 +2513,1258 @@ button:disabled {
   font-size: var(--fs-meta);
   line-height: 1.35;
   color: var(--muted);
+}
+
+/* =====================================================================================================
+   Visual match pass: layout and look from docs/mockup/html. These rules come after the earlier ones on
+   purpose, so each media query that touches the same selectors is repeated at the end of this block.
+   ===================================================================================================== */
+
+/* ---------- Header switch: a drawn toggle after the state text ---------- */
+.switch {
+  gap: 10px;
+  padding: var(--s-1) var(--s-2);
+  font-size: 14px;
+  color: var(--text-2);
+  background: none;
+  border: 0;
+}
+
+.switch[aria-checked="true"] {
+  border: 0;
+}
+
+.switch-state {
+  min-width: 0;
+  font-weight: 400;
+}
+
+.switch-track {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 24px;
+  background: #18211F;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+}
+
+.switch-knob {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  background: #9FB2AB;
+  border-radius: 8px;
+  transition: left var(--t-hover) ease, background-color var(--t-hover) ease;
+}
+
+.switch[aria-checked="true"] .switch-track {
+  border-color: var(--mint);
+}
+
+.switch[aria-checked="true"] .switch-knob {
+  left: 23px;
+  background: var(--mint);
+}
+
+/* ---------- Setup: one card ---------- */
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.setup-section {
+  gap: var(--s-2);
+}
+
+.section-title {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #9FB2AB;
+}
+
+.section-note {
+  font-weight: 500;
+}
+
+/* Rule: one boxed row, the headline and "Why it matters" left, "Change rule" right. */
+.rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) 14px;
+  background: var(--surface-3);
+  border: 1px solid #2A3733;
+  border-radius: 12px;
+}
+
+.rule-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.rule-menu-button {
+  flex: none;
+  width: auto;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.preset-menu {
+  padding: var(--s-3) 14px;
+  background: var(--surface-3);
+  border: 1px solid #2A3733;
+  border-radius: 12px;
+}
+
+/* Gremlins: the chips and the "N more need other inputs" link on one row. */
+.chip-row {
+  align-items: center;
+}
+
+.chip {
+  padding: 6px 14px 6px 6px;
+  font-size: 14px;
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid #2A3733;
+  border-radius: 999px;
+}
+
+.chip[aria-pressed="true"] {
+  color: var(--pumpkin-soft);
+  background: #2A2113;
+  border: 1px solid var(--pumpkin);
+}
+
+.chip .icon-gremlin {
+  width: 30px;
+  height: 30px;
+}
+
+.more-link {
+  font-size: var(--fs-meta);
+  color: var(--mint);
+}
+
+.more-link:hover:not(:disabled) {
+  color: #A9F0C6;
+}
+
+/* Expanded: each disabled chip with its note beside it, 12 px apart, the notes in one column. */
+.incompatible-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  margin-top: var(--s-2);
+}
+
+.incompatible-list[hidden] {
+  display: none;
+}
+
+.incompatible-item {
+  display: contents;
+}
+
+.incompatible-item .pick-reason {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+
+/* Unleash and the tries line, bottom left of the card. */
+.setup-action {
+  justify-content: flex-start;
+  gap: var(--s-4);
+}
+
+.primary-unleash {
+  width: auto;
+  min-width: 0;
+  padding: 14px 28px;
+  font-size: 17px;
+  border: 0;
+  border-radius: 12px;
+}
+
+.tries-line {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Setup summary bar */
+.setup-summary {
+  justify-content: space-between;
+  padding: var(--s-3) 14px;
+  font-size: 14px;
+}
+
+.summary-device {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.summary-rule {
+  color: var(--text-2);
+}
+
+.summary-gremlins {
+  color: var(--pumpkin-soft);
+}
+
+.summary-note {
+  color: #9FB2AB;
+}
+
+.summary-sep {
+  color: #4E5F59;
+}
+
+.setup-summary-actions .secondary {
+  padding: 10px 14px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.setup-summary-actions .run-again {
+  color: var(--mint);
+  border-color: var(--held-line);
+}
+
+/* ---------- Stage ---------- */
+.stage {
+  gap: var(--s-5);
+  align-items: stretch;
+}
+
+/* Idle and running text in the right column, where the verdict card goes later, centred beside the scene. */
+.stage-status {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stage-status .stage-idle,
+.stage-status .stage-running {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.stage-aside > .aside:empty {
+  display: none;
+}
+
+.stage-status .stage-title,
+.stage-overlay .stage-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stage-status .stage-note,
+.stage-overlay .stage-note {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Shrink and note text over the dimmed Scene. */
+.stage-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-6);
+  text-align: center;
+  pointer-events: none;
+}
+
+.stage-overlay:empty {
+  display: none;
+}
+
+.stage-overlay .stage-shrink,
+.stage-overlay .stage-note-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 520px;
+  padding: var(--s-3) var(--s-4);
+  background: #0E1513D9;
+  border-radius: var(--r-sm);
+}
+
+.shrink-count {
+  color: var(--muted);
+}
+
+/* The scene card: the art edge to edge, clipped to the rounded card. */
+.scene {
+  gap: var(--s-2);
+}
+
+.scene-frame {
+  position: relative;
+  overflow: hidden;
+  background: #0E1513;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.scene-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A label next to its object, laid over the art in its own units (scene-chrome.ts). */
+.scene-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--text-2);
+  overflow-wrap: normal;
+}
+
+.scene-label--gremlin {
+  color: var(--pumpkin-soft);
+}
+
+.scene-label--big,
+.scene-label.scene-flag {
+  font-size: 16px;
+}
+
+.scene-label .signal-name {
+  margin-left: 0;
+  font-size: var(--fs-meta);
+}
+
+.scene-label .scene-column {
+  align-items: center;
+}
+
+.scene-label[hidden] {
+  display: none !important;
+}
+
+/* The ring label and its caption under the I'm-alive light wrap inside the label's max-width. */
+.scene-ring-label,
+.scene-ring-caption {
+  overflow-wrap: anywhere;
+}
+
+/* Corner badges over the art. */
+.scene-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  pointer-events: none;
+}
+
+.scene-corner--tl {
+  top: 12px;
+  left: 12px;
+}
+
+.scene-corner--tr {
+  top: 12px;
+  right: 12px;
+  align-items: flex-end;
+}
+
+.scene-corner--bl {
+  bottom: 12px;
+  left: 12px;
+}
+
+.scene-corner--br {
+  bottom: 12px;
+  right: 12px;
+  align-items: flex-end;
+}
+
+.scene-badge {
+  display: inline-block;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* The break badge ("Both have a green!", the garage deadline): a filled coral pill. 16 px, like the garage text. */
+.scene-badge--break {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A0E0C;
+  background: var(--coral);
+  border-radius: 8px;
+}
+
+.scene-badge--illustrative {
+  padding: var(--s-1) var(--s-2);
+  color: var(--text-2);
+  background: #0C1110D9;
+  border: 1px solid #2A3733;
+  border-radius: 6px;
+}
+
+.scene-badge--stopped {
+  padding: var(--s-1) var(--s-2);
+  color: var(--pumpkin-soft);
+  background: #0C1110D9;
+  border: 1px solid #4A3A22;
+  border-radius: 6px;
+}
+
+.scene-badge--title {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text);
+  background: #0C1110D9;
+  border-radius: 6px;
+}
+
+.scene-badge--state {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--mint);
+  border-radius: 6px;
+}
+
+/* The phone line under the scene; on wider screens the labels sit in the scene. */
+.scene-phone-line {
+  display: none;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.scene-line {
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+/* ---------- Scene art colours (mockup) ---------- */
+.sidewalk {
+  fill: #1A2421;
+}
+
+.road {
+  fill: #232E2B;
+}
+
+.stripe {
+  fill: #57685F;
+}
+
+.stop-line {
+  fill: var(--text-2);
+}
+
+.lane-mark {
+  stroke: #3E4C47;
+  stroke-width: 2;
+  stroke-dasharray: 18 14;
+}
+
+.pole {
+  fill: #6F837C;
+}
+
+.housing {
+  fill: #0E1513;
+  stroke: #6F837C;
+  stroke-width: 1.5;
+}
+
+.lamp {
+  stroke: none;
+}
+
+.lamp--red {
+  fill: #3A2523;
+}
+
+.lamp--yellow {
+  fill: #3A3323;
+}
+
+.lamp--green {
+  fill: #1F3A2C;
+}
+
+.lamp--red.is-lit {
+  fill: var(--coral);
+}
+
+.lamp--yellow.is-lit {
+  fill: var(--pumpkin-soft);
+}
+
+.lamp--green.is-lit {
+  fill: var(--mint);
+}
+
+.conflict-ring {
+  stroke-width: 2.5;
+}
+
+.walk-figure-head {
+  fill: var(--mint);
+}
+
+.walk-figure-body {
+  fill: none;
+  stroke: var(--mint);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.walk-stop {
+  fill: var(--coral);
+  opacity: 0.85;
+}
+
+.button-lamp {
+  fill: #2A2113;
+  stroke: var(--pumpkin);
+  stroke-width: 1.5;
+}
+
+.car-body {
+  fill: #2E3B37;
+  stroke: var(--text-2);
+  stroke-width: 2;
+}
+
+.car-glass {
+  fill: #1A2421;
+  stroke: var(--text-2);
+  stroke-width: 1.5;
+}
+
+.car-roof {
+  fill: #27332F;
+  stroke: none;
+}
+
+.car-headlight {
+  fill: #F7E3A1;
+  stroke: none;
+}
+
+.car-beam {
+  fill: #F7E3A1;
+  opacity: 0.45;
+}
+
+/* A car the end of playback caught on the right edge drives the rest of the way out. */
+.car-top.is-leaving {
+  transition: transform 600ms ease-in;
+}
+
+/* Garage door: a filled slatted panel under a roller. */
+.door-opening {
+  fill: #0B100F;
+}
+
+.door-slat {
+  fill: #2E3B37;
+  stroke: #6F837C;
+  stroke-width: 1.5;
+}
+
+.door-rail {
+  fill: #6F837C;
+}
+
+.door-roller {
+  fill: #3A4A45;
+  stroke: #6F837C;
+  stroke-width: 1.5;
+}
+
+.frame {
+  fill: #57685F;
+}
+
+/* ---------- Device card art ---------- */
+.device-art .art-road {
+  fill: #26322F;
+}
+
+.device-art .art-stripe {
+  fill: #6F837C;
+}
+
+.device-art .art-line {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.6;
+}
+
+.device-art .art-frame {
+  fill: none;
+  stroke: #6F837C;
+  stroke-width: 3;
+}
+
+.device-art .art-beam {
+  stroke: var(--pumpkin);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+}
+
+.device-art .art-gremlin {
+  fill: none;
+  stroke: var(--pumpkin);
+  stroke-width: 1.6;
+}
+
+.device-art .art-gremlin-fill {
+  fill: var(--pumpkin);
+}
+
+.device-art .art-lit {
+  fill: var(--mint);
+}
+
+.device-art .art-ring {
+  fill: none;
+  stroke: #2F3D39;
+  stroke-width: 5;
+}
+
+.device-art .art-ring-fill {
+  fill: none;
+  stroke: var(--mint);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* ---------- One panel under the scene: the move strip, then the player ---------- */
+.replay-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: 14px var(--s-4);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.replay-panel[hidden] {
+  display: none;
+}
+
+.move-strip {
+  gap: var(--s-3);
+}
+
+/* The track: dots on a line, each label under its dot, the break mark at the right end. */
+.strip-track {
+  position: relative;
+  height: 64px;
+  min-height: 0;
+  margin: 0;
+}
+
+.strip-track::before {
+  top: 13px;
+  border-top: 2px solid #2A3733;
+}
+
+.move-strip.is-moves .strip-track .strip-dot {
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  background: var(--pumpkin);
+  border: 0;
+  border-radius: 10px;
+  transition: opacity var(--t-shrink-dot) ease;
+}
+
+.move-strip.is-moves .strip-track .strip-label {
+  position: absolute;
+  top: 32px;
+  font-size: var(--fs-meta);
+  line-height: 1.3;
+  color: var(--text-2);
+}
+
+.strip-track .strip-break {
+  position: absolute;
+  top: 2px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 24px;
+  text-align: center;
+  color: #1A0E0C;
+  background: var(--coral);
+  border-radius: 6px;
+}
+
+.move-strip.is-moves .strip-track .strip-label--break {
+  left: auto;
+  right: 0;
+  text-align: right;
+  color: #FFB1A7;
+}
+
+/* Shrink mode keeps the dots on the line, with the legend under it. */
+.move-strip.is-shrinking .strip-track {
+  height: 28px;
+}
+
+.move-strip.is-shrinking .strip-track .strip-dot {
+  top: 4px;
+  margin: 0 0 0 -10px;
+  width: 20px;
+  height: 20px;
+}
+
+.move-strip.is-shrinking .strip-dot.is-not-needed,
+.move-strip.is-shrinking .strip-dot.is-faded {
+  opacity: 1;
+  background: none;
+  border: 2px dashed #6B5530;
+}
+
+.move-strip.is-shrinking .strip-dot.is-testing {
+  background: #F2A5414D;
+  border: 0;
+  outline: 2px solid var(--pumpkin);
+  outline-offset: 3px;
+}
+
+.strip-row .strip-break {
+  position: static;
+  flex: none;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-weight: 800;
+  color: #1A0E0C;
+  background: var(--coral);
+  border-radius: 6px;
+}
+
+.strip-legend .strip-dot {
+  width: 12px;
+  height: 12px;
+}
+
+.strip-legend .strip-dot.is-not-needed {
+  opacity: 1;
+  background: none;
+  border: 2px dashed #6B5530;
+}
+
+.strip-legend .strip-dot.is-testing {
+  background: #F2A5414D;
+  border: 0;
+  outline: 2px solid var(--pumpkin);
+  outline-offset: 2px;
+}
+
+/* Player row: round play button, Replay, the slider between its two end words, the speed badge. */
+.player-bar {
+  gap: var(--s-3);
+}
+
+.player-play {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+  border-radius: 22px;
+}
+
+.player-play .icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.player-play:hover:not(:disabled) {
+  background: #FFFFFF;
+}
+
+.player-replay {
+  height: 44px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.speed-slider {
+  flex: 1 1 220px;
+  gap: 10px;
+  max-width: 460px;
+}
+
+.speed-end {
+  flex: none;
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+
+/* The speed slider: 6 px track with mint fill left of the thumb, 18 px thumb, no default look. */
+.speed-slider input[type="range"].speed-input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 120px;
+  max-width: 300px;
+  height: 18px;
+  min-height: var(--target);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.speed-input::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(to right, var(--mint) 0, var(--mint) var(--fill, 0%), #2A3733 var(--fill, 0%), #2A3733 100%);
+  border-radius: 3px;
+}
+
+.speed-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  background: var(--mint);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+}
+
+.speed-input::-moz-range-track {
+  height: 6px;
+  background: #2A3733;
+  border-radius: 3px;
+}
+
+.speed-input::-moz-range-progress {
+  height: 6px;
+  background: var(--mint);
+  border-radius: 3px;
+}
+
+.speed-input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--mint);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+}
+
+.player-speed-badge {
+  flex: none;
+  padding: var(--s-1) var(--s-2);
+  font-size: 12px;
+  color: var(--pumpkin-soft);
+  border: 1px solid #4A3A22;
+  border-radius: 6px;
+}
+
+/* ---------- Aside cards ---------- */
+.verdict-card {
+  gap: 10px;
+  padding: 18px;
+}
+
+.verdict-card--broke .plain-broke {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.verdict-card--broke .cause-line {
+  font-size: 14px;
+  color: #D9B8B2;
+}
+
+.verdict-card--held .held-plain,
+.verdict-card--tell .tell-headline {
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.verdict-card--held .held-text {
+  font-size: 14px;
+  color: #B8D9C8;
+}
+
+.reduction-card {
+  gap: 6px;
+  padding: var(--s-4);
+}
+
+.reduction-count {
+  font-size: 15px;
+}
+
+.reduction-needed {
+  color: var(--pumpkin);
+}
+
+.reduction-card .reduction-note {
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+}
+
+.aside-fix {
+  padding: 14px 18px;
+  font-size: 16px;
+  text-align: left;
+  border: 0;
+  border-radius: 12px;
+}
+
+/* ---------- Fix view ---------- */
+.fix-heading-row {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.fix-badge-line {
+  padding: var(--s-1) var(--s-2);
+  font-size: 12px;
+  color: var(--pumpkin-soft);
+  border: 1px solid #4A3A22;
+  border-radius: 6px;
+}
+
+/* Two scenes, then the two cards under them at equal height. */
+.fix-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "left-scene right-scene"
+    "left-card right-card";
+  align-items: stretch;
+  gap: 10px var(--s-4);
+}
+
+.fix-side--original {
+  grid-area: left-scene;
+}
+
+.fix-side--fixed {
+  grid-area: right-scene;
+}
+
+.fix-card--left {
+  grid-area: left-card;
+}
+
+.fix-card--right {
+  grid-area: right-card;
+}
+
+.fix-scene--original .scene-frame,
+.fix-side--original .scene-card .scene-frame {
+  border: 2px solid var(--broke-line);
+}
+
+.fix-scene--fixed .scene-frame {
+  border: 2px solid var(--held-line);
+}
+
+/* The Fix_View shows each side's state in its badges, so the labels and the phone line stay out. */
+.fix-view .scene-labels,
+.fix-view .scene-phone-line {
+  display: none;
+}
+
+/* One speed badge for the Fix_View: the one by the heading. */
+.fix-view .player-speed-badge {
+  display: none;
+}
+
+.fix-card {
+  gap: var(--s-1);
+  padding: 14px var(--s-4);
+  border-radius: 12px;
+}
+
+.fix-card--left {
+  background: var(--broke-surface);
+  border: 1px solid var(--broke-line);
+}
+
+.fix-card--left .fix-left-text {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Before the break the BROKE card keeps its place but does not show. */
+.fix-card.is-waiting {
+  visibility: hidden;
+}
+
+.fix-card--right {
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+}
+
+.fix-card--right .fix-replay {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.fix-card--right .fix-campaign-line,
+.fix-card--right .fix-campaign-prefix,
+.fix-card--right .fix-progress {
+  font-size: 14px;
+}
+
+.fix-card--held {
+  background: var(--held-surface);
+  border-color: var(--held-line);
+}
+
+.fix-card--held .fix-campaign-line,
+.fix-card--held .fix-campaign-prefix {
+  color: #B8D9C8;
+}
+
+.fix-card--broke {
+  background: var(--broke-surface);
+  border-color: var(--broke-line);
+}
+
+.fix-card--tell {
+  background: var(--couldnt-tell-surface);
+  border-color: var(--couldnt-tell-line);
+}
+
+/* "What the fix changed": one panel with the explanation, the two buttons and the code change. */
+.fix-change {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--s-4) 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.fix-change-title {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9FB2AB;
+}
+
+.fix-change .fix-explain,
+.fix-tab .fix-explain {
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: #D5E0DC;
+}
+
+.fix-change-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fix-change-actions .secondary,
+.fix-tab .secondary {
+  padding: 10px 14px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.fix-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  max-width: 820px;
+}
+
+/* ---------- Tabs ---------- */
+.tab {
+  padding: var(--s-3) var(--s-4);
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.tab[aria-selected="true"] {
+  font-weight: 600;
+}
+
+.tab-panel {
+  padding: var(--s-5) var(--s-1);
+}
+
+.happened-body,
+.tab-idle {
+  max-width: 820px;
+}
+
+.happened-body .story-text {
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: #D5E0DC;
+}
+
+/* ---------- 899 px and narrower ---------- */
+@media (max-width: 899px) {
+  .device-slot {
+    display: none;
+  }
+
+  .stage-status {
+    min-height: 0;
+  }
+
+  .fix-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "left-scene"
+      "left-card"
+      "right-scene"
+      "right-card";
+  }
+
+  .fix-card.is-waiting {
+    display: none;
+  }
+}
+
+/* ---------- 600 px and narrower: the labels would crowd or clip the art, so one line of the same texts goes
+   under the scene, and the corner badges sit in a row under the art instead of over it. ---------- */
+@media (max-width: 600px) {
+  .scene-labels,
+  .scene-corner--tr {
+    display: none;
+  }
+
+  .scene-phone-line {
+    display: block;
+  }
+
+  .scene-frame {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .scene-frame > .scene-svg {
+    flex: 0 0 100%;
+  }
+
+  .scene-corner {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .scene-corner:has(> :not([hidden])) {
+    padding: 0 var(--s-2) var(--s-2);
+  }
+}
+
+/* ---------- Phone_Width: 430 px and narrower ---------- */
+@media (max-width: 430px) {
+  .page {
+    padding: var(--s-4);
+  }
+
+  .hero h1 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .hero-text {
+    font-size: var(--fs-body);
+  }
+
+  .setup-card {
+    padding: 14px;
+  }
+
+  .rule-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .incompatible-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scene-badge--break {
+    font-size: var(--fs-meta);
+    padding: var(--s-1) var(--s-2);
+  }
+
+  .stage .stage-status {
+    order: 2;
+  }
+
+  .stage .replay-panel {
+    order: 3;
+  }
+
+  .strip-track {
+    display: none;
+  }
+
+  .strip-rows {
+    display: flex;
+  }
+
+  .move-strip.is-shrinking .strip-track {
+    display: block;
+  }
+
+  .speed-slider {
+    flex-basis: 100%;
+    max-width: none;
+  }
 }

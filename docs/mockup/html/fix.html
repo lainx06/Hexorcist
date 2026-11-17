@@ -1,0 +1,89 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stage: the fix, side by side</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="width: 1200px; height: 900px; box-sizing: border-box; padding: 20px; background: #0C1110">
+<div style="height: 100%; box-sizing: border-box; background: #101715; border: 1px solid #22302C; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<span class="head" style="font-size: 20px; font-weight: 600">The same 3 moves, on both programs</span>
+<span style="font-size: 12px; color: #F7D9A8; border: 1px solid #4A3A22; border-radius: 6px; padding: 4px 8px">Same moves, same moment · slowed 20×</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="position: relative; background: #0E1513; border: 2px solid #5A2E28; border-radius: 14px; overflow: hidden">
+<svg viewBox="0 0 560 300" style="display: block; width: 100%; height: auto" role="img" aria-label="Original program: car light green and walk sign on at the same time; the car waits at the stop line">
+<rect x="0" y="0" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="210" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="90" width="560" height="120" fill="#232E2B"></rect>
+<rect x="330" y="94" width="12" height="112" fill="#57685F"></rect><rect x="352" y="94" width="12" height="112" fill="#57685F"></rect><rect x="374" y="94" width="12" height="112" fill="#57685F"></rect><rect x="396" y="94" width="12" height="112" fill="#57685F"></rect>
+<rect x="312" y="152" width="5" height="54" fill="#C9D6D1"></rect>
+<rect x="228" y="160" width="70" height="36" rx="8" fill="#2E3B37" stroke="#C9D6D1" stroke-width="2"></rect>
+<g transform="translate(362 116)"><circle cx="8" cy="0" r="7" fill="#E7EEEB"></circle><path d="M8 7v18M8 13l-8 6M8 13l8-4M8 25l-6 12M8 25l6 12" stroke="#E7EEEB" stroke-width="3" stroke-linecap="round" fill="none"></path></g>
+<g transform="translate(290 214)"><rect x="-4" y="-4" width="26" height="58" rx="8" fill="none" stroke="#FF7A6B" stroke-width="2"></rect><rect width="18" height="50" rx="5" fill="#0E1513" stroke="#6F837C"></rect><circle cx="9" cy="10" r="5" fill="#3A2523"></circle><circle cx="9" cy="25" r="5" fill="#3A3323"></circle><circle cx="9" cy="40" r="5" fill="#7EE2A8"></circle></g>
+<g transform="translate(340 30)"><rect x="-4" y="-4" width="36" height="36" rx="8" fill="none" stroke="#FF7A6B" stroke-width="2"></rect><rect width="28" height="28" rx="5" fill="#0E1513" stroke="#6F837C"></rect><circle cx="14" cy="8" r="2.5" fill="#7EE2A8"></circle><path d="M14 11v7M14 13l-4 3M14 13l4-2M14 18l-3 6M14 18l3 6" stroke="#7EE2A8" stroke-width="1.8" fill="none" stroke-linecap="round"></path></g>
+</svg>
+<span style="position: absolute; top: 10px; left: 10px; font-size: 13px; font-weight: 600; background: rgba(12,17,16,0.85); border-radius: 6px; padding: 4px 8px">Original program</span>
+<span style="position: absolute; bottom: 10px; left: 10px; background: #FF7A6B; color: #1A0E0C; font-weight: 700; font-size: 13px; border-radius: 6px; padding: 4px 8px">Both have a green!</span>
+</div>
+<div style="background: #1C1513; border: 1px solid #5A2E28; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+<span class="head" style="font-size: 26px; font-weight: 700">BROKE</span>
+<span style="font-size: 15px">Cars and walkers both got a green. Stopped at the break.</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="position: relative; background: #0E1513; border: 2px solid #2D5A43; border-radius: 14px; overflow: hidden">
+<svg viewBox="0 0 560 300" style="display: block; width: 100%; height: auto" role="img" aria-label="Fixed program at the same moment: walk sign off, the walker waits on the sidewalk, the car drives through on green">
+<rect x="0" y="0" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="210" width="560" height="90" fill="#1A2421"></rect><rect x="0" y="90" width="560" height="120" fill="#232E2B"></rect>
+<rect x="330" y="94" width="12" height="112" fill="#57685F"></rect><rect x="352" y="94" width="12" height="112" fill="#57685F"></rect><rect x="374" y="94" width="12" height="112" fill="#57685F"></rect><rect x="396" y="94" width="12" height="112" fill="#57685F"></rect>
+<rect x="312" y="152" width="5" height="54" fill="#C9D6D1"></rect>
+<rect x="430" y="160" width="70" height="36" rx="8" fill="#2E3B37" stroke="#C9D6D1" stroke-width="2"></rect>
+<g transform="translate(362 40)"><circle cx="8" cy="0" r="7" fill="#E7EEEB"></circle><path d="M8 7v18M8 25l-4 12M8 25l4 12M8 13l-6 5M8 13l6 5" stroke="#E7EEEB" stroke-width="3" stroke-linecap="round" fill="none"></path></g>
+<g transform="translate(290 214)"><rect width="18" height="50" rx="5" fill="#0E1513" stroke="#6F837C"></rect><circle cx="9" cy="10" r="5" fill="#3A2523"></circle><circle cx="9" cy="25" r="5" fill="#3A3323"></circle><circle cx="9" cy="40" r="5" fill="#7EE2A8"></circle></g>
+<g transform="translate(340 30)"><rect width="28" height="28" rx="5" fill="#0E1513" stroke="#6F837C"></rect><rect x="8" y="8" width="12" height="12" rx="2" fill="#FF7A6B" opacity="0.85"></rect></g>
+</svg>
+<span style="position: absolute; top: 10px; left: 10px; font-size: 13px; font-weight: 600; background: rgba(12,17,16,0.85); border-radius: 6px; padding: 4px 8px">Fixed program</span>
+<span style="position: absolute; bottom: 10px; left: 10px; background: #7EE2A8; color: #0C1110; font-weight: 700; font-size: 13px; border-radius: 6px; padding: 4px 8px">Walk sign: off · Car light: green</span>
+</div>
+<div style="background: #121D19; border: 1px solid #2D5A43; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 600">Same 3 moves: no break.</span>
+<span style="font-size: 14px; color: #B8D9C8"><span class="head" style="font-weight: 700; color: #E7EEEB">HELD</span> · fixed program, all 24 tries: No violation found in 24 emulated runs of this gremlin set. Not a proof.</span>
+</div>
+</div>
+</div>
+
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13px; font-weight: 600; color: #9FB2AB; letter-spacing: 0.04em">WHAT THE FIX CHANGED</span>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; color: #D5E0DC">In the original program, pressing the button again during a crossing restarted the walk timer. The car lights did not wait for it, so cars got a green while the walk sign was still on. The fix removes that restart.</p>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<button style="background: transparent; color: #E7EEEB; border: 1px solid #3A4A45; border-radius: 10px; padding: 10px 14px; font-size: 14px">Show the code change ▾</button>
+<button style="background: transparent; color: #E7EEEB; border: 1px solid #3A4A45; border-radius: 10px; padding: 10px 14px; font-size: 14px">Replay both</button>
+</div>
+</div>
+<span style="font-size: 12px; color: #7F948D">Scenes are illustrative and driven only by each program's real outputs. The left scene freezes at the break; the right keeps running.</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

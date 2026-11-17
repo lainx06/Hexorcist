@@ -1,0 +1,109 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gremlin characters and device scenes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="width: 1440px; height: 980px; box-sizing: border-box; padding: 32px; background: #0C1110; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span class="head" style="font-size: 26px; font-weight: 700">Gremlins</span>
+<span style="font-size: 15px; color: #A9BAB4">Simple scripted pests, not AI. One drawing each, used on the picker, the timeline markers and in the scenes. Pumpkin orange = gremlin.</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px">
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Masher: a small round gremlin swinging a hammer"><circle cx="34" cy="42" r="18" fill="#2A2113" stroke="#F2A541" stroke-width="2.5"></circle><circle cx="28" cy="40" r="2.6" fill="#F2A541"></circle><circle cx="40" cy="40" r="2.6" fill="#F2A541"></circle><path d="M28 50q6 4 12 0" stroke="#F2A541" stroke-width="2" fill="none" stroke-linecap="round"></path><line x1="48" y1="30" x2="58" y2="16" stroke="#F2A541" stroke-width="3" stroke-linecap="round"></line><rect x="52" y="6" width="16" height="10" rx="2" transform="rotate(35 60 11)" fill="#F2A541"></rect></svg>
+<span style="font-weight: 600; font-size: 16px">Masher</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Presses a button over and over, fast.</span>
+</div>
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Bouncer: a jittery gremlin on a spring"><circle cx="36" cy="28" r="15" fill="#2A2113" stroke="#F2A541" stroke-width="2.5"></circle><circle cx="31" cy="27" r="2.4" fill="#F2A541"></circle><circle cx="41" cy="27" r="2.4" fill="#F2A541"></circle><path d="M22 18l-5-4M50 18l5-4M20 30h-6M52 30h6" stroke="#F2A541" stroke-width="2" stroke-linecap="round"></path><path d="M36 43l-8 4 16 4-16 4 16 4-8 4" fill="none" stroke="#F2A541" stroke-width="2.2" stroke-linejoin="round"></path></svg>
+<span style="font-weight: 600; font-size: 16px">Bouncer</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Makes a button or sensor flicker for a split second, like a loose wire.</span>
+</div>
+<div style="background: #121917; border: 1px solid #22302C; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Stuck: a heavy gremlin sitting on a button"><circle cx="36" cy="30" r="17" fill="#2A2113" stroke="#F2A541" stroke-width="2.5"></circle><path d="M29 29h4M39 29h4" stroke="#F2A541" stroke-width="2.4" stroke-linecap="round"></path><path d="M30 38h12" stroke="#F2A541" stroke-width="2" stroke-linecap="round"></path><rect x="20" y="50" width="32" height="10" rx="3" fill="none" stroke="#F2A541" stroke-width="2.2"></rect><line x1="16" y1="64" x2="56" y2="64" stroke="#6F837C" stroke-width="2"></line></svg>
+<span style="font-weight: 600; font-size: 16px">Stuck</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Holds a button down and never lets go.</span>
+</div>
+<div style="background: #121917; border: 1px dashed #2A3733; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Dropout: a gremlin holding a pulled plug"><circle cx="30" cy="38" r="15" fill="#1F1A12" stroke="#B38A4E" stroke-width="2.5"></circle><circle cx="25" cy="37" r="2.2" fill="#B38A4E"></circle><circle cx="35" cy="37" r="2.2" fill="#B38A4E"></circle><path d="M45 34h10M55 28v12M55 31h7M55 37h7" stroke="#B38A4E" stroke-width="2.4" stroke-linecap="round"></path></svg>
+<span style="font-weight: 600; font-size: 16px">Dropout</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Makes a signal that is normally on cut out for a moment.</span>
+</div>
+<div style="background: #121917; border: 1px dashed #2A3733; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Spike: a gremlin with a lightning bolt"><circle cx="30" cy="40" r="15" fill="#1F1A12" stroke="#B38A4E" stroke-width="2.5"></circle><circle cx="25" cy="39" r="2.2" fill="#B38A4E"></circle><circle cx="35" cy="39" r="2.2" fill="#B38A4E"></circle><path d="M56 8l-10 18h8l-8 18" fill="none" stroke="#B38A4E" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+<span style="font-weight: 600; font-size: 16px">Spike</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Makes a dial-type reading (like a temperature sensor) jump suddenly.</span>
+</div>
+<div style="background: #121917; border: 1px dashed #2A3733; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Drifter: a sleepy gremlin pushing a slow wave"><circle cx="30" cy="34" r="15" fill="#1F1A12" stroke="#B38A4E" stroke-width="2.5"></circle><path d="M23 33h5M33 33h5" stroke="#B38A4E" stroke-width="2.2" stroke-linecap="round"></path><path d="M10 60c8-8 14-8 22 0s14 8 22 0" fill="none" stroke="#B38A4E" stroke-width="2.4" stroke-linecap="round"></path></svg>
+<span style="font-weight: 600; font-size: 16px">Drifter</span>
+<span style="font-size: 13px; color: #A9BAB4; line-height: 1.45">Slowly pushes a dial-type reading up or down.</span>
+</div>
+</div>
+<span style="font-size: 13px; color: #7F948D">Dashed tiles: these need inputs the bundled examples don't have; they hide behind "3 more need other inputs".</span>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; flex: 1">
+<div style="position: relative; background: #0E1513; border: 1px solid #22302C; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 18px; font-weight: 600">Garage door at the break</span>
+<div style="display: flex; justify-content: center">
+<span style="background: #FF7A6B; color: #1A0E0C; font-weight: 700; font-size: 13px; border-radius: 6px; padding: 5px 10px">20 ms deadline missed · door still closing</span>
+</div>
+<svg viewBox="0 0 560 300" style="display: block; width: 100%; height: auto" role="img" aria-label="Garage door partly closed, a pumpkin in the doorway, the beam flickering; the beam label sits beside the receiver">
+<path d="M150 290V30h260v260" fill="none" stroke="#6F837C" stroke-width="14"></path>
+<rect x="158" y="36" width="244" height="22" fill="#26322F" stroke="#C9D6D1" stroke-width="1.5"></rect><rect x="158" y="58" width="244" height="22" fill="#26322F" stroke="#C9D6D1" stroke-width="1.5"></rect><rect x="158" y="80" width="244" height="22" fill="#26322F" stroke="#C9D6D1" stroke-width="1.5"></rect>
+<path d="M268 120v-6" stroke="#FF7A6B" stroke-width="2"></path>
+<path d="M280 104l0 24" stroke="#FF7A6B" stroke-width="2.5" stroke-dasharray="4 4"></path>
+<polygon points="272,126 288,126 280,136" fill="#FF7A6B"></polygon>
+<g transform="translate(250 228)"><ellipse cx="30" cy="30" rx="30" ry="26" fill="#2A2113" stroke="#F2A541" stroke-width="2.5"></ellipse><path d="M30 6c0 16 0 32 0 48M14 10c-6 14-6 30 0 44M46 10c6 14 6 30 0 44" stroke="#F2A541" stroke-width="1.5" fill="none" opacity="0.6"></path><path d="M30 4q2-8 8-10" stroke="#7EE2A8" stroke-width="3" fill="none" stroke-linecap="round"></path></g>
+<rect x="126" y="262" width="22" height="22" rx="4" fill="#0E1513" stroke="#6F837C" stroke-width="1.5"></rect>
+<rect x="412" y="262" width="22" height="22" rx="4" fill="#0E1513" stroke="#6F837C" stroke-width="1.5"></rect>
+<line x1="148" y1="273" x2="248" y2="273" stroke="#F2A541" stroke-width="2.5" stroke-dasharray="8 6"></line>
+<line x1="312" y1="273" x2="412" y2="273" stroke="#F2A541" stroke-width="2.5" stroke-dasharray="8 6"></line>
+<text x="442" y="278" font-family="Inter, sans-serif" font-size="14" fill="#F7D9A8">Beam blocked</text>
+</svg>
+<span style="font-size: 13px; color: #A9BAB4">Sensor reading flickers: blocked, clear, blocked within 4 ms (slowed 500× so you can see it).</span>
+<span style="position: absolute; top: 16px; right: 16px; font-size: 12px; color: #C9D6D1; border: 1px solid #2A3733; border-radius: 6px; padding: 4px 8px">Illustrative</span>
+</div>
+
+<div style="position: relative; background: #0E1513; border: 1px solid #22302C; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<span class="head" style="font-size: 18px; font-weight: 600">I'm-alive light</span>
+<span style="font-size: 13px; color: #A9BAB4">The light blinks to show the program is running. The ring fills from the last blink and resets on every blink; past 600 ms it turns red. While waiting on the sensor, the program forgot to blink.</span>
+<svg viewBox="0 0 560 300" style="display: block; width: 100%; height: auto" role="img" aria-label="A stuck gremlin sits on the sensor; the I'm-alive light's ring has filled past the 600 millisecond mark and turned red">
+<g transform="translate(40 150)"><rect x="0" y="40" width="120" height="44" rx="10" fill="#151E1C" stroke="#6F837C" stroke-width="2"></rect><text x="60" y="110" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#C9D6D1">Sensor</text><circle cx="60" cy="18" r="20" fill="#2A2113" stroke="#F2A541" stroke-width="2.5"></circle><path d="M52 17h5M63 17h5" stroke="#F2A541" stroke-width="2.2" stroke-linecap="round"></path></g>
+<line x1="160" y1="212" x2="232" y2="212" stroke="#4A5A55" stroke-width="3"></line>
+<rect x="232" y="172" width="100" height="80" rx="12" fill="#151E1C" stroke="#6F837C" stroke-width="2"></rect>
+<text x="282" y="217" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#E7EEEB">Program</text>
+<line x1="332" y1="212" x2="384" y2="212" stroke="#4A5A55" stroke-width="3"></line>
+<circle cx="452" cy="150" r="62" fill="none" stroke="#22302C" stroke-width="10"></circle>
+<circle cx="452" cy="150" r="62" fill="none" stroke="#FF7A6B" stroke-width="10" stroke-dasharray="390 400" transform="rotate(-90 452 150)" stroke-linecap="round"></circle>
+<circle cx="452" cy="150" r="40" fill="#7EE2A8"></circle>
+<text x="452" y="236" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#C9D6D1">I'm-alive light</text>
+<text x="452" y="256" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#FFB1A7">stuck on for 600 ms</text>
+</svg>
+<span style="position: absolute; top: 16px; right: 16px; font-size: 12px; color: #C9D6D1; border: 1px solid #2A3733; border-radius: 6px; padding: 4px 8px">Illustrative</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

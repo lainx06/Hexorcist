@@ -1,0 +1,115 @@
+<!-- Reference only (mockup v2). Kiro: copy the layout, sizes, spacing and colours from this file. Fonts: use the system fonts from docs/stage-design.md, not the fonts named here. Where this file and docs/stage-design.md disagree on wording or behaviour, stage-design.md wins. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hexorcist: page on load</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0C1110;color:#E7EEEB;font-family:Inter,system-ui,sans-serif}
+a{color:#7EE2A8}a:hover{color:#A9F0C6}
+button{font-family:inherit;cursor:pointer}
+.head{font-family:'Space Grotesk',Inter,sans-serif}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0C1110">
+<div style="max-width: 1200px; margin: 0 auto; padding: 24px 32px 64px; display: flex; flex-direction: column; gap: 28px">
+
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3c-6.6 0-11 5-11 11.5V30l3.7-2.6L13.3 30l3.7-2.6 3.7 2.6 3.6-2.6L28 30V14.5C28 8 23.6 3 17 3z" fill="none" stroke="#7EE2A8" stroke-width="2" stroke-linejoin="round"></path><circle cx="13" cy="15" r="1.8" fill="#7EE2A8"></circle><circle cx="21" cy="15" r="1.8" fill="#7EE2A8"></circle></svg>
+<span class="head" style="font-size: 22px; font-weight: 700">Hexorcist</span>
+</div>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #C9D6D1">Technical details <span style="color: #9FB2AB">Off</span>
+<button role="switch" aria-checked="false" aria-label="Technical details" style="width: 44px; height: 24px; border-radius: 12px; border: 1px solid #3A4A45; background: #18211F; position: relative; padding: 0"><span style="position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 8px; background: #9FB2AB"></span></button>
+</label>
+</header>
+
+<section style="display: flex; flex-direction: column; gap: 14px; padding-top: 8px">
+<h1 class="head" style="margin: 0; font-size: 46px; line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; max-width: 840px">AI wrote your gadget's code.<br><span style="color: #7EE2A8">Let gremlins break it here, before it breaks for real.</span></h1>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #B8C7C1; max-width: 760px">Hexorcist runs the real compiled program on a simulated chip, right in this page. Gremlins (simple scripted pests, not AI) poke its buttons at awkward moments. If your rule breaks, you see the few moves that did it, replayed step by step.</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span style="font-size: 13px; color: #C9D6D1; border: 1px solid #2A3733; border-radius: 999px; padding: 6px 12px">Runs the real compiled program</span>
+<span style="font-size: 13px; color: #C9D6D1; border: 1px solid #2A3733; border-radius: 999px; padding: 6px 12px">Same gremlins, same result, every time</span>
+<span style="font-size: 13px; color: #C9D6D1; border: 1px solid #2A3733; border-radius: 999px; padding: 6px 12px">Runs in your browser</span>
+</div>
+</section>
+
+<section aria-label="Setup" style="background: #121917; border: 1px solid #22302C; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13px; font-weight: 600; color: #9FB2AB; letter-spacing: 0.04em">1 · PICK A DEVICE</span>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<button aria-pressed="true" style="text-align: left; background: #172320; border: 2px solid #F2A541; border-radius: 14px; padding: 12px; color: #E7EEEB; display: flex; flex-direction: column; gap: 10px">
+<svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="0" y="18" width="120" height="28" fill="#26322F"></rect><rect x="66" y="18" width="5" height="28" fill="#6F837C"></rect><rect x="75" y="18" width="5" height="28" fill="#6F837C"></rect><rect x="84" y="18" width="5" height="28" fill="#6F837C"></rect><path d="M24 26h22c4 0 7 3 8 6c-1 3-4 6-8 6H24z" fill="none" stroke="#C9D6D1" stroke-width="1.6"></path><circle cx="58" cy="10" r="3.5" fill="#7EE2A8"></circle><circle cx="100" cy="10" r="3.5" fill="#F2A541"></circle></svg>
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 600; font-size: 15px">Crosswalk</span><span style="font-size: 13px; color: #A9BAB4">Cars and walkers must never both see green.</span></span>
+</button>
+<button aria-pressed="false" style="text-align: left; background: #151E1C; border: 1px solid #2A3733; border-radius: 14px; padding: 12px; color: #E7EEEB; display: flex; flex-direction: column; gap: 10px">
+<svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M36 60V6h48v54" fill="none" stroke="#6F837C" stroke-width="3"></path><rect x="39" y="8" width="42" height="12" fill="none" stroke="#C9D6D1" stroke-width="1.4"></rect><line x1="30" y1="56" x2="90" y2="56" stroke="#F2A541" stroke-width="1.6" stroke-dasharray="3 3"></line><ellipse cx="60" cy="50" rx="7" ry="6" fill="none" stroke="#F2A541" stroke-width="1.6"></ellipse></svg>
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 600; font-size: 15px">Garage door</span><span style="font-size: 13px; color: #A9BAB4">Something in the doorway? The door must stop.</span></span>
+</button>
+<button aria-pressed="false" style="text-align: left; background: #151E1C; border: 1px solid #2A3733; border-radius: 14px; padding: 12px; color: #E7EEEB; display: flex; flex-direction: column; gap: 10px">
+<svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><circle cx="60" cy="32" r="22" fill="none" stroke="#2F3D39" stroke-width="5"></circle><path d="M60 10a22 22 0 0 1 19 11" fill="none" stroke="#7EE2A8" stroke-width="5" stroke-linecap="round"></path><circle cx="60" cy="32" r="11" fill="#7EE2A8"></circle></svg>
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 600; font-size: 15px">I'm-alive light</span><span style="font-size: 13px; color: #A9BAB4">A light that must keep blinking to show the program is running.</span></span>
+</button>
+<button aria-pressed="false" style="text-align: left; background: #121917; border: 1px dashed #3A4A45; border-radius: 14px; padding: 12px; color: #E7EEEB; display: flex; flex-direction: column; gap: 10px">
+<svg width="100%" height="64" viewBox="0 0 120 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="40" y="10" width="40" height="44" rx="6" fill="none" stroke="#7EE2A8" stroke-width="2"></rect><path d="M60 42V22M52 30l8-8 8 8" stroke="#7EE2A8" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 600; font-size: 15px">Your own program</span><span style="font-size: 13px; color: #A9BAB4">Load a compiled .hex for this chip and map its pins.</span></span>
+</button>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 600; color: #9FB2AB; letter-spacing: 0.04em">2 · RULE</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #151E1C; border: 1px solid #2A3733; border-radius: 12px; padding: 12px 14px">
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-weight: 600; font-size: 15px">Cars and walkers must never both get a green.</span><span style="font-size: 13px; color: #A9BAB4">Why it matters: a walker could step out while cars are moving.</span></span>
+<button style="flex-shrink: 0; background: transparent; color: #E7EEEB; border: 1px solid #3A4A45; border-radius: 10px; padding: 10px 14px; font-size: 14px; min-height: 44px">Change rule ▾</button>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 600; color: #9FB2AB; letter-spacing: 0.04em">3 · GREMLINS <span style="font-weight: 500; letter-spacing: 0; color: #9FB2AB">· scripted pests, not AI</span></span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+<button aria-pressed="true" style="display: flex; align-items: center; gap: 8px; background: #2A2113; border: 1px solid #F2A541; border-radius: 999px; padding: 6px 14px 6px 6px; color: #F7D9A8; font-size: 14px; min-height: 44px"><svg width="30" height="30" viewBox="0 0 72 72" aria-hidden="true"><circle cx="34" cy="42" r="18" fill="#2A2113" stroke="#F2A541" stroke-width="3.5"></circle><circle cx="28" cy="40" r="3.2" fill="#F2A541"></circle><circle cx="40" cy="40" r="3.2" fill="#F2A541"></circle><path d="M28 50q6 4 12 0" stroke="#F2A541" stroke-width="3" fill="none" stroke-linecap="round"></path><line x1="48" y1="30" x2="58" y2="16" stroke="#F2A541" stroke-width="4" stroke-linecap="round"></line><rect x="52" y="6" width="16" height="10" rx="2" transform="rotate(35 60 11)" fill="#F2A541"></rect></svg>Masher ✓</button>
+<button aria-pressed="false" style="display: flex; align-items: center; gap: 8px; background: transparent; border: 1px solid #2A3733; border-radius: 999px; padding: 6px 14px 6px 6px; color: #C9D6D1; font-size: 14px; min-height: 44px"><svg width="30" height="30" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="28" r="15" fill="#2A2113" stroke="#F2A541" stroke-width="3.5"></circle><circle cx="31" cy="27" r="3" fill="#F2A541"></circle><circle cx="41" cy="27" r="3" fill="#F2A541"></circle><path d="M22 18l-5-4M50 18l5-4M20 30h-6M52 30h6" stroke="#F2A541" stroke-width="3" stroke-linecap="round"></path><path d="M36 43l-8 4 16 4-16 4 16 4-8 4" fill="none" stroke="#F2A541" stroke-width="3" stroke-linejoin="round"></path></svg>Bouncer</button>
+<button aria-pressed="false" style="display: flex; align-items: center; gap: 8px; background: transparent; border: 1px solid #2A3733; border-radius: 999px; padding: 6px 14px 6px 6px; color: #C9D6D1; font-size: 14px; min-height: 44px"><svg width="30" height="30" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="30" r="17" fill="#2A2113" stroke="#F2A541" stroke-width="3.5"></circle><path d="M29 29h4M39 29h4" stroke="#F2A541" stroke-width="3.2" stroke-linecap="round"></path><path d="M30 38h12" stroke="#F2A541" stroke-width="3" stroke-linecap="round"></path><rect x="20" y="50" width="32" height="10" rx="3" fill="none" stroke="#F2A541" stroke-width="3"></rect></svg>Stuck</button>
+<a href="#" style="font-size: 13px">3 more need other inputs</a>
+</div>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+<button style="background: #7EE2A8; color: #0C1110; border: 0; border-radius: 12px; padding: 14px 28px; font-size: 17px; font-weight: 700">Unleash gremlins</button>
+<span style="font-size: 14px; color: #A9BAB4">24 tries, about a second of device time each</span>
+</div>
+</section>
+
+<section aria-label="Stage, idle" style="background: #101715; border: 1px solid #22302C; border-radius: 18px; padding: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap">
+<svg viewBox="0 0 720 300" style="flex: 999 1 520px; min-width: 0; height: auto; opacity: 0.6" aria-hidden="true">
+<rect x="0" y="0" width="720" height="90" fill="#1A2421"></rect><rect x="0" y="210" width="720" height="90" fill="#1A2421"></rect><rect x="0" y="90" width="720" height="120" fill="#232E2B"></rect>
+<rect x="420" y="94" width="16" height="112" fill="#57685F"></rect><rect x="448" y="94" width="16" height="112" fill="#57685F"></rect><rect x="476" y="94" width="16" height="112" fill="#57685F"></rect><rect x="504" y="94" width="16" height="112" fill="#57685F"></rect><rect x="532" y="94" width="16" height="112" fill="#57685F"></rect>
+<path d="M120 160h70c12 0 22 10 26 22c-4 12-14 22-26 22h-70z" fill="#2E3B37" stroke="#C9D6D1" stroke-width="2"></path>
+<g transform="translate(600 40)"><circle cx="14" cy="0" r="9" fill="#E7EEEB"></circle><path d="M14 9v24M14 33l-6 14M14 33l6 14M14 18l-8 6M14 18l8 6" stroke="#E7EEEB" stroke-width="4" stroke-linecap="round" fill="none"></path></g>
+</svg>
+<div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 8px">
+<span class="head" style="font-size: 20px; font-weight: 600">Nothing has broken yet.</span>
+<span style="font-size: 15px; color: #A9BAB4; line-height: 1.5">Press Unleash gremlins. If a rule breaks, the replay plays here.</span>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

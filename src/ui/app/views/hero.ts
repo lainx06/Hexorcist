@@ -22,6 +22,8 @@ export function detailsSwitch(): HTMLButtonElement {
   const btn = el("button", { type: "button", class: "switch", role: "switch", "aria-checked": on0 ? "true" : "false" }, [
     el("span", { class: "switch-label" }, [UI_COPY.switchLabel]),
     state,
+    // The drawn toggle; its knob moves with aria-checked (CSS only).
+    el("span", { class: "switch-track", "aria-hidden": "true" }, [el("span", { class: "switch-knob" })]),
   ]);
   btn.addEventListener("click", () => {
     const on = btn.getAttribute("aria-checked") !== "true";
