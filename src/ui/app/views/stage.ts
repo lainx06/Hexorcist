@@ -147,7 +147,16 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     const atBreak = cursor >= s.v;
     const plan = playback.plan();
     const ended = !playback.playing() && plan !== null && cursor >= plan.end;
-    const common = { atBreak, stopped: atBreak && !playback.playing(), ended };
+    // The crosswalk actors move in display time: they need to know when playback ends and when it jumps.
+    const common = {
+      atBreak,
+      stopped: atBreak && !playback.playing(),
+      ended,
+      playing: playback.playing(),
+      endCursor: plan === null ? null : plan.end,
+      msToEnd: plan === null ? null : playback.msUntil(plan.end),
+      epoch: playback.epoch(),
+    };
     let opts: Record<string, unknown> = common;
     if (exampleId === "garage") {
       opts = { ...common, fixture: s.fixture, kind: s.kind ?? "reduced-buggy", v: s.v, limitMs: s.limitMs };

@@ -30,6 +30,10 @@ export interface Playback {
   playing(): boolean;
   cursor(): number;
   plan(): PacingPlan | null;
+  /** Counts jumps of the Cursor that are not playback: a new plan, Replay, a seek. Scene actors place themselves on a change. */
+  epoch(): number;
+  /** Display ms of continuous play until the Cursor reaches `cycle` at the current slider step; null when not playing. */
+  msUntil(cycle: number): number | null;
   onCursor(cb: CursorListener): () => void;
   onState(cb: StateListener): () => void;
   /** The slider value changed (the user moved it, or a plan loaded and put it back at the left end). */
@@ -48,6 +52,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
   let anchorTs: number | null = null;
   let anchorPos = 0;
   let isPlaying = false;
+  let jumps = 0;
   let handle: number | null = null;
   const cursorSubs = new Set<CursorListener>();
   const stateSubs = new Set<StateListener>();
@@ -120,6 +125,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       setPlaying(false);
       plan = p;
       pos = 0;
+      jumps++;
       step = SLIDER_PACED;
       emitSlider();
       if (autoPlay && reduced()) jumpToEnd();
@@ -142,6 +148,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       if (plan === null) return;
       stopLoop();
       pos = 0;
+      jumps++;
       emit();
       start();
     },
@@ -150,6 +157,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       stopLoop();
       setPlaying(false);
       pos = positionOf(plan, step, cycle);
+      jumps++;
       emit();
     },
     setSlider(s) {
@@ -170,6 +178,11 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
     playing: () => isPlaying,
     cursor: () => (plan === null ? 0 : cursorAt(plan, step, pos)),
     plan: () => plan,
+    epoch: () => jumps,
+    msUntil(cycle) {
+      if (plan === null || !isPlaying) return null;
+      return Math.max(0, (positionOf(plan, step, cycle) - pos) / POS_PER_MS);
+    },
     onCursor(cb) {
       cursorSubs.add(cb);
       return () => cursorSubs.delete(cb);

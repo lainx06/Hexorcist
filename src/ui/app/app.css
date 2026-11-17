@@ -3135,11 +3135,6 @@ button:disabled {
   opacity: 0.45;
 }
 
-/* A car the end of playback caught on the right edge drives the rest of the way out. */
-.car-top.is-leaving {
-  transition: transform 600ms ease-in;
-}
-
 /* Garage door: a filled slatted panel under a roller. */
 .door-opening {
   fill: #0B100F;

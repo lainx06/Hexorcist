@@ -218,7 +218,17 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     const rc = Math.min(c, rightEnd);
     const rightOver = c >= rightEnd && !playback.playing();
     // No per-Scene speed badge: the speed pill in the heading says it for both.
-    const lo: Record<string, unknown> = { layout: "fix", title: FIX_TEXT.leftTitle, atBreak: frozen, stopped: frozen, ended: frozen };
+    const lo: Record<string, unknown> = {
+      layout: "fix",
+      title: FIX_TEXT.leftTitle,
+      atBreak: frozen,
+      stopped: frozen,
+      ended: frozen,
+      playing: playback.playing(),
+      endCursor: i.v,
+      msToEnd: playback.msUntil(i.v),
+      epoch: playback.epoch(),
+    };
     const ro: Record<string, unknown> = {
       layout: "fix",
       title: FIX_TEXT.rightTitle,
@@ -226,6 +236,10 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
       atBreak: false,
       stopped: false,
       ended: rightOver,
+      playing: playback.playing(),
+      endCursor: rightEnd,
+      msToEnd: playback.msUntil(rightEnd),
+      epoch: playback.epoch(),
     };
     if (i.exampleId === "garage") {
       Object.assign(lo, { fixture: i.fixture, kind: "reduced-buggy", v: i.v, limitMs: i.limitMs });

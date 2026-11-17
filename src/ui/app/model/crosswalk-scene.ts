@@ -41,9 +41,14 @@ export interface CrosswalkFrame {
   lampLit: boolean;
   carOnStripes: boolean;
   walkerOnStripes: boolean;
+  /** Car passes that have ended by the Cursor. With `car` and `carX` it places the car on the display conveyor. */
+  passesDone: number;
+  /** Walker crossings that have ended by the Cursor. With `walkerY` it places the walker on its two-way path. */
+  crossingsDone: number;
 }
 
-const REQUEST_PIN: FixturePin = { signal: "REQUEST", port: "D", bit: 2, direction: "input", activeLevel: "low" };
+/** The walk button input, for the press intervals of the display model. */
+export const REQUEST_PIN: FixturePin = { signal: "REQUEST", port: "D", bit: 2, direction: "input", activeLevel: "low" };
 
 function carLightAt(edges: readonly OutputEvent[], c: number): CarLight {
   if (levelAt(edges, "CAR_GREEN", c) === 1) return "green";
@@ -178,6 +183,8 @@ export function crosswalkFrame(
   const carOnStripes = carX > CROSSWALK_STRIPES_FROM && carX - CROSSWALK_CAR_LEN < CROSSWALK_STRIPES_TO;
 
   const crossing = crossings.find((s) => s <= c && c < s + CROSSWALK_WALK_CROSS);
+  const crossingsDone = crossings.filter((s) => s + CROSSWALK_WALK_CROSS <= c).length;
+  const passesDone = plan.passes.filter((p) => p.start + CROSSWALK_PASS <= c).length;
   const walkIsOn = walkOn(edges, c);
   return {
     carX,
@@ -189,6 +196,8 @@ export function crosswalkFrame(
     lampLit: inputLaneWord(events, REQUEST_PIN, c) === "pressed",
     carOnStripes,
     walkerOnStripes: crossing !== undefined,
+    passesDone,
+    crossingsDone,
   };
 }
 

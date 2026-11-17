@@ -9,14 +9,24 @@
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { OutputEvent } from "../../../engine/types";
 import type { CarLight } from "../model/crosswalk-scene";
-import { CROSSWALK_CAR_LEN, CROSSWALK_EXIT, CROSSWALK_STOP, crosswalkFrame, crosswalkLabels } from "../model/crosswalk-scene";
-import { crossed } from "../model/strip";
-import { el, svg } from "./dom";
+import { CROSSWALK_STOP, crosswalkLabels } from "../model/crosswalk-scene";
+import { CYCLES_PER_UNIT, ROAD_X0_UNITS, VIEW_UNITS, createCrosswalkActors } from "../model/crosswalk-actors";
+import type { ActorPose } from "../model/crosswalk-actors";
+import { el, prefersReducedMotion, svg } from "./dom";
 import { masherIcon } from "./icons";
 import type { SceneCommonOpts } from "./scene-chrome";
 import { createChrome } from "./scene-chrome";
 
-export type CrosswalkOpts = SceneCommonOpts;
+/** The actors' inputs (model/crosswalk-actors.ts). All optional: a scene drawn without them is placed at its model pose. */
+export interface CrosswalkOpts extends SceneCommonOpts {
+  /** Playback is running: it calls update every frame, so the scene runs no frame loop of its own. */
+  playing?: boolean;
+  /** The Cursor where playback ends for this scene, and the display ms until then. */
+  endCursor?: number | null;
+  msToEnd?: number | null;
+  /** Changes when the Cursor jumps (new plan, Replay, a seek). */
+  epoch?: number;
+}
 
 export interface CrosswalkSceneView {
   node: HTMLElement;
@@ -24,16 +34,11 @@ export interface CrosswalkSceneView {
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: CrosswalkOpts): void;
 }
 
-const VIEW_W = 830;
+// The same numbers as model/crosswalk-actors.ts, which decides where a car is in or out of sight.
+const VIEW_W = VIEW_UNITS;
 const VIEW_H = 460;
-/** Cycles per scene unit of car travel. */
-const CYCLES_PER_UNIT = 8_000;
 /** View x of car travel 0. */
-const ROAD_X0 = 100;
-/** Cycles per unit of walker travel: 4,800,000 cycles span 300 units. */
-const WALK_CYCLES_PER_UNIT = 16_000;
-/** Cycles of walking per step of the legs. */
-const WALK_STEP_CYCLES = 480_000;
+const ROAD_X0 = ROAD_X0_UNITS;
 
 const SIDEWALK_TOP = 130;
 const SIDEWALK_BOTTOM = 330;
@@ -43,6 +48,8 @@ const STOP_X = ROAD_X0 + CROSSWALK_STOP / CYCLES_PER_UNIT + 2;
 /** The walker waits with its feet at the curb of the top sidewalk, over the middle of the stripes. */
 const WALKER_X = STRIPES_X + 56;
 const WALKER_TOP = 95;
+/** Units the walker walks between the two sidewalks (4,800,000 cycles of crossing at 16,000 per unit). */
+const SIDEWALK_RUN = 300;
 const WALK_SIGN_X = 350;
 const BUTTON_X = 610;
 const BUTTON_Y = 33;
@@ -197,26 +204,25 @@ export function createCrosswalkScene(): CrosswalkSceneView {
     below: [summary],
   });
 
-  let prevCursor: number | null = null;
-
   const lampClass = (color: CarLight, mine: "red" | "yellow" | "green"): string =>
     color === mine ? `lamp lamp--${mine} is-lit` : `lamp lamp--${mine}`;
 
-  function update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts: CrosswalkOpts = {}): void {
-    const f = crosswalkFrame(edges, events, cursor);
+  // The actors move in display time (model/crosswalk-actors.ts). The scene keeps the arguments of the last
+  // update and, while an actor is still moving and playback is not calling update every frame (paused,
+  // stopped), runs a frame loop of its own until everything is at rest.
+  const actors = createCrosswalkActors();
+  let last: { edges: readonly OutputEvent[]; events: readonly ReducerEvent[]; cursor: number; opts: CrosswalkOpts } | null = null;
+  let loop = 0;
+
+  function draw(p: ActorPose): void {
+    const f = p.frame;
     const labels = crosswalkLabels(f);
-
-    // A car that the end of playback catches across the right edge finishes leaving, so it never
-    // stops half-cut. Its rear is already past the stripes there, so it never crosses them doing so.
-    const front = carViewX(f.carX);
-    const cut = f.car === "driving" && front > VIEW_W && front - CROSSWALK_CAR_LEN / CYCLES_PER_UNIT < VIEW_W;
-    const leaving = opts.ended === true && cut;
-    car.classList.toggle("is-leaving", leaving);
-    car.style.transform = `translate(${num(leaving ? carViewX(CROSSWALK_EXIT) : front)}px, 0px)`;
-    car.setAttribute("visibility", f.car === "gone" ? "hidden" : "visible");
-
-    pose(f.walkerOnStripes ? 1 + (Math.floor(f.walkerY / WALK_STEP_CYCLES) % 2) : 0);
-    walker.setAttribute("transform", `translate(${String(WALKER_X)} ${num(WALKER_TOP + f.walkerY / WALK_CYCLES_PER_UNIT)})`);
+    // The car: a transform attribute, in view units. A car at either end of its lap is out of sight.
+    car.setAttribute("transform", `translate(${num(carViewX(p.car.x))} 0)`);
+    car.setAttribute("visibility", p.car.visible ? "visible" : "hidden");
+    // The walker: along the two-way path, so it stays on the far sidewalk after a crossing.
+    pose(p.stride);
+    walker.setAttribute("transform", `translate(${String(WALKER_X)} ${num(WALKER_TOP + p.walkerFrac * SIDEWALK_RUN)})`);
     red.setAttribute("class", lampClass(f.carLight, "red"));
     yellow.setAttribute("class", lampClass(f.carLight, "yellow"));
     green.setAttribute("class", lampClass(f.carLight, "green"));
@@ -224,29 +230,54 @@ export function createCrosswalkScene(): CrosswalkSceneView {
     walkStop.setAttribute("visibility", f.walk === "on" ? "hidden" : "visible");
     carRing.setAttribute("visibility", f.conflict ? "visible" : "hidden");
     walkRing.setAttribute("visibility", f.conflict ? "visible" : "hidden");
-    buttonLamp.setAttribute("class", f.lampLit ? "button-lamp is-lit" : "button-lamp");
-
-    // Press burst: when the Cursor moves forward over a REQUEST Gremlin_Event.
-    const requests = events.filter((e) => e.signal === "REQUEST" && e.gremlinId !== "rest").map((e) => e.cycle);
-    if (prevCursor !== null && crossed(prevCursor, cursor, requests).length > 0) {
+    // The button lamp: lit for at least 250 ms per press, one pulse ring per press.
+    buttonLamp.setAttribute("class", p.lampLit ? "button-lamp is-lit" : "button-lamp");
+    if (p.pulse) {
       burst.classList.remove("is-burst");
       void burst.getBoundingClientRect();
       burst.classList.add("is-burst");
     }
-    prevCursor = cursor;
-
     carLabel.textContent = labels.carLight;
     walkLabel.textContent = labels.walk;
     buttonLabel.textContent = labels.button;
     summary.textContent = `${labels.carLight}, ${labels.walk}`;
     chrome.setLine([labels.carLight, labels.walk]);
     chrome.setConflict(labels.conflict);
-    chrome.apply(opts);
   }
 
+  function run(): void {
+    if (last === null) return;
+    const { edges, events, cursor, opts } = last;
+    const p = actors.step(
+      {
+        edges,
+        events,
+        cursor,
+        endCursor: opts.endCursor ?? null,
+        msToEnd: opts.msToEnd ?? null,
+        ended: opts.ended === true,
+        epoch: opts.epoch ?? 0,
+        reduced: prefersReducedMotion(),
+      },
+      performance.now(),
+    );
+    draw(p);
+    if (!p.settled && opts.playing !== true && loop === 0 && typeof requestAnimationFrame === "function") {
+      loop = requestAnimationFrame(() => {
+        loop = 0;
+        // Later frames of the loop see the same Cursor, at rest: the epoch does not change, so nothing snaps.
+        run();
+      });
+    }
+  }
+
+  function update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts: CrosswalkOpts = {}): void {
+    last = { edges, events, cursor, opts };
+    run();
+    chrome.apply(opts);
+  }
   // The idle frame: no outputs yet, so the car waits at the stop line and the walker on the top sidewalk.
   update([], [], 0);
-  prevCursor = null;
 
   return { node: chrome.node, frame: chrome.frame, update };
 }
