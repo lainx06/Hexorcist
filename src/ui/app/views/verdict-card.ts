@@ -5,11 +5,11 @@ import type { Verdict } from "../../../engine/types";
 import type { ExampleId } from "../data/examples";
 import { ruleBySentence } from "../model/rules";
 import type { PeripheralUses } from "../model/stage-copy";
-import { STAGE_TEXT, VERDICT_WORD, brokeTryLine, causeLine, couldntTellCard } from "../model/stage-copy";
+import { STAGE_TEXT, VERDICT_WORD, brokeTryLine, causeLine, couldntTellCard, heldPlainText } from "../model/stage-copy";
 import { techOnly } from "./details";
 import type { Child } from "./dom";
 import { el } from "./dom";
-import { boundedTraceIcon, brokenLinkIcon, openBracketIcon } from "./icons";
+import { boundedTraceIcon, brokenLinkIcon, questionIcon } from "./icons";
 
 // Pinned by tests/ui/copy-scan.test.ts, which scans both strings with the word lists.
 export const CARD_COPY = {
@@ -24,7 +24,10 @@ export function violatedRule(ruleSet: RuleSet, v: Verdict): Rule | null {
   return found === null ? null : found.rule;
 }
 
-/** The Plain_Story slot of the BROKE card: no slot, a placeholder while reducing, or the story text. */
+/**
+ * The story state of the BROKE card. The card never shows the plain story (it lives in the "What happened" tab).
+ * While the state is "pending" the card shows a placeholder in place of the cause line.
+ */
 export type StoryState = { kind: "none" } | { kind: "pending" } | { kind: "ready"; text: string };
 
 export interface StageBrokeInput {
@@ -43,6 +46,8 @@ export interface StageBrokeInput {
 export interface StageHeldInput {
   /** `verdict.text`, passed through unchanged. */
   text: string;
+  /** Tries of the buggy campaign (M), for the plain sentence above the text. */
+  tries: number;
 }
 
 export interface StageCouldntTellInput {
@@ -65,26 +70,29 @@ function cardShell(modifier: "broke" | "held" | "tell", word: string, iconNode: 
 
 export function stageBrokeCard(i: StageBrokeInput): HTMLElement {
   const cause = causeLine(i.exampleId, i.fingerprint);
+  // The verdict word, the plain BROKE sentence, the cause line and the try line. Until the cause line can be
+  // known the placeholder holds its place.
   return cardShell("broke", VERDICT_WORD.broke, brokenLinkIcon(), [
     el("p", { class: "plain-broke" }, [i.plainBroke]),
-    cause === null ? null : el("p", { class: "cause-line" }, [cause]),
+    cause !== null
+      ? el("p", { class: "cause-line" }, [cause])
+      : i.story.kind === "pending"
+        ? el("p", { class: "story-pending meta" }, [STAGE_TEXT.storyPlaceholder])
+        : null,
     el("p", { class: "broke-try meta" }, [brokeTryLine(i.violatingRunIndex, i.tries, i.elapsedMs)]),
-    i.story.kind === "none"
-      ? null
-      : el("p", { class: i.story.kind === "pending" ? "story-text story-pending meta" : "story-text" }, [
-          i.story.kind === "pending" ? STAGE_TEXT.storyPlaceholder : i.story.text,
-        ]),
   ]);
 }
 
 export function stageHeldCard(i: StageHeldInput): HTMLElement {
-  return cardShell("held", VERDICT_WORD.held, boundedTraceIcon(), [el("p", { class: "held-text" }, [i.text])]);
+  return cardShell("held", VERDICT_WORD.held, boundedTraceIcon(), [
+    el("p", { class: "held-plain" }, [heldPlainText(i.tries)]),
+    el("p", { class: "held-text" }, [i.text]),
+  ]);
 }
-
 export function stageCouldntTellCard(i: StageCouldntTellInput): HTMLElement {
   // The use lines are built for the Technical_View and wrapped in techOnly, so the Plain_View hides them.
   const c = couldntTellCard(i.reason, true, i.peripheralUses);
-  return cardShell("tell", VERDICT_WORD.couldntTell, openBracketIcon(), [
+  return cardShell("tell", VERDICT_WORD.couldntTell, questionIcon(), [
     el("p", { class: "tell-headline" }, [c.headline]),
     el(
       "ul",

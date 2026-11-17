@@ -18,10 +18,12 @@ export interface CrosswalkSceneView {
   update(edges: readonly OutputEvent[], events: readonly ReducerEvent[], cursor: number, opts?: CrosswalkOpts): void;
 }
 
-/** Cycles per scene unit: the 6,400,000-cycle loop spans 800 units. */
+/** Cycles per scene unit: the 6,400,000-cycle scene width spans 800 units. */
 const CYCLES_PER_UNIT = 8_000;
 /** Cycles per unit of walker travel: 4,800,000 cycles span 300 units. */
 const WALK_CYCLES_PER_UNIT = 16_000;
+/** Cycles of walking per step of the legs. */
+const WALK_STEP_CYCLES = 480_000;
 const WALKER_X = 380;
 const WALKER_TOP = 60;
 const BUTTON_X = 473;
@@ -46,10 +48,46 @@ export function createCrosswalkScene(): CrosswalkSceneView {
     svg("circle", { cx: -5, cy: 298, r: 6, class: "car-headlight" }),
   ]);
 
+  // The walker is a pictogram about 60 units tall (the car is 120 long): head, body, two arms, two legs.
+  // A dark halo under each limb keeps it readable on the sidewalk and on the road.
+  const limb = (cls: string): SVGElement => svg("line", { class: cls, x1: 0, y1: 0, x2: 0, y2: 0 });
+  const arms = [limb("walker-limb"), limb("walker-limb")];
+  const legs = [limb("walker-limb"), limb("walker-limb")];
+  const haloArms = [limb("walker-halo"), limb("walker-halo")];
+  const haloLegs = [limb("walker-halo"), limb("walker-halo")];
+  const setLimb = (n: SVGElement, x1: number, y1: number, x2: number, y2: number): void => {
+    n.setAttribute("x1", String(x1));
+    n.setAttribute("y1", String(y1));
+    n.setAttribute("x2", String(x2));
+    n.setAttribute("y2", String(y2));
+  };
+  /** Stride 0 stands; 1 and 2 are the two steps of a walk. Pure function of the walked distance. */
+  const pose = (stride: number): void => {
+    const swing = stride === 0 ? 0 : stride === 1 ? 6 : -6;
+    // Left side (-1) and right side (+1); the two sides swing in opposite directions.
+    [-1, 1].forEach((side, i) => {
+      const s = side * swing;
+      for (const [arm, leg] of [
+        [arms[i], legs[i]],
+        [haloArms[i], haloLegs[i]],
+      ] as const) {
+        if (arm === undefined || leg === undefined) continue;
+        setLimb(arm, 0, -6, side * 13, 6 - s * 0.5);
+        setLimb(leg, 0, 8, side * 9 + s, 29);
+      }
+    });
+  };
   const walker = svg("g", { class: "walker" }, [
-    svg("ellipse", { cx: 0, cy: 4, rx: 16, ry: 9, class: "walker-body" }),
-    svg("circle", { cx: 0, cy: 0, r: 8, class: "walker-head" }),
+    ...haloArms,
+    ...haloLegs,
+    svg("line", { x1: 0, y1: -13, x2: 0, y2: 8, class: "walker-halo walker-torso" }),
+    svg("circle", { cx: 0, cy: -22, r: 10, class: "walker-head-halo" }),
+    ...arms,
+    ...legs,
+    svg("line", { x1: 0, y1: -13, x2: 0, y2: 8, class: "walker-limb walker-torso" }),
+    svg("circle", { cx: 0, cy: -22, r: 8, class: "walker-head" }),
   ]);
+  pose(0);
 
   const lamp = (cy: number, color: string) => svg("circle", { cx: 288, cy, r: 11, class: `lamp lamp--${color}` });
   const red = lamp(380, "red");
@@ -136,6 +174,8 @@ export function createCrosswalkScene(): CrosswalkSceneView {
       const labels = crosswalkLabels(f);
 
       car.setAttribute("transform", `translate(${num(f.carX / CYCLES_PER_UNIT)} 0)`);
+      car.setAttribute("visibility", f.car === "gone" ? "hidden" : "visible");
+      pose(f.walkerOnStripes ? 1 + (Math.floor(f.walkerY / WALK_STEP_CYCLES) % 2) : 0);
       walker.setAttribute("transform", `translate(${String(WALKER_X)} ${num(WALKER_TOP + f.walkerY / WALK_CYCLES_PER_UNIT)})`);
       red.setAttribute("class", lampClass(f.carLight, "red"));
       yellow.setAttribute("class", lampClass(f.carLight, "yellow"));

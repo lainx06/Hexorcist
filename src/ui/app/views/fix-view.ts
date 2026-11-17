@@ -1,6 +1,8 @@
-// Fix view: the original program and the fixed program side by side on one shared Cursor.
-// One Playback (views/playback.ts) drives both Scenes. The plan is the Pacing_Plan of the broke replay
-// plus the 4x tail (pacing.withTail), so the right Scene follows the Cursor up to its own end and stops.
+// Fix view: the original program and the fixed program side by side on one shared Cursor, across the full
+// width of the stage. One Playback (views/playback.ts) drives both Scenes, so the one Replay button replays
+// both. The plan is the Pacing_Plan of the broke replay plus the 4x tail (pacing.withTail), so the right
+// Scene follows the Cursor up to its own end and stops. The one speed pill sits in the heading; the Scenes
+// carry no speed badge of their own.
 // This file draws what it is given. Copy comes from model/stage-copy.ts, cursors and badges from
 // model/fix-view.ts. It reads no clock and posts nothing to the Engine_Worker.
 import type { ReducerEvent } from "../../../engine/reducer/types";
@@ -111,9 +113,17 @@ export function createFixChange(id: ExampleId, hunks: readonly DiffHunk[]): HTML
   ]);
 }
 
+/** The code change alone, with no explanation: what "The fix" tab shows while the Fix_View holds the explanation. */
+export function createCodeChange(hunks: readonly DiffHunk[]): HTMLElement {
+  return el("section", { class: "fix-change fix-change--code", "aria-label": FIX_TEXT.showCode }, [
+    el("details", { class: "code-change", open: true }, [el("summary", {}, [FIX_TEXT.showCode]), diffView(hunks)]),
+  ]);
+}
+
 export function createFixView(playback: Playback, playerNode?: HTMLElement): FixView {
   const heading = el("h2", { class: "fix-heading" }, [""]);
-  const badgeLine = el("p", { class: "fix-badge-line badge" }, [""]);
+  // The one speed pill of the Fix_View. It sits in the heading row and is as wide as its text.
+  const badgeLine = el("span", { class: "fix-badge-line badge badge--speed" }, [""]);
   badgeLine.hidden = true;
 
   const leftHost = el("div", { class: "scene-card" });
@@ -139,14 +149,12 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     fixState,
     rightCard,
   ]);
-  const replayBoth = el("button", { type: "button", class: "secondary fix-replay-both" }, [FIX_TEXT.replayBoth]);
   const player = playerNode ?? createPlayerBar(playback).root;
   const changeHost = el("div", { class: "fix-change-host" });
   const root = el("section", { class: "fix-view", "aria-label": "Fix view" }, [
-    heading,
-    badgeLine,
+    el("div", { class: "fix-heading-row" }, [heading, badgeLine]),
     el("div", { class: "fix-grid" }, [leftSide, rightSide]),
-    el("div", { class: "fix-controls" }, [player, replayBoth]),
+    el("div", { class: "fix-controls" }, [player]),
     changeHost,
   ]);
 
@@ -164,8 +172,9 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     const frozen = c >= i.v;
     const lc = leftCursor(c, i.v);
     const rc = Math.min(c, rightEnd);
-    const left = { speed: frozen ? null : slow, atBreak: frozen, stopped: frozen };
-    const right = { speed: slow, atBreak: false, stopped: false };
+    // No per-Scene speed badge here: the speed pill in the heading says it for both.
+    const left = { speed: null, atBreak: frozen, stopped: frozen };
+    const right = { speed: null, atBreak: false, stopped: false };
     const lo: Record<string, unknown> = { ...left };
     const ro: Record<string, unknown> = { ...right };
     if (i.exampleId === "garage") {
@@ -193,7 +202,6 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     draw(c);
   });
   const offState = playback.onState(() => draw(playback.cursor()));
-  replayBoth.addEventListener("click", () => playback.replay());
 
   function campaignParagraph(text: string, cls: string): HTMLElement {
     return el("p", { class: cls }, [text]);

@@ -1,4 +1,4 @@
-// Shared HTML frame of the three scenes: the badge rows above and below the art. Labels live in
+// Shared HTML frame of the three scenes: the badge row above the art. Labels live in
 // HTML, never inside the SVG, so they cannot overlap scene shapes. This file only maps option
 // values to attributes and text; the texts come from the model tables.
 import type { Ratio } from "../model/pacing";
@@ -23,18 +23,17 @@ export interface SceneChrome {
   setConflict(text: string | null): void;
 }
 
-/** Wraps `parts` (art, label rows, lines) between the top and bottom badge rows. */
+/** Puts the badge row above `parts` (art, label rows, lines). */
 export function createChrome(parts: readonly (Node | null)[]): SceneChrome {
   const conflict = el("span", { class: "badge badge--conflict", hidden: true }, [""]);
   const speed = el("span", { class: "badge badge--speed", hidden: true }, [""]);
   const illustrative = el("span", { class: "badge badge--illustrative" }, [STAGE_TEXT.illustrative]);
   const stopped = el("span", { class: "badge badge--broke", hidden: true }, [STAGE_TEXT.stopped]);
   const top = el("div", { class: "scene-badges" }, [
-    el("div", { class: "scene-badge-group" }, [conflict, speed]),
+    el("div", { class: "scene-badge-group" }, [conflict, speed, stopped]),
     illustrative,
   ]);
-  const bottom = el("div", { class: "scene-badges scene-badges--bottom" }, [stopped]);
-  const node = el("div", { class: "scene" }, [top, ...parts, bottom]);
+  const node = el("div", { class: "scene" }, [top, ...parts]);
 
   return {
     node,

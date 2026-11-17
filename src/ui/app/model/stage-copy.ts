@@ -73,6 +73,12 @@ export const STAGE_TEXT = {
   stopped: "Stopped at the break",
   bothGreen: "Both have a green!",
   storyPlaceholder: "Working out what happened\u2026",
+  /** Stage line while the replay of one held try is made ready. */
+  heldPending: "Getting one of the tries ready to show\u2026",
+  /** Stage line when that replay could not be made. */
+  heldFailed: "This try could not be replayed here.",
+  /** Dimmed scene line after COULDN'T TELL. */
+  couldntTell: "This program can't be judged here. The card says why.",
 } as const;
 
 export const CARD_TEXT = {
@@ -94,7 +100,6 @@ export const FIX_TEXT = {
   badgePrefix: "Same moves, same moment \u00b7 ",
   whatChanged: "What the fix changed",
   showCode: "Show the code change \u25be",
-  replayBoth: "Replay both",
 } as const;
 
 export const TAB_TEXT = {
@@ -107,7 +112,9 @@ export const PLAYER_TEXT = {
   play: "Play",
   pause: "Pause",
   replay: "Replay",
-  speedLabel: "Slower \u2190\u2192 Real speed (1x)",
+  speedLabel: "Speed",
+  slower: "Slower",
+  realSpeed: "Real speed (1x)",
 } as const;
 
 function plural(n: number, one: string, many: string): string {
@@ -140,6 +147,16 @@ export function tryProgress(runsCompleted: number | null, tries: number): { n: n
   const n = runsCompleted === null ? 0 : Math.min(runsCompleted + 1, tries);
   const done = runsCompleted === null ? 0 : runsCompleted;
   return { n, text: fill(UI_COPY.plainRunning, { n, m: tries }), fill: tries > 0 ? Math.min(1, done / tries) : 0 };
+}
+
+/** Plain sentence of the HELD card for the buggy build: "No gremlin broke it in M tries." ("its 1 try" at M = 1). */
+export function heldPlainText(tries: number): string {
+  return tries === 1 ? "No gremlin broke it in its 1 try." : `No gremlin broke it in ${String(tries)} tries.`;
+}
+
+/** Label above the scene of a held try: "Try N of M, one of the tries where the rule held". `runIndex` is zero-based. */
+export function heldTryLabel(runIndex: number, tries: number): string {
+  return `Try ${String(runIndex + 1)} of ${String(tries)}, one of the tries where the rule held`;
 }
 
 /** "tried <Shorter_Count> shorter versions of the attack so far" ("1 shorter version" at 1). */
@@ -224,7 +241,7 @@ export function fixedCampaignText(
   plainBroke: string,
 ): { prefix: string; lines: string[] } {
   if (verdict.verdict === "HELD") {
-    return { prefix: `${VERDICT_WORD.held} \u00b7 fixed program, all ${String(tries)} tries:`, lines: [verdict.text] };
+    return { prefix: `${VERDICT_WORD.held} \u00b7 fixed program, ${tries === 1 ? "its 1 try" : `all ${String(tries)} tries`}:`, lines: [verdict.text] };
   }
   if (verdict.verdict === "BROKE") {
     const n = (violatingRunIndex === null ? verdict.trace.runIndex : violatingRunIndex) + 1;

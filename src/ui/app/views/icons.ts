@@ -58,11 +58,12 @@ export function boundedTraceIcon(): SVGElement {
   ]);
 }
 
-/** COULDN'T TELL: an open bracket with a dashed stub. */
-export function openBracketIcon(): SVGElement {
+/** COULDN'T TELL: a circle with a question mark. It takes the colour of its card (currentColor). */
+export function questionIcon(): SVGElement {
   return icon(24, [
-    svg("path", { d: "M10 4H6v16h4" }),
-    svg("path", { d: "M13 12h7", "stroke-dasharray": "2 3" }),
+    svg("circle", { cx: 12, cy: 12, r: 9 }),
+    svg("path", { d: "M9.4 9.6a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.2-2.6 4" }),
+    svg("circle", { cx: 12, cy: 17.4, r: 0.9, fill: "currentColor", stroke: "none" }),
   ]);
 }
 

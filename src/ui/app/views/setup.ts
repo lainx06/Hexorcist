@@ -6,7 +6,7 @@ import { EXAMPLE_COPY } from "../model/example-copy";
 import { checkLimit, presetFor, presetHeadline, presetRuleText } from "../model/presets";
 import { SETUP, WHY, setupSummary, triesLine } from "../model/stage-copy";
 import { UI_COPY } from "../model/ui-copy";
-import { techOnly } from "./details";
+import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
 import { deviceArt } from "./icons";
 import { picker } from "./picker";
@@ -41,6 +41,12 @@ export interface SetupView {
   setExample(example: ExampleBundle | null): void;
   /** The Rule_Headline. */
   setHeadline(text: string): void;
+  /**
+   * Custom rules (the rule text differs from the example's and is not just a preset number): the exact
+   * sentences are listed under the headline in the plain view too, "Why it matters" and the example line are
+   * hidden, and the technical heading reads "Exact rule".
+   */
+  setCustomRule(custom: boolean, sentences: readonly string[]): void;
   /** The "<M> tries · ..." line; null when the tries field is not valid. */
   setTries(tries: number | null, runCycles: number): void;
   /** False while the page forbids a run (no example, a rule error, no gremlin, a bad field, a running job). */
@@ -83,8 +89,10 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   for (const id of EXAMPLE_IDS) {
     const btn = el("button", { type: "button", class: "device-card", "aria-pressed": "false", "data-example": id }, [
       deviceArt(id),
-      el("span", { class: "device-title" }, [EXAMPLE_COPY[id].title]),
-      el("span", { class: "device-line" }, [EXAMPLE_COPY[id].line]),
+      el("span", { class: "device-text" }, [
+        el("span", { class: "device-title" }, [EXAMPLE_COPY[id].title]),
+        el("span", { class: "device-line" }, [EXAMPLE_COPY[id].line]),
+      ]),
     ]);
     btn.addEventListener("click", () => {
       if (id === selected || busy) return;
@@ -97,6 +105,8 @@ export function createSetup(cb: SetupCallbacks): SetupView {
 
   // Section 2.
   const headlineNode = el("p", { class: "rule-headline" });
+  // Empty (and so not drawn) unless the rule is custom. The technical view lists the sentences in its own area.
+  const customList = plainOnly(el("ul", { class: "custom-rules" }));
   const why = el("p", { class: "why-line" });
   const menuBtn = el("button", { type: "button", class: "secondary", "aria-expanded": "false", "aria-controls": "preset-menu" }, [
     SETUP.changeRule,
@@ -165,9 +175,11 @@ export function createSetup(cb: SetupCallbacks): SetupView {
       el("div", { class: "device-grid" }, [...cards.values(), slot]),
       problems,
     ]),
+    el("div", { class: "setup-columns" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-rule-title" }, [
       sectionTitle("setup-rule-title", SETUP.ruleHeading),
       headlineNode,
+      customList,
       why,
       menuBtn,
       menu,
@@ -176,6 +188,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     el("section", { class: "setup-section", "aria-labelledby": "setup-gremlin-title" }, [
       sectionTitle("setup-gremlin-title", SETUP.gremlinHeading),
       gremlins.node,
+    ]),
     ]),
     action,
   ]);
@@ -278,13 +291,23 @@ export function createSetup(cb: SetupCallbacks): SetupView {
       presetLine.textContent = ex === null ? "" : EXAMPLE_COPY[ex.id].headline;
       menu.hidden = true;
       menuBtn.setAttribute("aria-expanded", "false");
-      menuBtn.hidden = ex === null;
+      // Only a rule with a number has a preset to change; the crosswalk rule has none.
+      menuBtn.hidden = ex === null || def === null;
       paint();
     },
     setHeadline(text) {
       headline = text;
       headlineNode.textContent = text;
       paintSummary();
+    },
+    setCustomRule(custom, sentences) {
+      rules.setCustom(custom);
+      why.hidden = custom;
+      presetLine.hidden = custom;
+      setChildren(
+        customList,
+        custom ? sentences.map((s) => el("li", { class: "custom-rule mono" }, [s])) : [],
+      );
     },
     setTries(tries, runCycles) {
       triesNode.textContent = tries === null ? UI_COPY.sendsInvalid : triesLine(tries, runCycles);

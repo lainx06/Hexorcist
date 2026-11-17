@@ -1,11 +1,12 @@
 // Stage view: the Scene_Area (scene, status text, Move_Strip, Player) and the Aside.
-// States: idle, running, shrinking, broke, reduce-error. The page controller (app-page.ts) calls one
+// States: idle, running, shrinking, broke, held, couldn't tell, reduce-error. The page controller (app-page.ts) calls one
 // show* method per phase; this file draws what it is given and holds no rule or timing logic.
 // Copy comes from model/stage-copy.ts. Playback comes from a Playback the caller owns.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture, OutputEvent } from "../../../engine/types";
 import type { ExampleId } from "../data/examples";
 import type { Ratio } from "../model/pacing";
+import type { ShownKind } from "../model/scenes";
 import { STAGE_TEXT, shorterText, tryProgress } from "../model/stage-copy";
 import { fadeShrinkDots } from "../model/strip";
 import type { AsideView } from "./aside";
@@ -33,6 +34,8 @@ export interface ShownReplay {
   limitMs?: number;
   /** An I'm-alive rule broke on the shown run. */
   imAliveRuleBroke?: boolean;
+  /** Which replay this is, for the garage deadline badge. Default "reduced-buggy". */
+  kind?: ShownKind;
 }
 
 export interface StageView {
@@ -68,6 +71,16 @@ export interface StageView {
   ): Set<number>;
   /** Broke: Scene, strip with labels and Player. The caller loads the Playback plan. */
   showBroke(replay: ShownReplay): void;
+  /**
+   * Held: a try where the rule held. Label above the Scene, the Scene and the Player; no strip, no break
+   * marker and no "Stopped at the break" (`replay.v` is past the end of the plan). The caller loads the plan.
+   */
+  showHeld(replay: ShownReplay, label: string): void;
+  /**
+   * One line of text in place of a replay: no strip and no Player. `dim` dims the Scene (COULDN'T TELL, a replay
+   * that could not be shown); without it the Scene looks idle (a replay is being made ready).
+   */
+  showNote(line: string, dim: boolean): void;
   /** Reduce error: dimmed Scene, no strip and no Player. The message goes in the Aside's Reduction_Card. */
   showReduceError(): void;
   dispose(): void;
@@ -96,13 +109,16 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
   const playerBar: PlayerBar = createPlayerBar(playback);
   const sceneCard = el("div", { class: "scene-card is-idle" });
   const status = el("div", { class: "stage-status", "aria-live": "polite" });
-  const sceneArea = el("div", { class: "scene-area" }, [sceneCard, status]);
+  const tryLabel = el("p", { class: "scene-try-label", hidden: true });
+  const sceneArea = el("div", { class: "scene-area" }, [tryLabel, sceneCard, status]);
   const fixSlot = el("div", { class: "stage-fix", hidden: true });
   const main = el("div", { class: "stage-main" }, [sceneArea, strip.root, playerBar.root, fixSlot]);
   const side = el("div", { class: "stage-aside" }, [aside.root, aside.actions]);
   const root = el("section", { class: "stage", "aria-label": "Stage" }, [main, side]);
 
   let exampleId: ExampleId = initial;
+  let fixMode = false;
+  let stripWanted = false;
   let scene: Scene = makeScene(initial);
   let shown: ShownReplay | null = null;
 
@@ -124,7 +140,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     const common = { speed: slow, atBreak, stopped: atBreak && !playback.playing() };
     let opts: Record<string, unknown> = common;
     if (exampleId === "garage") {
-      opts = { ...common, fixture: s.fixture, kind: "reduced-buggy", v: s.v, limitMs: s.limitMs };
+      opts = { ...common, fixture: s.fixture, kind: s.kind ?? "reduced-buggy", v: s.v, limitMs: s.limitMs };
     } else if (exampleId === "heartbeat") {
       opts = { ...common, limitMs: s.limitMs, imAliveRuleBroke: s.imAliveRuleBroke === true, build: "buggy" };
     }
@@ -148,6 +164,17 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     playerBar.root.hidden = hidden;
   }
 
+  /** The move strip shows only while it has something to show: never empty, never in the fix view. */
+  function stripVisible(on: boolean): void {
+    stripWanted = on;
+    strip.root.hidden = fixMode || !on;
+  }
+
+  function showLabel(text: string | null): void {
+    tryLabel.textContent = text ?? "";
+    tryLabel.hidden = text === null;
+  }
+
   function showShrinking(
     original: readonly ReducerEvent[],
     candidatesTried: number | null,
@@ -157,6 +184,8 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     shown = null;
     look("dim");
     hidePlayer(true);
+    showLabel(null);
+    stripVisible(true);
     strip.showShrink(original, faded, reduced);
     text(
       reduced === null ? STAGE_TEXT.shrinkTitle : null,
@@ -167,6 +196,7 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
 
   mountScene();
   hidePlayer(true);
+  stripVisible(false);
 
   return {
     root,
@@ -174,8 +204,11 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     strip,
     playerNode: playerBar.root,
     setFixMode(on, fixRoot) {
+      fixMode = on;
       sceneArea.hidden = on;
-      strip.root.hidden = on;
+      side.hidden = on;
+      root.classList.toggle("is-fix", on);
+      strip.root.hidden = on || !stripWanted;
       fixSlot.hidden = !on;
       if (on) {
         shown = null;
@@ -197,6 +230,8 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       shown = null;
       look("idle");
       strip.clear();
+      stripVisible(false);
+      showLabel(null);
       hidePlayer(true);
       text(STAGE_TEXT.idleTitle, [STAGE_TEXT.idleLine], "stage-idle");
     },
@@ -204,6 +239,8 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
       shown = null;
       look("idle");
       strip.clear();
+      stripVisible(false);
+      showLabel(null);
       hidePlayer(true);
       const p = tryProgress(runsCompleted, tries);
       const fillNode = el("span", { class: "progress-fill" });
@@ -224,15 +261,38 @@ export function createStage(playback: Playback, initial: ExampleId = "crosswalk"
     showBroke(replay) {
       shown = replay;
       look("live");
+      showLabel(null);
       setChildren(status, []);
+      stripVisible(true);
       strip.showMoves(replay.events, replay.fixture, replay.start, replay.v);
       hidePlayer(false);
       drawScene(playback.cursor(), null);
+    },
+    showHeld(replay, label) {
+      shown = replay;
+      look("live");
+      showLabel(label);
+      setChildren(status, []);
+      strip.clear();
+      stripVisible(false);
+      hidePlayer(false);
+      drawScene(playback.cursor(), null);
+    },
+    showNote(line, dim) {
+      shown = null;
+      look(dim ? "dim" : "idle");
+      strip.clear();
+      stripVisible(false);
+      showLabel(null);
+      hidePlayer(true);
+      text(null, [line], "stage-idle");
     },
     showReduceError() {
       shown = null;
       look("dim");
       strip.clear();
+      stripVisible(false);
+      showLabel(null);
       hidePlayer(true);
       setChildren(status, []);
     },

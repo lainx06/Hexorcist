@@ -33,6 +33,11 @@ export const HEARTBEAT_TEXT = {
   forgot: FORGOT_LINE,
 } as const;
 
+/** Caption under the light: what the ring measures, and the limit of the rule. */
+export function ringCaption(limitMs: number): string {
+  return `Ring: time since the last blink (limit ${String(limitMs)} ms)`;
+}
+
 /** The viewBox is 960 wide; the three parts sit at 1/6, 3/6 and 5/6 of it. */
 const SENSOR_X = 160;
 const PROGRAM_X = 480;
@@ -72,9 +77,18 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     svg("line", { x1: PROGRAM_X + 80, y1: LIGHT_Y, x2: LIGHT_X - RING_R, y2: LIGHT_Y, class: "wire" }),
     stuckIcon,
   ]);
+  // The ring fills clockwise from the top, so it is full at the top again: the tick sits there, at the limit.
+  const limitTick = svg("line", {
+    x1: LIGHT_X,
+    y1: LIGHT_Y - RING_R - 14,
+    x2: LIGHT_X,
+    y2: LIGHT_Y - RING_R + 14,
+    class: "ring-limit-tick",
+  });
   const light = svg("g", { class: "scene-light" }, [
     svg("circle", { cx: LIGHT_X, cy: LIGHT_Y, r: RING_R, class: "ring-track" }),
     ringFill,
+    limitTick,
     lampGlow,
     lamp,
   ]);
@@ -90,17 +104,19 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     [scenery, light],
   );
 
-  const column = (name: string, techName: string, extra: HTMLElement | null): HTMLElement =>
+  const column = (name: string, techName: string, extra: HTMLElement | null, caption: HTMLElement | null = null): HTMLElement =>
     el("div", { class: "scene-column" }, [
       el("span", {}, [name]),
       markDetail(el("span", { class: "signal-name" }, [techName]), "tech"),
       extra,
+      caption,
     ]);
   const ringLabel = el("span", { class: "scene-ring-label" }, [HEARTBEAT_TEXT.blinking]);
+  const ringNote = el("span", { class: "scene-ring-caption" }, [ringCaption(600)]);
   const labelRow = el("div", { class: "scene-label-row scene-label-row--three" }, [
     column(HEARTBEAT_TEXT.sensor, "PULSE", null),
     el("div", { class: "scene-column" }, [el("span", {}, [HEARTBEAT_TEXT.program])]),
-    column(HEARTBEAT_TEXT.light, "HEARTBEAT", ringLabel),
+    column(HEARTBEAT_TEXT.light, "HEARTBEAT", ringLabel, ringNote),
   ]);
   const line = el("p", { class: "scene-line", hidden: true }, [HEARTBEAT_TEXT.forgot]);
   const summary = el("p", { class: "visually-hidden" }, [""]);
@@ -110,7 +126,9 @@ export function createHeartbeatScene(): HeartbeatSceneView {
     node: chrome.node,
     update(edges, events, cursor, opts = {}) {
       const state = heartbeatSceneAt({ outputEdges: edges, events, violation: null }, null, cursor);
-      const ring = ringAt(edges, cursor, opts.limitMs ?? 600);
+      const limit = opts.limitMs ?? 600;
+      const ring = ringAt(edges, cursor, limit);
+      ringNote.textContent = ringCaption(limit);
 
       lamp.setAttribute("class", state.lampLit ? "status-lamp is-lit" : "status-lamp");
       lampGlow.setAttribute("class", state.lampLit ? "lamp-glow is-lit" : "lamp-glow");

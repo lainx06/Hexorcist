@@ -1,44 +1,18 @@
-// Signal timeline: one lane per mapped signal plus GREMLINS, a shared cursor, playback and keys.
+// Signal timeline: one lane per mapped signal plus GREMLINS, a scrubber and "Jump to the break".
+// The Cursor is the stage Playback cursor: the page feeds it in with setCursor and takes scrubber moves
+// out with onSeek. The timeline plays nothing itself.
 import type { Violation } from "../../../engine/checker";
 import type { ReducerEvent } from "../../../engine/reducer/types";
-import type { Fixture, FixturePin, OutputEvent } from "../../../engine/types";
-import { friendlyLabel } from "../model/labels";
+import type { Fixture, OutputEvent } from "../../../engine/types";
 import type { ExampleLane } from "../model/lanes";
-import { exampleLanes, inputLaneWord, outputLaneWord, plainSelectedText, releaseRanges } from "../model/lanes";
-import type { PlayerState, Speed } from "../model/player";
-import {
-  cycleFromPlotX,
-  DEFAULT_SPEED,
-  home,
-  jumpNext,
-  jumpPrev,
-  navEvents,
-  nudge,
-  pause,
-  play,
-  seek,
-  setSpeed,
-  showReplay,
-  SPEEDS,
-  tick,
-} from "../model/player";
+import { exampleLanes, releaseRanges } from "../model/lanes";
 import type { Span } from "../model/span";
-import type { LaneLevel, Marker, TimelineEvent } from "../model/timeline";
-import {
-  axisTicks,
-  eventValue,
-  gremlinMarkers,
-  laneSegments,
-  LANES,
-  markersToRemove,
-  selectedEventText,
-  timelineEvents,
-} from "../model/timeline";
-import { cycles, inputValueText, ms } from "../model/format";
+import type { LaneLevel, Marker } from "../model/timeline";
+import { axisTicks, eventValue, gremlinMarkers, laneSegments, LANES, markersToRemove } from "../model/timeline";
+import { cycles, ms } from "../model/format";
 import { originalRunNote } from "../model/verdict-plain";
 import { plainOnly, signalLabel, techOnly } from "./details";
 import { el, prefersReducedMotion, setChildren, svg } from "./dom";
-import { nextIcon, pauseIcon, playIcon, prevIcon } from "./icons";
 import { UI_COPY } from "./panels";
 
 export type RunLabel = "Original run" | "Reduced replay" | "Fixed program" | typeof UI_COPY.trialRun;
@@ -63,7 +37,10 @@ export interface TimelineView {
   setFixture(fixture: Fixture): void;
   /** Gremlin_Event counts for the note under the Timeline while "Original run" is selected; null clears it. */
   setRunNote(counts: { original: number; reduced: number } | null): void;
-  onCursor(fn: (cursor: number, view: ReplayView | null) => void): void;
+  /** The stage Cursor moved (playback or seek). `range` is the span the scrubber covers, or null for the whole window. */
+  setCursor(cycle: number, range?: { min: number; max: number } | null): void;
+  /** The scrubber moved, or "Jump to the break" was pressed: the page moves the stage Playback there. */
+  onSeek(fn: (cycle: number) => void): void;
   onToggle(fn: (label: RunLabel) => void): void;
 }
 
@@ -78,7 +55,6 @@ const DEFAULT_LANES: ExampleLane[] = LANES.map((signal) => ({
   signal,
   direction: signal === "GREMLINS" ? "gremlins" : signal === "REQUEST" ? "input" : "output",
 }));
-const DEFAULT_PINS: FixturePin[] = [{ signal: "REQUEST", port: "D", bit: 2, direction: "input", activeLevel: "low" }];
 
 function yFor(level: LaneLevel, top: number): number | null {
   if (level === 1) return top + 8;
@@ -88,18 +64,15 @@ function yFor(level: LaneLevel, top: number): number | null {
 
 export function createTimeline(): TimelineView {
   let view: ReplayView | null = null;
-  let events: TimelineEvent[] = [];
   let markers: { m: Marker; node: SVGElement }[] = [];
-  let state: PlayerState = showReplay(0, 0, DEFAULT_SPEED);
+  let cursor = 0;
+  let range: { min: number; max: number } | null = null;
   let width = MIN_W;
   let lanes: ExampleLane[] = DEFAULT_LANES;
-  let pins: readonly FixturePin[] = DEFAULT_PINS;
   let selection: RunLabel = "Original run";
   let runCounts: { original: number; reduced: number } | null = null;
-  let frame = 0;
-  let cursorFn: (c: number, v: ReplayView | null) => void = () => undefined;
   let toggleFn: (l: RunLabel) => void = () => undefined;
-
+  let seekFn: (cycle: number) => void = () => undefined;
   const runLabel = el("p", { class: "run-label region-title" }, ["No replay yet."]);
   // "Original run" is a Technical_View control; "Reduced replay" and "Fixed program" show in both views.
   const originalBtn = techOnly(el("button", { type: "button", class: "toggle", "aria-pressed": "true" }, ["Original run"]));
@@ -135,16 +108,7 @@ export function createTimeline(): TimelineView {
   plotSvg.appendChild(markerLayer);
   plotSvg.appendChild(dynamicLayer);
   const plot = el("div", { class: "plot-scroll" }, [plotSvg]);
-  const timeline = el(
-    "div",
-    {
-      class: "timeline",
-      tabindex: 0,
-      role: "group",
-      "aria-label": "Signal timeline. Space plays or pauses, arrows step through events, Home and End jump.",
-    },
-    [labels, plot],
-  );
+  const timeline = el("div", { class: "timeline", role: "group", "aria-label": "Signal timeline" }, [labels, plot]);
 
   const scrub = el("input", {
     type: "range",
@@ -156,36 +120,18 @@ export function createTimeline(): TimelineView {
     disabled: true,
     "aria-label": UI_COPY.scrubLabel,
   });
-  const playBtn = el("button", { type: "button", class: "icon-button" }, [playIcon(), UI_COPY.playLabel]);
-  const prevBtn = el("button", { type: "button", class: "icon-button" }, [prevIcon(), UI_COPY.prevEvent]);
-  const nextBtn = el("button", { type: "button", class: "icon-button" }, [nextIcon(), UI_COPY.nextEvent]);
   const breakBtn = el("button", { type: "button", class: "icon-button", hidden: true }, [UI_COPY.jumpBreak]);
-  const startBtn = el("button", { type: "button", class: "icon-button" }, [UI_COPY.backToStart]);
-  const speedBtns = SPEEDS.map((s) => el("button", { type: "button", class: "toggle", "aria-pressed": "false" }, [s]));
-  const noEvent = "No event selected.";
-  const selectedPlain = plainOnly(el("p", { class: "selected-event" }, [noEvent]));
-  const selectedTech = techOnly(el("p", { class: "selected-event mono" }, [noEvent]));
   const legend = el("p", { class: "timeline-legend meta" }, [TIMELINE_LEGEND]);
   const runNote = el("p", { class: "run-note meta", hidden: true }, [""]);
   const cursorTech = techOnly(el("p", { class: "cursor-text meta mono" }, [""]));
   const cursorPlain = plainOnly(el("p", { class: "cursor-text meta" }, [""]));
-  const scrubRow = el("div", { class: "scrub-row" }, [scrub, cursorPlain, cursorTech]);
-  const controls = el("div", { class: "timeline-controls" }, [playBtn, prevBtn, nextBtn, breakBtn, startBtn]);
-  const speedRow = el("div", { class: "speed-row" }, [
-    el("span", { class: "speed-label meta" }, [UI_COPY.speedLabel]),
-    el("div", { class: "toggle-row", role: "group", "aria-label": UI_COPY.speedLabel }, speedBtns),
-  ]);
-
+  const scrubRow = el("div", { class: "scrub-row" }, [scrub, breakBtn, cursorPlain, cursorTech]);
   const node = el("section", { class: "panel timeline-region", "aria-label": "Timeline" }, [
     el("div", { class: "timeline-head" }, [runLabel, el("div", { class: "toggle-row" }, [originalBtn, reducedBtn, fixedBtn])]),
     timeline,
     legend,
     runNote,
     scrubRow,
-    controls,
-    speedRow,
-    selectedPlain,
-    selectedTech,
   ]);
 
   function refreshNote(): void {
@@ -194,7 +140,6 @@ export function createTimeline(): TimelineView {
     runNote.textContent = show && runCounts !== null ? originalRunNote(runCounts.original, runCounts.reduced) : "";
   }
 
-  const now = (): number => performance.now();
   const x = (c: number): number => {
     const end = view === null ? 1 : Math.max(1, view.windowEnd);
     return 8 + (c / end) * (width - 16);
@@ -202,19 +147,16 @@ export function createTimeline(): TimelineView {
 
   function setButtons(): void {
     const has = view !== null;
-    for (const b of [playBtn, prevBtn, nextBtn, breakBtn, startBtn, ...speedBtns]) b.disabled = !has;
     scrub.disabled = !has;
+    breakBtn.disabled = !has;
     breakBtn.hidden = view === null || view.violation === null;
-    const playText = state.playing ? UI_COPY.pauseLabel : UI_COPY.playLabel;
-    if (playBtn.textContent !== playText) setChildren(playBtn, [state.playing ? pauseIcon() : playIcon(), playText]);
-    speedBtns.forEach((b, i) => b.setAttribute("aria-pressed", String(SPEEDS[i] === state.speed)));
   }
-
   function drawStatic(): void {
     setChildren(staticLayer, []);
     setChildren(markerLayer, []);
     markers = [];
-    const w = Math.max(MIN_W, plot.clientWidth || MIN_W);
+    // The plot fills the width of its box; a narrow box scrolls at MIN_W.
+    const w = Math.max(MIN_W, Math.floor(plot.clientWidth));
     width = w;
     plotSvg.setAttribute("width", String(w));
     plotSvg.setAttribute("height", String(LANE_H * lanes.length + AXIS_H));
@@ -305,134 +247,67 @@ export function createTimeline(): TimelineView {
     }
   }
 
-  function wordFor(v: ReplayView, ev: TimelineEvent): string {
-    if (ev.source === "output") return outputLaneWord(v.outputEdges, ev.signal, ev.cycle);
-    const pin = pins.find((p) => p.signal === ev.signal);
-    return pin === undefined ? inputValueText(ev.value) : inputLaneWord(v.events, pin, ev.cycle);
-  }
-
   function drawDynamic(): void {
     setChildren(dynamicLayer, []);
     const axisTop = LANE_H * lanes.length;
+    const end = view === null ? 0 : view.windowEnd;
+    const shown = Math.max(0, Math.min(cursor, end));
     if (view !== null) {
-      const cx = x(state.cursor);
+      const cx = x(shown);
       dynamicLayer.appendChild(svg("line", { x1: cx, x2: cx, y1: 0, y2: axisTop, class: "cursor-line" }));
-      if (state.selected !== null) {
-        const ev = events[state.selected];
-        if (ev !== undefined) {
-          const lane =
-            ev.source === "input" && ev.gremlinId !== "rest"
-              ? lanes.length - 1
-              : Math.max(0, lanes.findIndex((l) => l.signal === ev.signal));
-          dynamicLayer.appendChild(
-            svg("rect", { x: x(ev.cycle) - 11, y: lane * LANE_H + 9, width: 22, height: 22, class: "selected-box" }),
-          );
-        }
-      }
     }
-    const ev = state.selected === null ? undefined : events[state.selected];
-    selectedTech.textContent = ev === undefined ? noEvent : selectedEventText(ev);
-    selectedPlain.textContent = ev === undefined || view === null ? noEvent : plainSelectedText(ev, friendlyLabel(ev.signal).text, wordFor(view, ev));
-    scrub.max = String(view === null ? 0 : view.windowEnd);
-    scrub.value = String(state.cursor);
-    scrub.setAttribute("aria-valuetext", ms(state.cursor));
-    cursorPlain.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(state.cursor)}`;
-    cursorTech.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(state.cursor)} \u00b7 ${cycles(state.cursor)} cycles`;
-    cursorFn(state.cursor, view);
+    const lo = range === null ? 0 : Math.max(0, Math.min(range.min, end));
+    const hi = range === null ? end : Math.max(lo, Math.min(range.max, end));
+    scrub.min = String(lo);
+    scrub.max = String(hi);
+    scrub.value = String(Math.max(lo, Math.min(shown, hi)));
+    scrub.setAttribute("aria-valuetext", ms(shown));
+    cursorPlain.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(shown)}`;
+    cursorTech.textContent = view === null ? "" : `${UI_COPY.cursorLabel}: ${ms(shown)} \u00b7 ${cycles(shown)} cycles`;
   }
 
-  function loop(): void {
-    frame = 0;
-    if (!state.playing) return;
-    state = tick(state, now());
-    drawDynamic();
-    if (state.playing) frame = requestAnimationFrame(loop);
-    setButtons();
-  }
-
-  function update(next: PlayerState): void {
-    state = next;
-    drawDynamic();
-    setButtons();
-    if (state.playing && frame === 0) frame = requestAnimationFrame(loop);
-    if (!state.playing && frame !== 0) {
-      cancelAnimationFrame(frame);
-      frame = 0;
-    }
-  }
-
-  const togglePlay = (): void => update(state.playing ? pause(state) : play(state, now()));
-  playBtn.addEventListener("click", togglePlay);
-  prevBtn.addEventListener("click", () => update(jumpPrev(state, events, now())));
-  nextBtn.addEventListener("click", () => update(jumpNext(state, events, now())));
   breakBtn.addEventListener("click", () => {
-    if (view !== null && view.violation !== null) update(seek(state, view.violation.cycle, now()));
+    if (view !== null && view.violation !== null) seekFn(view.violation.cycle);
   });
-  startBtn.addEventListener("click", () => update(home(state, now())));
-  const speed = (s: Speed) => update(setSpeed(state, s, now()));
-  speedBtns.forEach((b, i) => b.addEventListener("click", () => speed(SPEEDS[i] as Speed)));
 
-  // Scrubber: dragging moves the Cursor; the arrow keys move it by 1 ms, with Shift by 10 ms.
+  // Scrubber: dragging moves the stage Cursor; the arrow keys move it by 1 ms, with Shift by 10 ms.
   scrub.addEventListener("input", () => {
-    if (view !== null) update(seek(state, Number(scrub.value), now()));
+    if (view !== null) seekFn(Number(scrub.value));
   });
   scrub.addEventListener("keydown", (e: KeyboardEvent) => {
     if (view === null) return;
-    const step = e.shiftKey ? 10 : 1;
+    const step = (e.shiftKey ? 10 : 1) * 16_000;
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
-      update(nudge(state, e.key === "ArrowLeft" ? -step : step, now()));
+      seekFn(Number(scrub.value) + (e.key === "ArrowLeft" ? -step : step));
     } else if (e.key === "Home") {
       e.preventDefault();
-      update(seek(state, 0, now()));
+      seekFn(Number(scrub.min));
     } else if (e.key === "End") {
       e.preventDefault();
-      update(seek(state, state.end, now()));
+      seekFn(Number(scrub.max));
     }
   });
 
-  // A click anywhere on the plot moves the Cursor there.
-  plotSvg.addEventListener("click", (e: MouseEvent) => {
-    if (view === null) return;
-    const box = plotSvg.getBoundingClientRect();
-    const px = (e.clientX - box.left) * (box.width > 0 ? width / box.width : 1);
-    update(seek(state, cycleFromPlotX(px, width, view.windowEnd), now()));
-  });
-  timeline.addEventListener("keydown", (e: KeyboardEvent) => {
-    if (view === null) return;
-    if (e.key === " " || e.code === "Space") {
-      e.preventDefault();
-      if (e.repeat) return;
-      togglePlay();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      update(jumpPrev(state, events, now()));
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      update(jumpNext(state, events, now()));
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      update(home(state, now()));
-    } else if (e.key === "End") {
-      e.preventDefault();
-      update(seek(state, view.violation === null ? state.end : view.violation.cycle, now()));
-    }
-  });
+  // The plot fills its box: redraw when the box gets a new width (a hidden tab has none until it shows).
+  if (typeof ResizeObserver === "function") {
+    new ResizeObserver(() => {
+      const w = Math.floor(plot.clientWidth);
+      if (w > 0 && Math.max(MIN_W, w) !== width) {
+        drawStatic();
+        drawDynamic();
+      }
+    }).observe(plot);
+  }
 
   setButtons();
   drawStatic();
   drawDynamic();
-
   return {
     node,
     show(v) {
       view = v;
-      if (frame !== 0) cancelAnimationFrame(frame);
-      frame = 0;
       runLabel.textContent = v === null ? "No replay yet." : v.label;
-      events = v === null ? [] : navEvents(timelineEvents(v.events, v.outputEdges, v.windowEnd));
-      const vc = v === null || v.violation === null ? 0 : v.violation.cycle;
-      state = showReplay(v === null ? 0 : v.windowEnd, vc, state.speed);
       drawStatic();
       drawDynamic();
       setButtons();
@@ -440,7 +315,6 @@ export function createTimeline(): TimelineView {
     },
     setFixture(fixture) {
       lanes = exampleLanes(fixture);
-      pins = fixture.pins;
       drawLabels();
     },
     setRunNote(counts) {
@@ -477,8 +351,13 @@ export function createTimeline(): TimelineView {
       selection = sel;
       refreshNote();
     },
-    onCursor(fn) {
-      cursorFn = fn;
+    setCursor(cycle, r = null) {
+      cursor = cycle;
+      range = r;
+      drawDynamic();
+    },
+    onSeek(fn) {
+      seekFn = fn;
     },
     onToggle(fn) {
       toggleFn = fn;

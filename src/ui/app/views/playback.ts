@@ -1,11 +1,13 @@
 // Playback controller. The UI clock is the requestAnimationFrame timestamp. It drives display only:
 // it never reaches rule timing and nothing here is posted to the Engine_Worker.
 
-import { cursorAt, positionOf, slowFactorAt, SLIDER_MAX, totalUnits, POS_PER_MS, type PacingPlan, type Ratio } from "../model/pacing";
+import { cursorAt, positionOf, slowFactorAt, totalUnits, POS_PER_MS, type PacingPlan, type Ratio } from "../model/pacing";
+import { SLIDER_PACED, sliderToStep, stepToSlider } from "../model/slider";
 import { prefersReducedMotion } from "./dom";
 
 export type CursorListener = (cycle: number, slowFactor: Ratio) => void;
 export type StateListener = (playing: boolean) => void;
+export type SliderListener = (value: number) => void;
 
 export interface PlaybackOptions {
   /** Frame scheduler; defaults to window.requestAnimationFrame. The callback gets the UI clock in ms. */
@@ -15,18 +17,23 @@ export interface PlaybackOptions {
 }
 
 export interface Playback {
+  /** Loads a paced plan. The slider goes back to its left (paced) end. */
   load(plan: PacingPlan, autoPlay: boolean): void;
   play(): void;
   pause(): void;
   /** Restart from S at the current slider position. */
   replay(): void;
-  setSlider(step: number): void;
+  /** Moves the Cursor to `cycle` (clamped to the plan) and pauses. The scrubber of the Signals tab uses this. */
+  seek(cycle: number): void;
+  setSlider(value: number): void;
   slider(): number;
   playing(): boolean;
   cursor(): number;
   plan(): PacingPlan | null;
   onCursor(cb: CursorListener): () => void;
   onState(cb: StateListener): () => void;
+  /** The slider value changed (the user moved it, or a plan loaded and put it back at the left end). */
+  onSlider(cb: SliderListener): () => void;
   dispose(): void;
 }
 
@@ -44,6 +51,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
   let handle: number | null = null;
   const cursorSubs = new Set<CursorListener>();
   const stateSubs = new Set<StateListener>();
+  const sliderSubs = new Set<SliderListener>();
 
   function emit(): void {
     if (plan === null) return;
@@ -56,6 +64,10 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
     if (isPlaying === p) return;
     isPlaying = p;
     for (const cb of stateSubs) cb(p);
+  }
+
+  function emitSlider(): void {
+    for (const cb of sliderSubs) cb(stepToSlider(step));
   }
 
   function stopLoop(): void {
@@ -108,6 +120,8 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       setPlaying(false);
       plan = p;
       pos = 0;
+      step = SLIDER_PACED;
+      emitSlider();
       if (autoPlay && reduced()) jumpToEnd();
       else if (autoPlay) {
         emit();
@@ -131,8 +145,15 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       emit();
       start();
     },
+    seek(cycle) {
+      if (plan === null) return;
+      stopLoop();
+      setPlaying(false);
+      pos = positionOf(plan, step, cycle);
+      emit();
+    },
     setSlider(s) {
-      const next = Math.min(SLIDER_MAX, Math.max(0, Math.trunc(s)));
+      const next = sliderToStep(s);
       if (next === step) return;
       if (plan !== null) {
         // Keep the cursor at its cycle: re-anchor the position for the new mapping.
@@ -143,6 +164,7 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
         anchorPos = pos;
         emit();
       } else step = next;
+      emitSlider();
     },
     slider: () => step,
     playing: () => isPlaying,
@@ -156,10 +178,15 @@ export function createPlayback(opts: PlaybackOptions = {}): Playback {
       stateSubs.add(cb);
       return () => stateSubs.delete(cb);
     },
+    onSlider(cb) {
+      sliderSubs.add(cb);
+      return () => sliderSubs.delete(cb);
+    },
     dispose() {
       stopLoop();
       cursorSubs.clear();
       stateSubs.clear();
+      sliderSubs.clear();
     },
   };
 }

@@ -2,7 +2,7 @@
 // role=tablist / tab / tabpanel, aria-selected on the selected tab only, roving tabindex, Left and Right wrap
 // (model/tabs.ts). The 150 ms cross-fade is a CSS animation that restarts when a panel stops being hidden;
 // Reduced_Motion turns it into one step in app.css. "What happened" and "Signals" show the idle text until
-// a replay exists. The scrubber and the preset speeds live inside the Timeline, which only the Signals tab holds.
+// a replay exists. The scrubber and "Jump to the break" live inside the Timeline, which only the Signals tab holds; they move the\n// stage Playback cursor and follow it. The Timeline has no player of its own.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { Fixture } from "../../../engine/types";
@@ -17,7 +17,7 @@ import { tabAfterKey, tabIndexes } from "../model/tabs";
 import { EMPTY_TRACE_TEXT, traceRows } from "../model/verdict-text";
 import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
-import { createFixChange } from "./fix-view";
+import { createCodeChange } from "./fix-view";
 import { gremlinIcon } from "./icons";
 import type { TimelineView } from "./timeline";
 
@@ -67,7 +67,7 @@ export interface TabsView {
   panels(): readonly HTMLElement[];
   /** A replay exists (data) or not (null: idle text in "What happened" and "Signals"). */
   setReplay(data: ReplayTabData | null): void;
-  /** The fix explanation and code change in "The fix"; null shows "Press See the fix work to compare.". */
+  /** The code change alone in "The fix" (the explanation is in the Fix_View); null shows "Press See the fix work to compare.". */
   setFixChange(id: ExampleId | null, hunks?: readonly DiffHunk[]): void;
   /** Cycles_Rate_Text of the Details tab; null shows none (Technical_View only). */
   setCyclesRate(text: string | null): void;
@@ -265,7 +265,7 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
       paintReplay();
     },
     setFixChange(id, hunks = []) {
-      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createFixChange(id, hunks)]);
+      setChildren(fixHost, [id === null ? el("p", { class: "tab-idle" }, [TAB_TEXT.fixNotRun]) : createCodeChange(hunks)]);
     },
     setCyclesRate(text) {
       rateText.textContent = text ?? "";

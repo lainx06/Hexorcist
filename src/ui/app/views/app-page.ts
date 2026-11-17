@@ -3,6 +3,7 @@
 // Phase flow (model/stage.ts):
 //   idle -> running -> shrinking -> broke -> fix        (buggy Campaign BROKE)
 //                   -> held | couldnt-tell              (no reduction, no fix button)
+//                   held: the replay of one try where the rule held, played once, paced, no break marker
 //                   shrinking -> reduce-error           (reducer failed)
 // Job order after BROKE: reduce, then the reduced replay and its Display_Replay, then the original
 // replay and its Display_Replay. "See the fix work" runs the reduced replay on the fixed build, its
@@ -11,6 +12,8 @@
 // Nothing the UI clock, the Slow_Factor or the speed slider produce is put in a worker message.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
+import { isEngineError } from "../../../engine/errors";
+import { buildEventList } from "../../../engine/event-list";
 import { failureStory } from "../../../engine/reducer/story";
 import type { ReducerEvent, ReducerResult } from "../../../engine/reducer/types";
 import type { RuleSet } from "../../../engine/rules/ir";
@@ -21,6 +24,7 @@ import { diffHunks } from "../model/diff";
 import { displayAgrees, displaySpan, displayWindowEnd } from "../model/display";
 import { CUSTOM_COPY, copyFor, isCustomRuleSet, spanSentenceFor, storyEndingFor } from "../model/example-copy";
 import type { FlowState } from "../model/flow";
+import { chooseHeldRun, heldPlan } from "../model/held-replay";
 import { canApplyFix, canReplayAgain, canTryRemoving, canUnleash, initialFlow } from "../model/flow";
 import { fixedDisplayAgrees } from "../model/fix-view";
 import { fixedReplayText, tryRemovingText, withoutEvent } from "../model/fix-text";
@@ -37,7 +41,7 @@ import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
 import type { StagePhase } from "../model/stage";
-import { cyclesRateText, reductionCard } from "../model/stage-copy";
+import { STAGE_TEXT, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
 import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
@@ -184,6 +188,13 @@ export function mountApp(root: HTMLElement): void {
 
   const ctl = controls(24, 0);
   const timeline = createTimeline();
+  // The Signals tab shares the stage cursor: its scrubber moves the stage Playback, and the Playback
+  // moves the waveform cursor while the stage plays.
+  timeline.onSeek((cycle) => playback.seek(cycle));
+  playback.onCursor((cycle) => {
+    const p = playback.plan();
+    timeline.setCursor(cycle, p === null ? null : { min: p.start, max: p.end });
+  });
   const tabs = createTabs(timeline);
   tabs.setFields(ctl.node);
   const heroView = createHero();
@@ -684,6 +695,51 @@ export function mountApp(root: HTMLElement): void {
     }
   };
 
+  /**
+   * After a HELD verdict on the buggy build: replay one try where the rule held, once, paced. The campaign
+   * result holds counts of triggers per rule but not the run indexes, so the try is run 0 (chooseHeldRun).
+   * The event list of that run is rebuilt from the campaign seed, as the engine does for every run.
+   */
+  const heldFlow = async (c: RunContext, rec: CampaignRecord, tries: number): Promise<void> => {
+    const example = c.example;
+    const choice = chooseHeldRun(undefined);
+    const gen = buildEventList({
+      fixture: example.fixture,
+      gremlinSet: c.gremlinSet,
+      runCycles: example.meta.runCycles,
+      campaignSeed: rec.seed,
+      runIndex: choice.runIndex,
+    });
+    if (isEngineError(gen)) {
+      showError(`${gen.kind}: ${gen.message}`);
+      stage.showNote(STAGE_TEXT.heldFailed, true);
+      return;
+    }
+    const events = gen.events;
+    const r = await doReplay(example.buggyHex, events);
+    if (typeof r === "string" || r.replay.violation !== null) {
+      showError(typeof r === "string" ? r : "The replay of this try broke the rule, which the campaign did not see.");
+      stage.showNote(STAGE_TEXT.heldFailed, true);
+      return;
+    }
+    const plan = heldPlan(events, r.replay.reachedEnd);
+    stage.showHeld(
+      {
+        edges: r.replay.outputEdges,
+        events,
+        fixture: example.fixture,
+        start: plan.start,
+        // No break: the Cursor never reaches v, so there is no break marker and no "Stopped at the break".
+        v: Number.POSITIVE_INFINITY,
+        ...(c.limitMs === null ? {} : { limitMs: c.limitMs }),
+        imAliveRuleBroke: false,
+        kind: "original-buggy",
+      },
+      heldTryLabel(choice.runIndex, tries),
+    );
+    // Auto-plays once; under Reduced_Motion it does not play.
+    playback.load(plan, !prefersReducedMotion());
+  };
   const unleash = async (): Promise<void> => {
     const vals = ctl.values();
     if (flow.busy !== null || working) return;
@@ -716,15 +772,16 @@ export function mountApp(root: HTMLElement): void {
       tabs.setCyclesRate(cyclesRateText(done.result.totalCycles, rec.elapsedMs));
       const v = done.result.verdict;
       if (v.verdict === "HELD") {
-        cardInput = { kind: "HELD", text: v.text };
+        cardInput = { kind: "HELD", text: v.text, tries: v.runs };
         setPhase("held");
-        stage.showIdle();
+        stage.showNote(STAGE_TEXT.heldPending, false);
         renderAside();
+        await heldFlow(c, rec, v.runs);
       } else if (v.verdict === "COULDN'T TELL") {
         const uses = done.result.peripheralUses;
         cardInput = { kind: "COULDN'T TELL", reason: v.reason, ...(uses === undefined ? {} : { peripheralUses: uses }) };
         setPhase("couldnt-tell");
-        stage.showIdle();
+        stage.showNote(STAGE_TEXT.couldntTell, true);
         renderAside();
       } else {
         await brokeFlow(c);
@@ -795,16 +852,23 @@ export function mountApp(root: HTMLElement): void {
 
   // Rule_Box: check before the next render; the Active_Rule_Set changes only when the check passes.
   /** The Rule_Headline of the active rule set: the preset text with its limit, or "Custom rule". */
-  const headlineFor = (ex: ExampleBundle): string => {
+  /** True when the rule text differs from the example's and is not just a preset number change. */
+  const ruleIsCustom = (ex: ExampleBundle): boolean => {
     const limit = limitMsOf(ex.id, activeRuleSet);
-    if (limit === null) return copyFor(ex.id, isCustomRuleSet(activeSentences, ex.sentences)).headline;
+    if (limit === null) return isCustomRuleSet(activeSentences, ex.sentences);
     const def = presetFor(ex.id).limitDefault;
     const expected = limit === def ? ex.sentences : presetRuleText(ex, limit).split("\n").filter((s) => s !== "");
-    return isCustomRuleSet(activeSentences, expected) ? CUSTOM_COPY.headline : presetHeadline(ex.id, limit);
+    return isCustomRuleSet(activeSentences, expected);
+  };
+  const headlineFor = (ex: ExampleBundle): string => {
+    const limit = limitMsOf(ex.id, activeRuleSet);
+    if (limit === null) return copyFor(ex.id, ruleIsCustom(ex)).headline;
+    return ruleIsCustom(ex) ? CUSTOM_COPY.headline : presetHeadline(ex.id, limit);
   };
   const paintRule = (): void => {
     if (current === null) return;
     setup.setHeadline(headlineFor(current));
+    setup.setCustomRule(ruleIsCustom(current), activeSentences);
     setup.rules.setSentences(activeSentences);
     setup.rules.setErrors(ruleErrors);
   };

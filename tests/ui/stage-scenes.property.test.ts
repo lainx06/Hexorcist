@@ -21,11 +21,13 @@ import {
 } from "../../src/ui/app/model/scenes";
 import {
   CROSSWALK_CAR_LEN,
-  CROSSWALK_LOOP,
+  CROSSWALK_EXIT,
+  CROSSWALK_PASS,
   CROSSWALK_STOP,
   CROSSWALK_STRIPES_FROM,
   CROSSWALK_STRIPES_TO,
   CROSSWALK_WALK_CROSS,
+  carPlan,
   crosswalkFrame,
   crosswalkLabels,
 } from "../../src/ui/app/model/crosswalk-scene";
@@ -116,8 +118,11 @@ describe("Property 17: Crosswalk car", () => {
           const overlaps = f.carX > CROSSWALK_STRIPES_FROM && f.carX - CROSSWALK_CAR_LEN < CROSSWALK_STRIPES_TO;
           expect(f.carOnStripes).toBe(overlaps);
           expect(f.walk).toBe(walkOn ? "on" : "off");
-          expect(f.carX).toBeGreaterThanOrEqual(0);
-          expect(f.carX).toBeLessThan(CROSSWALK_LOOP);
+          // The car never wraps around: it stays between the stop line and the exit on the right.
+          expect(f.carX).toBeGreaterThanOrEqual(CROSSWALK_STOP);
+          expect(f.carX).toBeLessThanOrEqual(CROSSWALK_EXIT);
+          if (f.car === "waiting") expect(f.carX).toBe(CROSSWALK_STOP);
+          if (f.car === "gone") expect(f.carX).toBe(CROSSWALK_EXIT);
           if (walkOn || f.walkerOnStripes) expect(overlaps).toBe(false);
         }
       }),
@@ -158,14 +163,176 @@ describe("Property 17: Crosswalk car", () => {
           const marks = [p, ...edges.filter((e) => e.signal.startsWith("CAR_") && e.cycle > p && e.cycle <= q).map((e) => e.cycle)];
           if (!marks.every((m) => lightAt(edges, m) === "red")) return;
           checked++;
-          expect(crosswalkFrame(edges, events, p).carX).toBe(CROSSWALK_STOP);
-          expect(crosswalkFrame(edges, events, q).carX).toBe(CROSSWALK_STOP);
-          expect(crosswalkFrame(edges, events, p + Math.floor(span / 2)).carX).toBe(CROSSWALK_STOP);
+          for (const c of [p, q, p + Math.floor(span / 2)]) {
+            const f = crosswalkFrame(edges, events, c);
+            expect(f.carX).toBe(CROSSWALK_STOP);
+            expect(f.car).toBe("waiting");
+          }
         },
       ),
       { seed: SEED, numRuns: RUNS },
     );
     expect(checked).toBeGreaterThan(20);
+  });
+});
+
+// Feature: polish pass 1, item 16: one car per green, no wrap-around.
+describe("Property 17 (polish pass 1): one car per green", () => {
+  /** Light edges that make long green stretches possible, so whole passes fit. */
+  const longPhasesArb: fc.Arbitrary<OutputEvent[]> = fc
+    .array(
+      fc.record({
+        light: fc.constantFrom("green", "green", "yellow", "red", "off"),
+        walk: fc.constantFrom(false, false, false, true),
+        gap: fc.integer({ min: 0, max: 20_000_000 }),
+      }),
+      { minLength: 1, maxLength: 8 },
+    )
+    .map((phases) => {
+      const out: OutputEvent[] = [];
+      let c = 0;
+      for (const p of phases) {
+        c += p.gap;
+        out.push({ signal: "CAR_GREEN", value: p.light === "green" ? 1 : 0, cycle: c });
+        out.push({ signal: "CAR_YELLOW", value: p.light === "yellow" ? 1 : 0, cycle: c });
+        out.push({ signal: "CAR_RED", value: p.light === "red" ? 1 : 0, cycle: c });
+        out.push({ signal: "WALK", value: p.walk ? 1 : 0, cycle: c });
+      }
+      return out;
+    });
+  const edgesPassArb = fc.oneof(crosswalkEdgesArb, phasedEdgesArb, longPhasesArb);
+  const bigCursorsArb = fc.array(fc.integer({ min: 0, max: 120_000_000 }), { minLength: 1, maxLength: 5 });
+
+  it("lasts 8,000,000 cycles", () => {
+    expect(CROSSWALK_PASS).toBe(8_000_000);
+  });
+
+  it("a pass starts only when its whole window has a green or yellow light, WALK off and no walker on the stripes", () => {
+    let passes = 0;
+    fc.assert(
+      fc.property(edgesPassArb, requestEventsArb, bigCursorsArb, (edges, events, raw) => {
+        for (const c of raw) {
+          for (const p of carPlan(edges, c).passes) {
+            passes++;
+            const marks = [p.start, p.start + 1, p.start + CROSSWALK_PASS - 1];
+            for (const e of edges) if (e.cycle >= p.start && e.cycle <= p.start + CROSSWALK_PASS) marks.push(e.cycle, e.cycle - 1);
+            for (const x of marks.filter((m) => m >= p.start && m < p.start + CROSSWALK_PASS)) {
+              const light = lightAt(edges, x);
+              expect(light === "green" || light === "yellow").toBe(true);
+              expect(walkOnAt(edges, x)).toBe(false);
+              const f = crosswalkFrame(edges, events, x);
+              expect(f.car).toBe("driving");
+              expect(f.walkerOnStripes).toBe(false);
+              // The car is on the stripes only while the walk sign is off and nobody is crossing.
+              if (f.carOnStripes) expect(f.walk).toBe("off");
+            }
+          }
+        }
+      }),
+      { seed: SEED, numRuns: RUNS },
+    );
+    expect(passes).toBeGreaterThan(50);
+  });
+
+  it("gives each green stretch at most one pass, and passes never overlap", () => {
+    let stretches = 0;
+    let twoGreens = 0;
+    fc.assert(
+      fc.property(edgesPassArb, bigCursorsArb, (edges, raw) => {
+        for (const c of raw) {
+          const plan = carPlan(edges, c);
+          stretches += plan.stretches.length;
+          if (plan.stretches.length > 1) twoGreens++;
+          for (const s of plan.stretches) expect(plan.passes.filter((p) => p.stretch === s).length).toBeLessThanOrEqual(1);
+          plan.passes.forEach((p, i) => {
+            expect(p.start).toBeGreaterThanOrEqual(p.stretch.from);
+            expect(p.start).toBeLessThan(p.stretch.to);
+            const next = plan.passes[i + 1];
+            if (next !== undefined) expect(next.start).toBeGreaterThanOrEqual(p.start + CROSSWALK_PASS);
+          });
+        }
+      }),
+      { seed: SEED, numRuns: RUNS },
+    );
+    expect(stretches).toBeGreaterThan(50);
+    expect(twoGreens).toBeGreaterThan(10);
+  });
+
+  it("drives through once, leaves to the right and stays gone while the light stays green; waits when it is yellow or red", () => {
+    let driving = 0;
+    let gone = 0;
+    let waitingYellowRed = 0;
+    let waitingGreen = 0;
+    fc.assert(
+      fc.property(edgesPassArb, requestEventsArb, bigCursorsArb, (edges, events, raw) => {
+        // Random cursors, plus cursors inside and just after each pass the whole run would have.
+        const near = carPlan(edges, 120_000_000).passes.flatMap((p) =>
+          [0, 1, CROSSWALK_PASS / 2, CROSSWALK_PASS - 1, CROSSWALK_PASS, CROSSWALK_PASS + 1].map((d) => p.start + d),
+        );
+        for (const c of [...raw, ...near]) {
+          const f = crosswalkFrame(edges, events, c);
+          if (f.car === "driving") {
+            driving++;
+            expect(f.carX).toBeGreaterThanOrEqual(CROSSWALK_STOP);
+            expect(f.carX).toBeLessThan(CROSSWALK_EXIT);
+          }
+          if (f.car === "gone") {
+            gone++;
+            expect(f.carLight).toBe("green");
+            expect(f.carX).toBe(CROSSWALK_EXIT);
+          }
+          if (f.carLight === "yellow" || f.carLight === "red") {
+            expect(f.car).not.toBe("gone");
+            if (f.car === "waiting") waitingYellowRed++;
+          }
+          if (f.car === "waiting" && f.carLight === "green") waitingGreen++;
+        }
+      }),
+      { seed: SEED, numRuns: RUNS },
+    );
+    expect(driving).toBeGreaterThan(20);
+    expect(gone).toBeGreaterThan(20);
+    expect(waitingYellowRed).toBeGreaterThan(20);
+    expect(waitingGreen).toBeGreaterThan(20);
+  });
+
+  it("one long green: a car waits, drives through in 8,000,000 cycles, then none comes back", () => {
+    const green: OutputEvent[] = [
+      { signal: "CAR_GREEN", value: 1, cycle: 0 },
+      { signal: "CAR_YELLOW", value: 0, cycle: 0 },
+      { signal: "CAR_RED", value: 0, cycle: 0 },
+      { signal: "WALK", value: 0, cycle: 0 },
+    ];
+    const f0 = crosswalkFrame(green, [], 0);
+    expect(f0.car).toBe("driving");
+    expect(f0.carX).toBe(CROSSWALK_STOP);
+    let prev = -1;
+    for (let c = 0; c < CROSSWALK_PASS; c += 400_000) {
+      const f = crosswalkFrame(green, [], c);
+      expect(f.car).toBe("driving");
+      expect(f.carX).toBeGreaterThan(prev);
+      prev = f.carX;
+    }
+    for (const c of [CROSSWALK_PASS, CROSSWALK_PASS + 1, 3 * CROSSWALK_PASS, 50_000_000]) {
+      expect(crosswalkFrame(green, [], c).car).toBe("gone");
+    }
+    // The light turns red afterwards: the next car waits at the stop line.
+    const later = [...green, ...["CAR_GREEN", "CAR_YELLOW", "CAR_RED"].map((s) => ({ signal: s, value: s === "CAR_RED" ? 1 : 0, cycle: 20_000_000 }) as OutputEvent)];
+    const f = crosswalkFrame(later, [], 20_000_000);
+    expect(f.car).toBe("waiting");
+    expect(f.carX).toBe(CROSSWALK_STOP);
+  });
+
+  it("idle and starting frames: the car waits fully visible before the stop line and the walker waits at the top", () => {
+    for (const edges of [[], [{ signal: "CAR_RED", value: 1, cycle: 0 } as OutputEvent]]) {
+      const f = crosswalkFrame(edges, [], 0);
+      expect(f.car).toBe("waiting");
+      expect(f.carX).toBe(CROSSWALK_STOP);
+      expect(f.carX - CROSSWALK_CAR_LEN).toBeGreaterThanOrEqual(0);
+      expect(f.carX).toBeLessThanOrEqual(CROSSWALK_STRIPES_FROM);
+      expect(f.walkerY).toBe(0);
+      expect(f.walkerOnStripes).toBe(false);
+    }
   });
 });
 

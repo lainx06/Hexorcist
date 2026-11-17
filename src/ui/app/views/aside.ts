@@ -3,6 +3,7 @@
 // COULDN'T TELL (those states have no reduction result). Copy comes from model/stage-copy.ts.
 import { REDUCTION_TEXT, reductionCard } from "../model/stage-copy";
 import type { ReductionInput } from "../model/stage-copy";
+import { techOnly } from "./details";
 import { el, setChildren } from "./dom";
 
 export interface AsideState {
@@ -38,7 +39,8 @@ export function reductionCardView(r: ReductionInput): HTMLElement {
   }
   return el("section", { class: "card reduction-card", "aria-label": "Shrink result" }, [
     el("p", { class: "reduction-count" }, [t.summary]),
-    el("p", { class: "reduction-smallest" }, [t.smallest]),
+    // The "smallest replay" line is a technical detail: it shows only with technical details on.
+    techOnly(el("p", { class: "reduction-smallest" }, [t.smallest])),
     el("p", { class: "reduction-note meta" }, [t.note]),
   ]);
 }

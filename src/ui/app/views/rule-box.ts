@@ -6,6 +6,8 @@ import { el, setChildren } from "./dom";
 
 export const RULE_TEXT = {
   title: "Rule area",
+  /** The technical heading while the rules differ from the example's: the exact sentences. */
+  customTitle: "Exact rule",
   plainTitle: "Rule",
   plainError: "this doesn't look like a rule yet. Start from one of the patterns below.",
   edit: "Edit rule",
@@ -24,6 +26,8 @@ export interface PatternItem {
 export interface RuleAreaView {
   node: HTMLElement;
   setHeadline(text: string): void;
+  /** True while the rules are not the example's own: the technical heading reads "Exact rule". */
+  setCustom(custom: boolean): void;
   setSentences(sentences: readonly string[]): void;
   setText(text: string): void;
   getText(): string;
@@ -86,9 +90,10 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
     if (!busy) cb.onReset();
   });
 
+  const techTitle = el("span", {}, [RULE_TEXT.title]);
   const node = el("section", { class: "panel", "aria-labelledby": "rule-area-title" }, [
     el("h2", { class: "region-title", id: "rule-area-title" }, [
-      techOnly(el("span", {}, [RULE_TEXT.title])),
+      techOnly(techTitle),
       plainOnly(el("span", {}, [RULE_TEXT.plainTitle])),
     ]),
     headline,
@@ -101,6 +106,9 @@ export function ruleArea(cb: RuleAreaCallbacks): RuleAreaView {
     node,
     setHeadline(text) {
       headline.textContent = text;
+    },
+    setCustom(custom) {
+      techTitle.textContent = custom ? RULE_TEXT.customTitle : RULE_TEXT.title;
     },
     setSentences(sentences) {
       setChildren(
