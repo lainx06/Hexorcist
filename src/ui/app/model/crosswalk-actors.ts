@@ -15,6 +15,13 @@
 // The car lives on a conveyor: one lap is a car coming in at the left edge, waiting at the stop line, driving
 // out at the right edge. `carU` counts laps, so a new car (the next green) is the same actor coming round,
 // never a pop-in. The walker lives on a two-way path: it crosses back from where it stands.
+// The two never meet in the picture (display rule only; the model, the lights and the badges are untouched):
+// the drawn car does not enter, and is not inside, the crossing zone (stop line to the far edge of the stripes)
+// while the drawn walker is on the road, and the drawn walker does not step onto the road while the drawn car is
+// in the zone. A car that the model sends on holds at the stop line until the walker has cleared the road. A walker
+// still on the road once the walk sign is off finishes its crossing at WALKER_CLEAR_LIFT times its normal speed, so
+// the car's wait stays short. At the end of playback the model's own poses win (they are never in conflict, except
+// the break of the original program, where the car waits at the stop line, outside the zone, and the walker crosses).
 // The lamp is a small queue: every real press lights it for at least LAMP_MIN_MS, one flash per press, in order.
 import type { ReducerEvent } from "../../../engine/reducer/types";
 import type { OutputEvent } from "../../../engine/types";
@@ -22,6 +29,7 @@ import type { CrosswalkFrame } from "./crosswalk-scene";
 import {
   CROSSWALK_CAR_LEN,
   CROSSWALK_STOP,
+  CROSSWALK_STRIPES_TO,
   CROSSWALK_WALK_CROSS,
   CROSSWALK_WIDTH,
   REQUEST_PIN,
@@ -39,6 +47,10 @@ export const LAMP_MIN_MS = 250;
 export const LAMP_GAP_MS = 80;
 /** The last display ms of playback, in which the actors arrive at the end pose. */
 export const CATCH_UP_MS = 400;
+/** A walker still on the road after the walk sign went off clears it at this many times its normal speed. */
+export const WALKER_CLEAR_LIFT = 3;
+/** One step of the actors never covers more display time than this, so a hidden tab does not make them jump. */
+export const MAX_STEP_MS = 100;
 
 /** Travel cycles per display ms at the speed caps. */
 export const CAR_SPEED = CROSSWALK_WIDTH / CAR_CROSS_MS;
@@ -75,6 +87,29 @@ export function walkerFrac(u: number): number {
   const k = Math.floor(u / CROSSWALK_WALK_CROSS);
   const r = (u - k * CROSSWALK_WALK_CROSS) / CROSSWALK_WALK_CROSS;
   return k % 2 === 0 ? r : 1 - r;
+}
+
+/** Where the car is on its lap when its front is at the stop line, and when its rear has cleared the stripes. */
+const STOP_LOCAL = CROSSWALK_STOP - CAR_ENTRY;
+const ZONE_END_LOCAL = CROSSWALK_STRIPES_TO + CROSSWALK_CAR_LEN - CAR_ENTRY;
+
+const mod = (n: number, m: number): number => ((n % m) + m) % m;
+
+/** The car is inside the crossing zone: past the stop line, and its rear has not cleared the stripes. At the stop line it is outside. */
+export function carInZone(u: number): boolean {
+  const l = mod(u, LAP);
+  return l > STOP_LOCAL && l < ZONE_END_LOCAL;
+}
+
+/** The walker is on the road, not on a sidewalk (its position is a whole number of crossings on a sidewalk). */
+export function walkerOnRoad(u: number): boolean {
+  return mod(u, CROSSWALK_WALK_CROSS) !== 0;
+}
+
+/** The furthest conveyor position the car may reach without entering the zone: the stop line of this lap, or of the next. */
+function carGateLimit(u: number): number {
+  const stop = Math.floor(u / LAP) * LAP + STOP_LOCAL;
+  return u <= stop ? stop : stop + LAP;
 }
 
 export interface CarDraw {
@@ -228,7 +263,7 @@ export function createCrosswalkActors(): CrosswalkActors {
 
   return {
     step(input, nowMs) {
-      const dt = last === null ? 0 : Math.max(0, nowMs - last);
+      const dt = last === null ? 0 : Math.min(MAX_STEP_MS, Math.max(0, nowMs - last));
       last = nowMs;
       if (pressesOf !== input.events) {
         pressesOf = input.events;
@@ -243,16 +278,39 @@ export function createCrosswalkActors(): CrosswalkActors {
       // A car the end of playback caught on the right edge drives the rest of the way out.
       if (input.ended && carCutByEdge(carTarget)) carTarget = (Math.floor(carTarget / LAP) + 1) * LAP;
       const walkerTarget = walkerU(frame);
+      let carHeld = false;
+      let walkerHeld = false;
       if (snap || car === null) {
         car = carTarget;
         walker = walkerTarget;
       } else {
-        car = approach(car, carTarget, CAR_SPEED, dt, endFrame === null ? null : carU(endFrame), input.msToEnd);
-        walker = approach(walker, walkerTarget, WALKER_SPEED, dt, endFrame === null ? null : walkerU(endFrame), input.msToEnd);
-      }
-      const l = stepLamp(input.cursor, nowMs, snap);
+        const endCar = endFrame === null ? null : carU(endFrame);
+        const endWalker = endFrame === null ? null : walkerU(endFrame);
+        const atEnd = input.msToEnd !== null && input.msToEnd <= 0;
+        const carFinal = atEnd && endCar !== null && carTarget === endCar;
+        const walkerFinal = atEnd && endWalker !== null && walkerTarget === endWalker;
+        // The walker is moved before the car. Off the walk sign and still on the road, it clears the road at a lifted speed.
+        const lifted = frame.walk === "off" && walkerOnRoad(walker);
+        let walkerNext = approach(walker, walkerTarget, WALKER_SPEED * (lifted ? WALKER_CLEAR_LIFT : 1), dt, endWalker, input.msToEnd);
+        if (!walkerFinal && !walkerOnRoad(walker) && walkerOnRoad(walkerNext) && carInZone(car)) {
+          walkerNext = walker;
+          walkerHeld = true;
+        }
+        // Then the car, which sees where the walker is now.
+        let carNext = approach(car, carTarget, CAR_SPEED, dt, endCar, input.msToEnd);
+        if (!carFinal && walkerOnRoad(walkerNext) && !carInZone(car)) {
+          const limit = carGateLimit(car);
+          if (carNext > limit) {
+            carNext = limit;
+            carHeld = true;
+          }
+        }
+        car = carNext;
+        walker = walkerNext;
+      }      const l = stepLamp(input.cursor, nowMs, snap);
       const walking = walker !== walkerTarget || frame.walkerOnStripes;
-      const settled = car === carTarget && walker === walkerTarget && l.settled;
+      // A car held for the walker, or a walker held for the car, is at rest until the other one moves.
+      const settled = (car === carTarget || carHeld) && (walker === walkerTarget || walkerHeld) && l.settled;
       return {
         car: carDraw(car),
         carU: car,

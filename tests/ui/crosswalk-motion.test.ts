@@ -14,17 +14,20 @@ import {
   CAR_CROSS_MS,
   CAR_SPEED,
   CATCH_UP_MS,
+  WALKER_CLEAR_LIFT,
   LAMP_MIN_MS,
   LAP,
   WALKER_CROSS_MS,
   WALKER_SPEED,
   carCutByEdge,
   carDraw,
+  carInZone,
   carU,
   createCrosswalkActors,
   modelPose,
   pressIntervals,
   walkerFrac,
+  walkerOnRoad,
   walkerU,
 } from "../../src/ui/app/model/crosswalk-actors";
 import type { ActorPose } from "../../src/ui/app/model/crosswalk-actors";
@@ -38,7 +41,7 @@ import {
 } from "../../src/ui/app/model/crosswalk-scene";
 import { leftCursor, rightCursorEnd } from "../../src/ui/app/model/fix-view";
 import { heldPlan } from "../../src/ui/app/model/held-replay";
-import { buildPlan, withTail } from "../../src/ui/app/model/pacing";
+import { SLIDER_MAX, buildPlan, withTail } from "../../src/ui/app/model/pacing";
 import type { PacingPlan } from "../../src/ui/app/model/pacing";
 import { PINNED_CROSSWALK_FINGERPRINT } from "../../src/ui/app/model/speed";
 import { createPlayback } from "../../src/ui/app/views/playback";
@@ -118,7 +121,23 @@ interface Sample {
   now: number;
   cursor: number;
   playing: boolean;
+  /** Display ms until playback ends for this scene (null while not playing). */
+  msToEnd: number | null;
   pose: ActorPose;
+}
+
+const STEPS = Array.from({ length: SLIDER_MAX + 1 }, (_, i) => i);
+
+const memo = new Map<string, Sample[]>();
+/** One simulation per scenario and slider step, shared by the tests. */
+function sim(s: Scenario, step: number): Sample[] {
+  const key = `${s.name}/${String(step)}`;
+  let v = memo.get(key);
+  if (v === undefined) {
+    v = simulate(s, step);
+    memo.set(key, v);
+  }
+  return v;
 }
 
 /** Plays a scenario through the real Playback at 16 display ms per frame, then keeps stepping like the scene's own loop. */
@@ -139,20 +158,21 @@ function simulate(s: Scenario, slider: number, tailMs = 1_500): Sample[] {
   let now = 0;
   const observe = (): void => {
     const cursor = s.shown(pb.cursor());
+    const msToEnd = pb.msUntil(s.end);
     const pose = actors.step(
       {
         edges: s.edges,
         events: s.events,
         cursor,
         endCursor: s.end,
-        msToEnd: pb.msUntil(s.end),
+        msToEnd,
         ended: !pb.playing() && s.over(pb.cursor()),
         epoch: pb.epoch(),
         reduced: false,
       },
       now,
     );
-    samples.push({ now, cursor, playing: pb.playing(), pose });
+    samples.push({ now, cursor, playing: pb.playing(), msToEnd, pose });
   };
   pb.onCursor(() => observe());
   pb.load(s.plan, true);
@@ -174,78 +194,113 @@ function simulate(s: Scenario, slider: number, tailMs = 1_500): Sample[] {
   return samples;
 }
 
-describe("crosswalk motion: the real replays, paced, at 16 display ms", () => {
+/** Drawn poses equal to the model's at the end of this scene: the break frame. */
+function atModelEnd(s: Scenario, x: Sample): boolean {
+  const model = modelPose(crosswalkFrame(s.edges, s.events, s.end));
+  const p = x.pose;
+  return (
+    x.cursor >= s.end &&
+    p.car.visible === model.carVisible &&
+    (!model.carVisible || p.car.x === model.carX) &&
+    p.walkerFrac === model.walkerFrac
+  );
+}
+
+describe("crosswalk motion: the real replays, at every slider step, 16 display ms per frame", () => {
   it("builds the four scenarios", () => {
     expect(scenarios.map((s) => s.name)).toEqual(["reduced replay", "HELD replay", "fix view, original", "fix view, fixed"]);
     expect(pressIntervals(REDUCED)).toHaveLength(2);
+    expect(STEPS).toHaveLength(11);
   });
 
   for (const name of ["reduced replay", "HELD replay", "fix view, original", "fix view, fixed"]) {
     describe(name, () => {
-      const run = (): { s: Scenario; samples: Sample[] } => {
-        const s = scenarios.find((x) => x.name === name) as Scenario;
-        return { s, samples: simulate(s, 0) };
-      };
+      const scenario = (): Scenario => scenarios.find((x) => x.name === name) as Scenario;
 
-      it("the car and the walker never move faster than their display caps, and never snap", () => {
-        const { samples } = run();
-        expect(samples.length).toBeGreaterThan(100);
+      it("the car and the walker never move faster than their display caps (the walker at most 3x while it clears the road), and never snap, before the last 400 ms", () => {
+        const s = scenario();
         let moved = 0;
-        for (let i = 1; i < samples.length; i++) {
-          const a = samples[i - 1] as Sample;
-          const b = samples[i] as Sample;
-          const dt = b.now - a.now;
-          const car = Math.abs(b.pose.carU - a.pose.carU);
-          const walker = Math.abs(b.pose.walkerU - a.pose.walkerU);
-          if (car > 0 || walker > 0) moved++;
-          expect(car).toBeLessThanOrEqual(CAR_SPEED * dt + 1e-6);
-          expect(walker).toBeLessThanOrEqual(WALKER_SPEED * dt + 1e-6);
-          // Drawn: while the car is in sight in both samples, it moves by the same bound.
-          if (a.pose.car.visible && b.pose.car.visible) expect(Math.abs(b.pose.car.x - a.pose.car.x)).toBeLessThanOrEqual(CAR_SPEED * dt + 1e-6);
+        for (const step of STEPS) {
+          const samples = sim(s, step);
+          expect(samples.length).toBeGreaterThan(50);
+          for (let i = 1; i < samples.length; i++) {
+            const a = samples[i - 1] as Sample;
+            const b = samples[i] as Sample;
+            // The last CATCH_UP_MS of playback are the one place the actors may be sped up, to arrive at the break pose.
+            if (b.msToEnd !== null && b.msToEnd <= CATCH_UP_MS) continue;
+            const dt = b.now - a.now;
+            const car = Math.abs(b.pose.carU - a.pose.carU);
+            const walker = Math.abs(b.pose.walkerU - a.pose.walkerU);
+            if (car > 0 || walker > 0) moved++;
+            expect(car).toBeLessThanOrEqual(CAR_SPEED * dt + 1e-6);
+            expect(walker).toBeLessThanOrEqual(WALKER_SPEED * WALKER_CLEAR_LIFT * dt + 1e-6);
+          }
         }
-        expect(moved).toBeGreaterThan(0);
+        expect(moved).toBeGreaterThan(100);
       });
 
       it("at the break (the end of playback for this scene) the car and the walker are at the model's pose", () => {
-        const { s, samples } = run();
-        const at = samples.find((x) => x.cursor >= s.end);
-        expect(at).toBeDefined();
+        const s = scenario();
         const model = modelPose(crosswalkFrame(s.edges, s.events, s.end));
-        const p = (at as Sample).pose;
-        expect(p.car.visible).toBe(model.carVisible);
-        if (model.carVisible) expect(p.car.x).toBe(model.carX);
-        expect(p.walkerFrac).toBe(model.walkerFrac);
+        for (const step of STEPS) {
+          const at = sim(s, step).find((x) => x.cursor >= s.end);
+          expect(at, `step ${String(step)}`).toBeDefined();
+          const p = (at as Sample).pose;
+          expect(p.car.visible, `step ${String(step)}`).toBe(model.carVisible);
+          if (model.carVisible) expect(p.car.x, `step ${String(step)}`).toBe(model.carX);
+          expect(p.walkerFrac, `step ${String(step)}`).toBe(model.walkerFrac);
+        }
+      });
+
+      it("the drawn car is never inside the crossing zone while the drawn walker is on the road (except at the break, where the model itself has them there)", () => {
+        const s = scenario();
+        const modelEnd = crosswalkFrame(s.edges, s.events, s.end);
+        const modelConflict = carInZone(carU(modelEnd)) && walkerOnRoad(walkerU(modelEnd));
+        let walkerOnRoadSamples = 0;
+        for (const step of STEPS) {
+          for (const x of sim(s, step)) {
+            const inZone = carInZone(x.pose.carU);
+            const onRoad = walkerOnRoad(x.pose.walkerU);
+            if (onRoad) walkerOnRoadSamples++;
+            if (modelConflict && atModelEnd(s, x)) continue;
+            expect(inZone && onRoad, `step ${String(step)} at ${String(x.now)} ms`).toBe(false);
+          }
+        }
+        // The walker really is on the road in these replays, so the check is not empty.
+        expect(walkerOnRoadSamples).toBeGreaterThan(0);
       });
 
       it("every real press lights the lamp once, in order, for at least 250 display ms", () => {
-        const { s, samples } = run();
+        const s = scenario();
         const presses = pressIntervals(s.events).filter((p) => p.on >= s.plan.start && p.on <= s.end);
-        const flashes: { start: number; end: number }[] = [];
-        let open: number | null = null;
-        let pulses = 0;
-        for (const x of samples) {
-          if (x.pose.pulse) pulses++;
-          if (x.pose.lampLit && open === null) open = x.now;
-          if (!x.pose.lampLit && open !== null) {
-            flashes.push({ start: open, end: x.now });
-            open = null;
+        for (const step of STEPS) {
+          const samples = sim(s, step);
+          const flashes: { start: number; end: number }[] = [];
+          let open: number | null = null;
+          let pulses = 0;
+          for (const x of samples) {
+            if (x.pose.pulse) pulses++;
+            if (x.pose.lampLit && open === null) open = x.now;
+            if (!x.pose.lampLit && open !== null) {
+              flashes.push({ start: open, end: x.now });
+              open = null;
+            }
           }
+          if (open !== null) flashes.push({ start: open, end: (samples[samples.length - 1] as Sample).now });
+          expect(flashes, `step ${String(step)}`).toHaveLength(presses.length);
+          expect(pulses, `step ${String(step)}`).toBe(presses.length);
+          for (const f of flashes) expect(f.end - f.start, `step ${String(step)}`).toBeGreaterThanOrEqual(LAMP_MIN_MS);
+          flashes.forEach((f, i) => {
+            if (i > 0) expect(f.start).toBeGreaterThan((flashes[i - 1] as { end: number }).end);
+          });
         }
-        if (open !== null) flashes.push({ start: open, end: (samples[samples.length - 1] as Sample).now });
-        expect(flashes).toHaveLength(presses.length);
-        expect(pulses).toBe(presses.length);
-        for (const f of flashes) expect(f.end - f.start).toBeGreaterThanOrEqual(LAMP_MIN_MS);
-        // In order: each flash starts after the one before it ended.
-        flashes.forEach((f, i) => {
-          if (i > 0) expect(f.start).toBeGreaterThan((flashes[i - 1] as { end: number }).end);
-        });
       });
     });
   }
 
   it("the reduced replay has 2 lamp-on intervals (press, release, press and hold), the last one still lit", () => {
     const s = scenarios[0] as Scenario;
-    const samples = simulate(s, 0);
+    const samples = sim(s, 0);
     let on = 0;
     let prev = false;
     for (const x of samples) {
@@ -256,39 +311,56 @@ describe("crosswalk motion: the real replays, paced, at 16 display ms", () => {
     expect((samples[samples.length - 1] as Sample).pose.lampLit).toBe(true);
   });
 
-  it("the display car is never on the stripes while the walk sign is on or the walker is crossing (paced)", () => {
-    for (const s of scenarios) {
-      for (const x of simulate(s, 0)) {
-        const f = x.pose.frame;
-        const d = x.pose.car;
-        const onStripes = d.visible && d.x > CROSSWALK_STRIPES_FROM && d.x - CROSSWALK_CAR_LEN < CROSSWALK_STRIPES_TO;
-        if (onStripes) {
-          expect(f.walk).toBe("off");
-          expect(f.walkerOnStripes).toBe(false);
-        }
+  it("the walker still on the road after the walk sign went off clears it faster than its normal cap, and the car waits for it", () => {
+    // The fixed-program scene at the fastest step is where the drawn walker lags the most.
+    const s = scenarios.find((x) => x.name === "fix view, fixed") as Scenario;
+    let lifted = 0;
+    let carHeld = 0;
+    for (const step of STEPS) {
+      const samples = sim(s, step);
+      for (let i = 1; i < samples.length; i++) {
+        const a = samples[i - 1] as Sample;
+        const b = samples[i] as Sample;
+        if (b.msToEnd !== null && b.msToEnd <= CATCH_UP_MS) continue;
+        if (Math.abs(b.pose.walkerU - a.pose.walkerU) > WALKER_SPEED * (b.now - a.now) + 1e-6) lifted++;
+        // The car is at the stop line (or before it) with its model asking for more, while the walker is on the road.
+        const model = carU(b.pose.frame);
+        if (walkerOnRoad(b.pose.walkerU) && b.pose.carU < model && !carInZone(b.pose.carU)) carHeld++;
       }
     }
+    expect(lifted + carHeld).toBeGreaterThan(0);
   });
 
-  it("at faster slider steps the replay is shorter than the caps allow: the last 400 ms speed the actors up to arrive, and the break pose and the lamp are still exact", () => {
-    // The caps are asserted at the paced step (the thumb is at the left end for every new plan). At faster steps the
-    // actors may have to cover more than the caps in the last CATCH_UP_MS; they still arrive at the model pose.
-    const s = scenarios[0] as Scenario;
-    const model = modelPose(crosswalkFrame(s.edges, s.events, s.end));
-    for (const step of [3, 5, 10]) {
-      const samples = simulate(s, step);
-      const at = samples.find((x) => x.cursor >= s.end) as Sample;
-      expect(at.pose.car.visible).toBe(model.carVisible);
-      if (model.carVisible) expect(at.pose.car.x).toBe(model.carX);
-      expect(at.pose.walkerFrac).toBe(model.walkerFrac);
-      let flashes = 0;
-      let prev = false;
-      for (const x of samples) {
-        if (x.pose.lampLit && !prev) flashes++;
-        prev = x.pose.lampLit;
-      }
-      expect(flashes).toBe(2);
+  it("the old risk is gone: with the cap alone a lagging walker and a free-running car would meet; the gate keeps them apart", () => {
+    // A direct check of the gate on a made-up frame: the model sends the car on (green, sign off, walker crossing done),
+    // but the drawn walker is still mid-road. The car holds at the stop line until the walker reaches a sidewalk.
+    const edges: OutputEvent[] = [
+      { signal: "CAR_GREEN", value: 1, cycle: 0 },
+      { signal: "CAR_YELLOW", value: 0, cycle: 0 },
+      { signal: "CAR_RED", value: 0, cycle: 0 },
+      { signal: "WALK", value: 1, cycle: 1_000_000 },
+      { signal: "WALK", value: 0, cycle: 2_000_000 },
+    ];
+    const actors = createCrosswalkActors();
+    const at = (cursor: number, now: number, epoch = 0): ActorPose =>
+      actors.step({ edges, events: [], cursor, endCursor: null, msToEnd: null, ended: false, epoch, reduced: false }, now);
+    // Placed at cursor 3,000,000: the model walker is half way down the road, the car waits (the crossing is not over).
+    const start = at(3_000_000, 0);
+    expect(walkerOnRoad(start.walkerU)).toBe(true);
+    // Far later: the model walker has crossed and the car has driven off.
+    let prev = start;
+    let now = 0;
+    let held = 0;
+    for (let i = 0; i < 400; i++) {
+      now += STEP_MS;
+      const p = at(40_000_000, now);
+      expect(carInZone(p.carU) && walkerOnRoad(p.walkerU)).toBe(false);
+      if (walkerOnRoad(p.walkerU) && p.carU === prev.carU) held++;
+      prev = p;
     }
+    expect(held).toBeGreaterThan(0);
+    expect(walkerOnRoad(prev.walkerU)).toBe(false);
+    expect(prev.settled).toBe(true);
   });
 });
 describe("crosswalk motion: jumps place the actors with no animation", () => {
