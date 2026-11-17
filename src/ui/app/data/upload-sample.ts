@@ -1,6 +1,6 @@
 // The Sample: the bundled crosswalk buggy program, its pins, rule and settings. No network, no new raw import.
 import { friendlyLabel } from "../model/labels";
-import { importPinMap } from "../model/pin-map-file";
+import { exportPinMap, importPinMap } from "../model/pin-map-file";
 import type { PinRow } from "../model/pin-table";
 import type { LoadedProgram } from "../model/upload-hex";
 import { CROSSWALK_TEXTS } from "./crosswalk";
@@ -34,10 +34,13 @@ export interface DownloadFile {
   type: string;
 }
 
-/** The two files of "Download the sample", byte for byte the bundled strings. */
+/**
+ * The two files of "Download the sample": the bundled HEX byte for byte, and the Sample's pin map in the
+ * fixture.json format with each plain name in the extra "plainName" field, so importing it restores them.
+ */
 export function sampleDownloads(): DownloadFile[] {
   return [
     { name: SAMPLE_HEX_NAME, text: CROSSWALK_TEXTS.buggyHex, type: "text/plain" },
-    { name: SAMPLE_PINS_NAME, text: CROSSWALK_TEXTS.fixtureText, type: "application/json" },
+    { name: SAMPLE_PINS_NAME, text: exportPinMap(sampleRows(1)), type: "application/json" },
   ];
 }

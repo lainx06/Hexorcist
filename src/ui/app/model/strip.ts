@@ -29,9 +29,9 @@ export function relativeTime(cycle: number, e0: number): string {
 /** Short move word of the event at index i, chosen by the active/held/inactive kind of `movePhrase`. */
 export function stripPhrase(list: readonly ReducerEvent[], i: number, f: Fixture, labels: SignalLabels = EXAMPLE_LABELS): string {
   const e = list[i] as ReducerEvent;
-  // Upload: no Example wording; the move names the pin by its Display_Name (Q8).
-  if (labels.kind === "upload") return `changed ${labelOf(labels, e.signal).text}`;
   const kind = moveKind(list, i, f);
+  // Upload: the Examples' button words, then the pin's Display_Name.
+  if (labels.kind === "upload") return `${kind === "inactive" ? "let go of" : PRESS_WORDS[kind]} ${labelOf(labels, e.signal).text}`;
   switch (e.signal) {
     case "REQUEST":
     case "CLOSE":
@@ -53,6 +53,8 @@ export interface StripDot {
   cycle: number;
   label: string;
   gremlinId: string;
+  /** Upload: the label without the pin name, for a strip too narrow for the full label. */
+  short?: string;
 }
 
 /** One dot per Gremlin_Event, in list order, labelled "<Relative_Time> <Strip_Phrase>". e0 is the earliest Gremlin_Event cycle. */
@@ -61,7 +63,11 @@ export function stripDots(list: readonly ReducerEvent[], fixture: Fixture, _v?: 
   const out: StripDot[] = [];
   list.forEach((e, i) => {
     if (e.gremlinId === "rest") return;
-    out.push({ cycle: e.cycle, label: `${relativeTime(e.cycle, e0)} ${stripPhrase(list, i, fixture, labels)}`, gremlinId: e.gremlinId });
+    const label = `${relativeTime(e.cycle, e0)} ${stripPhrase(list, i, fixture, labels)}`;
+    if (labels.kind === "upload") {
+      const short = `${relativeTime(e.cycle, e0)} ${PRESS_WORDS[moveKind(list, i, fixture)]}`;
+      out.push({ cycle: e.cycle, label, gremlinId: e.gremlinId, short });
+    } else out.push({ cycle: e.cycle, label, gremlinId: e.gremlinId });
   });
   return out;
 }

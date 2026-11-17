@@ -20,17 +20,27 @@ export const CAPABILITY_COPY = {
     "Otherwise, a rule that could not be checked, a signal not mapped to a pin, a try that did not finish, or no gremlin move in any try: COULDN'T TELL.",
     "Otherwise: HELD. No violation found in N emulated runs of this gremlin set. Not a proof.",
   ],
-  // \u0077 is the letter w: the source rules forbid the bare DOM global's name in pure modules, strings included.
-  openWindowLine: "A rule \u0077indow still open when a try ends is not judged.",
+  openWindowLine: "A rule's time limit still running when a try ends is not judged.",
   scenesLine: '"Illustrative" scenes are drawings driven by real outputs; "Pin levels" shows real pin levels only.',
   floatingHeading: "Inputs read with no pull-up",
   floatingBare: "an input was read while floating",
   floatingNamed: (name: string): string => `${name} was read while floating`,
+  registersLine: (n: number): string => `and ${String(n)} low-level ${n === 1 ? "register" : "registers"}`,
 } as const;
 
 /** The plainName of every row of the engine's table, in table order, read at call time. */
 export function notModelledList(table: readonly PeripheralRow[] = UNMODELLED_PERIPHERALS): string[] {
   return table.map((r) => r.plainName);
+}
+
+/** Engine row ids named one by one in the Plain_View; the other rows are counted as low-level registers. */
+const PLAIN_IDS = ["USART0", "SPI", "TWI", "EEPROM", "WDT", "AC"] as const;
+
+/** Plain_View list: the named parts from the engine table, then "and N low-level registers". */
+export function notModelledPlain(table: readonly PeripheralRow[] = UNMODELLED_PERIPHERALS): string[] {
+  const named = PLAIN_IDS.flatMap((id) => table.filter((r) => r.id === id).map((r) => r.plainName));
+  const rest = table.length - named.length;
+  return rest > 0 ? [...named, CAPABILITY_COPY.registersLine(rest)] : named;
 }
 
 const FLOATING = /input ([A-Za-z][A-Za-z0-9_]*) was read while floating|an input was read while floating/g;
@@ -56,6 +66,8 @@ export interface CapabilityContent {
   notModelledHeading: string;
   notModelledLine: string;
   notModelled: string[];
+  /** The Plain_View form of `notModelled`. */
+  notModelledPlain: string[];
   lines: string[];
   orderHeading: string;
   order: string[];
@@ -78,6 +90,7 @@ export function capabilityContent(args: {
     notModelledHeading: C.notModelledHeading,
     notModelledLine: C.notModelledLine,
     notModelled: notModelledList(args.table),
+    notModelledPlain: notModelledPlain(args.table),
     lines: [C.analogLine, C.openWindowLine, C.scenesLine],
     orderHeading: C.orderHeading,
     order: [...C.order],

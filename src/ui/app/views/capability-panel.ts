@@ -3,6 +3,7 @@
 import type { Verdict } from "../../../engine/types";
 import { capabilityContent } from "../model/capability";
 import type { SignalLabels } from "../model/signal-labels";
+import { plainOnly, techOnly } from "./details";
 import { el, setChildren } from "./dom";
 
 export interface CapabilityPanelView {
@@ -26,7 +27,8 @@ export function createCapabilityPanel(): CapabilityPanelView {
         list(c.modelled),
         el("h4", { class: "capability-heading" }, [c.notModelledHeading]),
         el("p", { class: "meta" }, [c.notModelledLine]),
-        list(c.notModelled),
+        plainOnly(list(c.notModelledPlain)),
+        techOnly(list(c.notModelled)),
         ...c.lines.map((l) => el("p", { class: "capability-line" }, [l])),
         el("h4", { class: "capability-heading" }, [c.orderHeading]),
         list(c.order, true),

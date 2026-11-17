@@ -49,6 +49,7 @@ export function createMoveStrip(): MoveStrip {
 
   let dotEls: HTMLElement[] = [];
   let labelEls: HTMLElement[] = [];
+  let labelTexts: { full: string; short: string | undefined }[] = [];
   let markEl: HTMLElement | null = null;
   let markLabel: HTMLElement | null = null;
   let dotCycles: number[] = [];
@@ -84,9 +85,28 @@ export function createMoveStrip(): MoveStrip {
       label.style.left = `${String(o.x)}px`;
       // A label may run up to the next dot (or to the mark), less a small gap.
       const next = k + 1 < order.length ? (order[k + 1] as { x: number }).x : lay.mark;
-      label.style.maxWidth = `${String(Math.max(48, next - o.x - LABEL_GAP_PX))}px`;
+      const max = Math.max(48, next - o.x - LABEL_GAP_PX);
+      label.style.maxWidth = `${String(max)}px`;
+      fitLabel(label, labelTexts[o.i], max);
     });
     markEl.style.left = `${String(lay.mark)}px`;
+  }
+
+  /**
+   * Upload labels: the full label unless it would take more than two lines in `max` px; then the short label
+   * ("+0 ms pressed") shows and the full one moves to the tooltip. Measured when the track is laid out,
+   * else estimated at 7.5 px per character.
+   */
+  function fitLabel(label: HTMLElement, t: { full: string; short: string | undefined } | undefined, max: number): void {
+    if (t === undefined || t.short === undefined) return;
+    label.textContent = t.full;
+    label.removeAttribute("title");
+    const lh = parseFloat(getComputedStyle(label).lineHeight);
+    const lines = label.offsetHeight > 0 && Number.isFinite(lh) && lh > 0 ? label.offsetHeight / lh : (t.full.length * 7.5) / max;
+    if (lines > 2.2) {
+      label.textContent = t.short;
+      label.setAttribute("title", t.full);
+    }
   }
 
   if (typeof ResizeObserver === "function") new ResizeObserver(() => layoutMoves()).observe(track);
@@ -110,6 +130,7 @@ export function createMoveStrip(): MoveStrip {
       dotCycles = dots.map((d) => d.cycle);
       breakCycle = v;
       resetDots(dots.length);
+      labelTexts = dots.map((d) => ({ full: d.label, short: d.short }));
       labelEls = dots.map((d) => {
         const l = el("span", { class: "strip-label" }, [d.label]);
         track.appendChild(l);

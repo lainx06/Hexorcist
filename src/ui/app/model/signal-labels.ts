@@ -19,11 +19,23 @@ export function labelOf(labels: SignalLabels, signal: string): { text: string; k
   return plain === "" ? { text: signal, known: false } : { text: plain, known: true };
 }
 
-const EMPTY_PLAIN: Readonly<Record<string, PlainStoryLabel>> = Object.freeze({});
+/**
+ * Upload wording of one input, in the Examples' button words: "pressed <name>", "pressed and held <name>",
+ * "released <name>", and for a repeat on the same input "pressed it", "pressed and held it", "let go".
+ */
+function pressLabel(name: string): PlainStoryLabel {
+  return {
+    full: { active: `pressed ${name}`, held: `pressed and held ${name}`, inactive: `released ${name}` },
+    short: { active: "pressed it", held: "pressed and held it", inactive: "let go" },
+  };
+}
 
-/** Example: PLAIN_STORY_LABELS. Upload: no entries, so every move uses the unlabelled wording. */
+/** Example: PLAIN_STORY_LABELS. Upload: the press wording for every pin, named by its Display_Name. */
 export function plainStoryTableFor(labels: SignalLabels): Readonly<Record<string, PlainStoryLabel>> {
-  return labels.kind === "example" ? PLAIN_STORY_LABELS : EMPTY_PLAIN;
+  if (labels.kind === "example") return PLAIN_STORY_LABELS;
+  const out: Record<string, PlainStoryLabel> = {};
+  for (const signal of Object.keys(labels.names)) out[signal] = pressLabel(labelOf(labels, signal).text);
+  return out;
 }
 
 /** Example: storyLabelsFor(fixture). Upload: no entries. */

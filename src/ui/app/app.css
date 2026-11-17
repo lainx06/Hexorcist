@@ -4022,8 +4022,52 @@ button:disabled {
   width: 100%;
   height: auto;
 }
-.pin-levels-svg .switch-lever {
-  stroke-width: 5;
+/* Two columns over the empty card: inputs left, outputs right, each centred and spread evenly. */
+.pin-levels-columns {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-4);
+  padding: 40px var(--s-4) var(--s-4);
+}
+.pin-level-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* Centred while the rows fit; when 28 px rows no longer fit, the column scrolls from the top. */
+.pin-level-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  flex: 1 0 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pin-level-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 1 1 0;
+  min-height: 28px;
+  max-height: 64px;
+}
+.pin-switch {
+  flex: none;
+  width: 44px;
+  height: min(44px, 100%);
+}
+.pin-lamp-art {
+  flex: none;
+  width: 36px;
+  height: min(36px, 100%);
+}
+.pin-switch .switch-lever {
+  stroke-width: 4;
 }
 .pin-lamp {
   fill: var(--surface-3);
@@ -4039,25 +4083,45 @@ button:disabled {
   fill: none;
   stroke-dasharray: 4 3;
 }
-.pin-level-label {
+.pin-level-gremlin {
+  flex: none;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+}
+.pin-level-gremlin .pin-level-icon {
+  width: 28px;
+  height: 28px;
+}
+.pin-level-text {
   display: flex;
-  gap: var(--s-2);
   align-items: baseline;
+  gap: var(--s-2);
+  min-width: 0;
+  font-size: 16px;
   white-space: nowrap;
-  font-size: 13px;
 }
 .pin-level-name {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .pin-level-state {
-  color: var(--text-2);
+  color: var(--muted);
 }
-.pin-level-gremlin .pin-level-icon {
-  width: 22px;
-  height: 22px;
+.scene-card.is-idle .pin-levels-columns {
+  opacity: 0.6;
 }
-
+.scene-card.is-dim .pin-levels-columns {
+  opacity: 0.45;
+}
+/* The shrink and note text sits above the columns, on its own dark panel. */
+.pin-levels-frame > .stage-overlay {
+  z-index: 2;
+}
+/* The labels are in the card at every width, so the phone line under it is not needed. */
+.pin-levels .scene-phone-line {
+  display: none;
+}
 /* ---------- Capability_Panel (Details tab, every device) ---------- */
 .details-capability {
   margin-top: var(--s-4);
@@ -4081,4 +4145,32 @@ button:disabled {
 }
 .capability-line {
   margin: 0;
+}
+
+/* Upload: a not-ready Unleash stays pressable (to show what is missing) but looks like a disabled button. */
+button[aria-disabled="true"] {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px dashed var(--line-strong);
+}
+.upload-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  margin-top: var(--s-2);
+}
+.upload-checklist-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.upload-checklist-list li.is-done {
+  color: var(--mint);
+}
+.upload-check {
+  margin-right: var(--s-1);
 }

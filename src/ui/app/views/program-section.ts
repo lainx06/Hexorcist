@@ -4,9 +4,10 @@ import { MAX_PINS } from "../model/pin-table";
 import type { RowPatch } from "../model/pin-table";
 import { UPLOAD_COPY } from "../model/upload-copy";
 import { sizeText } from "../model/upload-hex";
+import { uploadChecklist, visibleErrors } from "../model/upload-state";
 import type { UploadDerived, UploadState } from "../model/upload-state";
 import { techOnly } from "./details";
-import { el } from "./dom";
+import { el, setChildren } from "./dom";
 import { createPinTable } from "./pin-table";
 
 export interface ProgramSectionCallbacks {
@@ -58,6 +59,8 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
   const exp = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.exportPins]);
   exp.addEventListener("click", () => cb.onExport());
   const importError = el("p", { class: "error-text import-error", role: "alert" }, [""]);
+  // One muted line of steps, each ticked when done; it replaces red errors until the visitor acts.
+  const checklist = el("div", { class: "meta upload-checklist" });
 
   const node = el("section", { class: "setup-section program-section", "aria-labelledby": "program-title" }, [
     el("h2", { class: "section-title", id: "program-title" }, [UPLOAD_COPY.sectionTitle]),
@@ -69,6 +72,7 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
     table.node,
     el("div", { class: "program-row" }, [add, imp.node, exp]),
     importError,
+    checklist,
   ]);
 
   return {
@@ -82,7 +86,15 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
       parserLine.textContent = s.hexError?.parser ?? "";
       importError.textContent = s.importError ?? "";
       importError.hidden = s.importError === null;
-      table.paint(s.rows, d.table, busy);
+      table.paint(s.rows, visibleErrors(s, d).table, busy);
+      const steps = uploadChecklist(s);
+      checklist.hidden = steps.every((x) => x.done);
+      setChildren(checklist, [
+        el("span", { class: "upload-checklist-prefix" }, [UPLOAD_COPY.checklist.prefix]),
+        el("ul", { class: "upload-checklist-list" }, steps.map((x) =>
+          el("li", { class: x.done ? "is-done" : "" }, [el("span", { class: "upload-check", "aria-hidden": "true" }, [x.done ? "\u2713" : "\u25cb"]), x.text]),
+        )),
+      ]);
       hex.input.disabled = busy;
       imp.input.disabled = busy;
       for (const l of [hex.label, imp.label]) l.classList.toggle("is-disabled", busy);

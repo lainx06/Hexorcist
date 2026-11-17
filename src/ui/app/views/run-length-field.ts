@@ -7,7 +7,8 @@ export const RUN_LENGTH_LABEL = "Run length in ms";
 export interface RunLengthFieldView {
   node: HTMLElement;
   /** Sets the text (when it differs, so the caret stays) and its message. */
-  paint(text: string, busy: boolean): void;
+  /** `show` false keeps the message hidden until the visitor has edited the field. */
+  paint(text: string, busy: boolean, show?: boolean): void;
 }
 
 export function createRunLengthField(onText: (text: string) => void): RunLengthFieldView {
@@ -25,9 +26,9 @@ export function createRunLengthField(onText: (text: string) => void): RunLengthF
   const node = el("div", { class: "field-row" }, [el("label", { for: "run-length-field" }, [RUN_LENGTH_LABEL]), input, msg]);
   return {
     node,
-    paint(text, busy) {
+    paint(text, busy, show = true) {
       if (input.value !== text) input.value = text;
-      const ok = checkRunLength(text).ok;
+      const ok = checkRunLength(text).ok || !show;
       msg.textContent = ok ? "" : RUN_LENGTH_MESSAGE;
       input.setAttribute("aria-invalid", ok ? "false" : "true");
       input.readOnly = busy;

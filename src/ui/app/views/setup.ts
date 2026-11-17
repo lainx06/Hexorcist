@@ -30,6 +30,8 @@ export interface SetupCallbacks {
   onRuleText(text: string): void;
   /** "Unleash gremlins" or "Run again". */
   onUnleash(): void;
+  /** Upload_Device: "Unleash gremlins" was pressed while not ready (it is aria-disabled, not disabled, there). */
+  onBlockedUnleash?(): void;
   /** The user opened or closed the setup with "Change setup". `expanded` is true while the body shows. */
   onExpandChange?(expanded: boolean): void;
 }
@@ -94,6 +96,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   let invalid = false;
   let names: readonly string[] = [];
   let headline = "";
+  let uploadMode = false;
 
   // Section 1.
   const cards = new Map<DeviceId, HTMLButtonElement>();
@@ -153,6 +156,8 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     limitMsg,
   ]);
   const menu = el("div", { id: "preset-menu", class: "preset-menu", hidden: true }, [presetLine, limitControl]);
+  // One boxed row: the headline and "Why it matters" on the left, "Change rule ▾" on the right.
+  const ruleRow = el("div", { class: "rule-row" }, [el("div", { class: "rule-row-text" }, [headlineNode, customList, why]), menuBtn, noNumber]);
   const rules = ruleArea({
     onText: (t) => cb.onRuleText(t),
     onInsert: (s) => {
@@ -175,7 +180,13 @@ export function createSetup(cb: SetupCallbacks): SetupView {
   const unleash = el("button", { type: "button", class: "primary primary-unleash" }, [UI_COPY.unleash]);
   const triesNode = el("p", { class: "meta tries-line" }, [""]);
   const action = el("div", { class: "setup-action" }, [unleash, triesNode]);
-  unleash.addEventListener("click", () => cb.onUnleash());
+  unleash.addEventListener("click", () => {
+    if (unleash.getAttribute("aria-disabled") === "true") {
+      cb.onBlockedUnleash?.();
+      return;
+    }
+    cb.onUnleash();
+  });
 
   // Setup_Summary.
   const summaryText = el("p", { class: "setup-summary-text" }, [""]);
@@ -204,8 +215,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
     el("div", { class: "setup-columns" }, [
     el("section", { class: "setup-section", "aria-labelledby": "setup-rule-title" }, [
       sectionTitle("setup-rule-title", SETUP.ruleHeading),
-      // One boxed row: the headline and "Why it matters" on the left, "Change rule ▾" on the right.
-      el("div", { class: "rule-row" }, [el("div", { class: "rule-row-text" }, [headlineNode, customList, why]), menuBtn, noNumber]),
+      ruleRow,
       menu,
       techOnly(rules.node),
     ]),
@@ -260,7 +270,11 @@ export function createSetup(cb: SetupCallbacks): SetupView {
       btn.disabled = busy;
     }
     const offUnleash = busy || !enabled || invalid;
-    unleash.disabled = offUnleash;
+    // Upload: a not-ready button stays focusable and pressable, so a press can show what is missing.
+    const soft = uploadMode && !busy && offUnleash;
+    unleash.disabled = offUnleash && !soft;
+    if (soft) unleash.setAttribute("aria-disabled", "true");
+    else unleash.removeAttribute("aria-disabled");
     againBtn.disabled = offUnleash;
     menuBtn.disabled = busy;
     limitInput.disabled = busy;
@@ -308,6 +322,9 @@ export function createSetup(cb: SetupCallbacks): SetupView {
       programHost.hidden = section === null;
     },
     setUploadMode(on) {
+      uploadMode = on;
+      // Upload: the exact-text editor is the rule area; the "Custom rule" box above it is not shown.
+      ruleRow.hidden = on;
       if (on) {
         // Shown in both views: the upload has no plain preset, only the exact-text editor.
         rules.node.removeAttribute("data-detail");
@@ -330,6 +347,7 @@ export function createSetup(cb: SetupCallbacks): SetupView {
         why.hidden = false;
         presetLine.hidden = false;
       }
+      paint();
     },
     setProblems(list) {
       setChildren(

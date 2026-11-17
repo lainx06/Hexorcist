@@ -76,6 +76,7 @@ import { createHero } from "./hero";
 import { createLiveRegion } from "./live";
 import { controls, UI_COPY } from "./panels";
 import { createPlayback } from "./playback";
+import { currentDetails } from "./details";
 import { offerDownload, readFileText } from "./file-io";
 import { createProgramSection } from "./program-section";
 import { createRunLengthField } from "./run-length-field";
@@ -352,6 +353,11 @@ export function mountApp(root: HTMLElement): void {
     onToggleGremlin: (id) => toggleGremlin(id),
     onRuleText: (t) => applyRuleText(t),
     onUnleash: () => void unleash(),
+    onBlockedUnleash: () => {
+      if (!isUpload() || lockedNow()) return;
+      upload = U.revealAll(upload);
+      paintUpload();
+    },
     onExpandChange: () => paintPrimary(),
   });
   const stage = createStage(playback, currentId);
@@ -421,7 +427,7 @@ export function mountApp(root: HTMLElement): void {
     setup.gremlins.setBusy(locked);
     if (isUpload()) {
       program.paint(upload, U.deriveUpload(upload), lockedNow());
-      runLength.paint(upload.fields.runLengthMs, lockedNow());
+      runLength.paint(upload.fields.runLengthMs, lockedNow(), U.visibleErrors(upload, U.deriveUpload(upload)).runLength);
     }  };
 
   const setBusy = (busy: FlowState["busy"]): void => {
@@ -817,7 +823,8 @@ export function mountApp(root: HTMLElement): void {
       reduced: res.reducedList.filter((e) => e.gremlinId !== "rest").length,
     });
     const card = reductionCard(reductionInput);
-    if (!("error" in card)) live.announce(`${card.summary} ${card.smallest}`);
+    // "The smallest replay this reducer found." is a technical detail, spoken only with technical details on.
+    if (!("error" in card)) live.announce(currentDetails() ? `${card.summary} ${card.smallest}` : card.summary);
 
     // Reduced replay and its Display_Replay on the buggy build.
     const red = await doReplay(example.hex, res.reducedList);
@@ -1201,7 +1208,7 @@ export function mountApp(root: HTMLElement): void {
     const sentences = d.rule.ok ? d.rule.sentences : [];
     setup.setCustomRule(true, sentences);
     setup.rules.setSentences(sentences);
-    setup.rules.setErrors(d.rule.ok ? [] : d.rule.errors);
+    setup.rules.setErrors(U.visibleErrors(upload, d).rule);
     setup.rules.setPatterns(d.patterns.map((p) => ({ label: PATTERN_LABELS[p.form] ?? p.form, sentence: p.sentence })));
     // The picker is rebuilt only when the pins change, so a chip keeps focus when it is toggled.
     const levelRows = pinLevelRows(upload.rows);

@@ -18,6 +18,7 @@ import { UPLOAD_DEFAULTS, checkRunLength, msToCycles } from "./upload-fields";
 import type { HexCheckResult, HexError, LoadedProgram } from "./upload-hex";
 import { checkUploadRule, uploadPatterns } from "./upload-rule";
 import type { UploadRuleCheck } from "./upload-rule";
+import type { RuleError } from "./rule-box";
 
 export interface UploadState {
   program: LoadedProgram | null;
@@ -36,7 +37,15 @@ export interface UploadState {
   fields: { runs: string; seed: string; runLengthMs: string };
   /** For the tries line while a field is invalid. */
   lastValid: { runs: number; runCycles: number };
+  /**
+   * Which red errors may show. Nothing shows before the visitor acts: a row's errors after it is edited or
+   * imported, the table errors after an import, the rule errors after the rule is edited, the run length
+   * message after it is edited, and everything after a press of the disabled "Unleash gremlins".
+   */
+  revealed: { rowIds: number[]; table: boolean; rule: boolean; runLength: boolean; all: boolean };
 }
+
+const NOTHING_REVEALED: UploadState["revealed"] = { rowIds: [], table: false, rule: false, runLength: false, all: false };
 
 export function initialUpload(): UploadState {
   return {
@@ -56,6 +65,7 @@ export function initialUpload(): UploadState {
       runLengthMs: String(UPLOAD_DEFAULTS.runLengthMs),
     },
     lastValid: { runs: UPLOAD_DEFAULTS.runs, runCycles: msToCycles(UPLOAD_DEFAULTS.runLengthMs) },
+    revealed: NOTHING_REVEALED,
   };
 }
 
@@ -130,19 +140,55 @@ export function editRow(s: UploadState, id: number, patch: RowPatch): UploadStat
     const moved = direction === undefined ? r : setDirection(r, direction);
     return { ...moved, ...rest };
   });
-  return pruneGremlins({ ...s, rows });
+  const rowIds = s.revealed.rowIds.includes(id) ? s.revealed.rowIds : [...s.revealed.rowIds, id];
+  return pruneGremlins({ ...s, rows, revealed: { ...s.revealed, rowIds } });
 }
 
 export function importPins(s: UploadState, text: string, bytes: number): UploadState {
   const r = importPinMap(text, bytes, s.nextRowId);
   if (!r.ok) return { ...s, importError: r.error };
-  return pruneGremlins({ ...s, rows: r.rows, nextRowId: r.nextId, importError: null });
+  const revealed = { ...s.revealed, rowIds: [...s.revealed.rowIds, ...r.rows.map((x) => x.id)], table: true };
+  return pruneGremlins({ ...s, rows: r.rows, nextRowId: r.nextId, importError: null, revealed });
+}
+
+/** A press of the disabled "Unleash gremlins": every error shows from now on. */
+export function revealAll(s: UploadState): UploadState {
+  return { ...s, revealed: { ...s.revealed, all: true } };
+}
+
+/** The red errors that may show now (the derived checks themselves are unchanged). */
+export function visibleErrors(s: UploadState, d: UploadDerived): {
+  table: PinTableCheck;
+  rule: RuleError[];
+  runLength: boolean;
+} {
+  const r = s.revealed;
+  const rowErrors = d.table.rowErrors.map((e, i) => (r.all || r.rowIds.includes(s.rows[i]?.id ?? -1) ? e : []));
+  return {
+    table: { ...d.table, rowErrors, tableErrors: r.all || r.table ? d.table.tableErrors : [] },
+    rule: d.rule.ok || !(r.all || r.rule) ? [] : d.rule.errors,
+    runLength: r.all || r.runLength,
+  };
+}
+
+/** The muted "To unleash:" checklist: each step and whether it is done. */
+export function uploadChecklist(s: UploadState): { text: string; done: boolean }[] {
+  const d = deriveUpload(s);
+  const C = UPLOAD_COPY.checklist;
+  const hasIn = s.rows.some((r) => r.direction === "input");
+  const hasOut = s.rows.some((r) => r.direction === "output");
+  return [
+    { text: C.hex, done: s.program !== null && s.reading === null },
+    { text: C.pins, done: hasIn && hasOut && d.table.ok },
+    { text: C.rule, done: d.rule.ok },
+    { text: C.gremlin, done: s.selected.length > 0 },
+  ];
 }
 
 // Rule, gremlins, fields
 
 export function setRuleText(s: UploadState, text: string): UploadState {
-  return { ...s, ruleText: text };
+  return { ...s, ruleText: text, revealed: { ...s.revealed, rule: true } };
 }
 
 /** Toggle a chip. A gremlin that does not fit the table is never added. Ends the Masher preselection. */
@@ -162,7 +208,8 @@ export function setField(s: UploadState, key: "runs" | "seed" | "runLengthMs", t
     const c = checkRunLength(text);
     if (c.ok) lastValid.runCycles = msToCycles(c.value);
   }
-  return { ...s, fields, lastValid };
+  const revealed = key === "runLengthMs" ? { ...s.revealed, runLength: true } : s.revealed;
+  return { ...s, fields, lastValid, revealed };
 }
 
 // Derived

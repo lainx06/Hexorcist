@@ -51,6 +51,7 @@ const SAMPLES: Readonly<Record<string, (f: (...a: never[]) => unknown) => unknow
   "IMPORT_ERROR_TEXT.entryPlainName": (f) => (f as (n: number) => string)(2),
   "IMPORT_ERROR_TEXT.entryField": (f) => (f as (n: number, s: string, k: string) => string)(2, "LED", "restLevel"),
   "CAPABILITY_COPY.floatingNamed": (f) => (f as (s: string) => string)("Button"),
+  "CAPABILITY_COPY.registersLine": (f) => (f as (n: number) => string)(10),
 };
 
 const TABLES: Readonly<Record<string, unknown>> = {

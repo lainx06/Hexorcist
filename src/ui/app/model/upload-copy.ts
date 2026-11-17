@@ -28,6 +28,13 @@ export const UPLOAD_COPY = {
   noFix: "Your own program has no fixed version to compare.",
   exportFileName: "pin-map.json",
   gremlinOrder: "Gremlin order: {names}",
+  checklist: {
+    prefix: "To unleash:",
+    hex: "load a .hex",
+    pins: "add an input and an output",
+    rule: "write a rule",
+    gremlin: "pick a gremlin",
+  },
 } as const;
 
 /** Fill "{key}" holes in a copy string. */
