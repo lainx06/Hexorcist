@@ -78,7 +78,7 @@ Kiro wrote all of the product code and tests in this repository. Everything Kiro
 - **Steering** ([`.kiro/steering/`](.kiro/steering/)): determinism rules, the exact verdict texts, scope, test rules and the banned claim words.
 - **Hooks** ([`.kiro/hooks/`](.kiro/hooks/)):
   - `guard-before-task` runs before every spec task and blocks the task if copy uses a claim word or engine code reads the clock. It blocked a real task once, when a design doc listed the banned words. (The copy-scan tests caught Kiro itself writing one in a code comment.)
-  - `engine-tests-on-save` and `examples-on-save` run the tests whenever Kiro edits engine code or an example sketch; the second one recompiles the sketches first.
+  - `engine-tests-on-save` and `examples-on-save` run the tests whenever Kiro edits engine code or an example sketch; the second one recompiles the sketches before testing.
 - **Custom agent** [`rule-skeptic`](.kiro/agents/rule-skeptic.md): read-only, it argues with a rule before you run it (unmapped signals, triggers that can't happen, limits longer than the run) and opens every answer with "Advice, not a verdict."
 - **CI** runs the type check, the guard, every test and the build on each push.
 
