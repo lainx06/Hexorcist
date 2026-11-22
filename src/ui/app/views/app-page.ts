@@ -290,6 +290,13 @@ export function mountApp(root: HTMLElement): void {
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
     },
+    onSerialSample: () => {
+      if (lockedNow()) return;
+      upload = U.loadSerialSample(upload);
+      setup.rules.setText(upload.ruleText);
+      ctl.setTexts(upload.fields.runs, upload.fields.seed);
+      afterUploadEdit();
+    },
     onDownloadSample: () => {
       for (const f of sampleDownloads()) offerDownload(f.name, f.text, f.type);
     },
@@ -356,6 +363,7 @@ export function mountApp(root: HTMLElement): void {
     onBlockedUnleash: () => {
       if (!isUpload() || lockedNow()) return;
       upload = U.revealAll(upload);
+      setup.gremlins.reveal();
       paintUpload();
     },
     onExpandChange: () => paintPrimary(),
@@ -1216,7 +1224,7 @@ export function mountApp(root: HTMLElement): void {
     if (key !== lastFixtureKey) {
       lastFixtureKey = key;
       const labels = U.uploadLabels(upload.rows);
-      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels);
+      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels, true);
       timeline.setFixture(d.previewFixture, labels);
     } else setup.gremlins.setSelected(upload.selected);
     tabs.setGremlinOrder(U.gremlinOrderLine(upload.selected));

@@ -82,7 +82,11 @@ Kiro wrote all of the product code and tests in this repository. Everything Kiro
 - **Custom agent** [`rule-skeptic`](.kiro/agents/rule-skeptic.md): read-only, it argues with a rule before you run it (unmapped signals, triggers that can't happen, limits longer than the run) and opens every answer with "Advice, not a verdict."
 - **CI** runs the type check, the guard, every test and the build on each push.
 
-How the work was split: Kiro wrote the code. The author directed the project, approved every change and ran the browser checks. Claude acted as the planning lead (spec prompts, review triage, acceptance checks, the hook, agent and workflow files, and this README). ChatGPT and Gemini gave outside design reviews.
+How the work was split: Kiro wrote the product code in 13 specs, up to its credit limit. After that, Claude wrote some follow-up code (listed below), each change reviewed and merged by the author. The author directed the project, approved every change and ran the browser checks. Claude also acted as the planning lead: spec prompts, review triage, acceptance checks, this README, and the starting drafts of the hook, agent and workflow files, which the author installed and ran in Kiro. ChatGPT and Gemini gave outside design reviews.
+
+Code written by Claude after the Kiro credit limit (each commit message ends in `(claude)`):
+
+- Upload page: hide analog gremlins on uploads, show the "pick a gremlin" message only after a click, page description and no-script text, and the "Try one it can't check" sample.
 
 ## Limits
 

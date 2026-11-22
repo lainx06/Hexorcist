@@ -3,7 +3,7 @@ import { GREMLIN_CATALOGUE, findGremlin } from "../../../engine/gremlins/catalog
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import type { RuleForm } from "../../../engine/rules/ir";
 import type { Fixture } from "../../../engine/types";
-import { SAMPLE_FIELDS, sampleProgram, sampleRows, sampleRuleText } from "../data/upload-sample";
+import { SAMPLE_FIELDS, SERIAL_FIELDS, SERIAL_RULE, sampleProgram, sampleRows, sampleRuleText, serialProgram, serialRows } from "../data/upload-sample";
 import type { CampaignRequest } from "../worker/messages";
 import { checkRuns, checkSeed } from "./fields";
 import type { FieldCheck } from "./fields";
@@ -104,20 +104,34 @@ export function hexReadFailed(s: UploadState, token: number): UploadState {
 }
 
 export function loadSample(s: UploadState): UploadState {
-  const rows = sampleRows(s.nextRowId);
+  return loadBundled(s, sampleProgram(), sampleRows(s.nextRowId), sampleRuleText(), SAMPLE_FIELDS);
+}
+
+/** The COULDN'T TELL sample: a program that uses the serial port, which the emulator does not model. */
+export function loadSerialSample(s: UploadState): UploadState {
+  return loadBundled(s, serialProgram(), serialRows(s.nextRowId), SERIAL_RULE, SERIAL_FIELDS);
+}
+
+function loadBundled(
+  s: UploadState,
+  program: LoadedProgram,
+  rows: PinRow[],
+  ruleText: string,
+  fields: { readonly runs: string; readonly seed: string; readonly runLengthMs: string },
+): UploadState {
   const next: UploadState = {
     ...s,
-    program: sampleProgram(),
+    program,
     hexError: null,
     reading: null,
     rows,
     nextRowId: s.nextRowId + rows.length,
     importError: null,
-    ruleText: sampleRuleText(),
+    ruleText,
     selected: ["masher"],
     autoMasher: false,
-    fields: { ...SAMPLE_FIELDS },
-    lastValid: { runs: Number(SAMPLE_FIELDS.runs), runCycles: msToCycles(Number(SAMPLE_FIELDS.runLengthMs)) },
+    fields: { ...fields },
+    lastValid: { runs: Number(fields.runs), runCycles: msToCycles(Number(fields.runLengthMs)) },
   };
   return pruneGremlins(next);
 }
