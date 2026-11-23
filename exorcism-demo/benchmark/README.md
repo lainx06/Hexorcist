@@ -84,6 +84,37 @@ Calibration: the Crosswalk example's fixed build holds all seven (Masher + Bounc
 
 Check: `node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-full-check.json`
 
-| File | Verdict |
-|---|---|
-| | |
+| File | Verdict | Both-on time (`measure-round2.mjs`) |
+|---|---|---|
+| `chatgpt-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
+| `chatgpt-high.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 990.3 ms |
+| `claude-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 990.3 ms |
+| `claude-high.ino` | BROKE, try 1 of 200 | 77 cycles, 4.81 µs at 990.3 ms |
+| `deepseek-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
+| `deepseek-high.ino` | BROKE, try 1 of 200 | 73 cycles, 4.56 µs at 970.8 ms |
+| `gemini-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
+| `gemini-medium.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
+
+All eight broke the same rule, `all of (WALK is 1, DONT_WALK is 1) must never happen.`, and the reducer cut
+each replay to one ordinary press of REQUEST (at 770.5 ms). Reading the code explains it: every sketch sets
+the lights in a helper that writes WALK and then DON'T WALK, one `digitalWrite` after the other. When WALK
+comes on, both pedestrian lights are on for about 5 microseconds (one `digitalWrite`) before DON'T WALK goes
+off. The sketches that break at 990.3 ms add a 20 ms debounce before reacting to the press.
+
+What this means: this is a real, repeatable behaviour of the code, measured in CPU cycles, not a checker
+error. On lamps nobody would see it. The same write order on two outputs that must never be on together
+(for example the two sides of a motor driver) is the pattern behind a short circuit. The rule decides which
+you care about: `must never happen` catches it; `must never last 1 ms or longer` accepts it (checked on a
+replica of the same write order). The fix is to switch lights off before switching others on, as the
+Crosswalk example's fixed build does.
+
+## Summary
+
+| Round | Sketches | Rules and gremlins | Result |
+|---|---|---|---|
+| 1 conveyor | 4 | 1 rule; Masher, 24 tries | 4 HELD |
+| 2 crossing | 8 | 1 rule; Masher, 24 tries | 8 HELD |
+| 2 crossing, stress | 8 | 1 rule; Masher + Bouncer, 200 tries | 8 HELD |
+| 2 crossing, full rules | 8 | 7 rules from the brief; Masher + Bouncer, 200 tries | 8 BROKE, all on the same ~5 µs WALK + DON'T WALK overlap |
+
+HELD means no violation in the runs made, not a proof.
