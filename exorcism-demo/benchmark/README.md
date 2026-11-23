@@ -45,13 +45,13 @@ Results (Nov 23, 2026), Masher, 24 tries, seed 20261101:
 | File | Chat tool, model and setting | Verdict |
 |---|---|---|
 | `chatgpt-fast.ino` | ChatGPT, fast setting | HELD (24 tries) |
-| `chatgpt-high.ino` | ChatGPT, high thinking | to confirm (output was garbled in the terminal) |
+| `chatgpt-high.ino` | ChatGPT, high thinking | HELD (24 tries) |
 | `gemini-fast.ino` | Gemini, fast setting | HELD (24 tries) |
 | `gemini-medium.ino` | Gemini, medium thinking | HELD (24 tries) |
 | `deepseek-fast.ino` | DeepSeek, DeepThink off | HELD (24 tries) |
 | `deepseek-high.ino` | DeepSeek, DeepThink on | HELD (24 tries) |
-| `claude-fast.ino` | claude.ai, fast setting | HELD (24 tries) |
-| `claude-high.ino` | claude.ai, high effort | HELD (24 tries) |
+| `claude-fast.ino` | claude.ai, Haiku 5.5, medium effort | HELD (24 tries) |
+| `claude-high.ino` | claude.ai, Opus 5.5, high effort | HELD (24 tries) |
 
 A first run of these files was checked against the conveyor rule by mistake (an old `try.mjs` that ignored
 the config argument); those results are discarded.
@@ -60,6 +60,29 @@ the config argument); those results are discarded.
 
 The same eight files with two gremlins (Masher and Bouncer, the contact-bounce gremlin) and 200 tries:
 `node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-stress-check.json`
+
+All eight: **HELD (200 tries)**.
+
+## Round 2, full rules from the brief
+
+One rule checks one thing. These seven rules restate the brief (`exorcism-demo/crosswalk-full-rules.txt`):
+
+```
+all of (CAR_GREEN is 1, WALK is 1) must never happen.
+all of (WALK is 1, DONT_WALK is 1) must never happen.
+all of (CAR_GREEN is 1, CAR_YELLOW is 1) must never happen.
+all of (CAR_GREEN is 1, CAR_RED is 1) must never happen.
+all of (CAR_YELLOW is 1, CAR_RED is 1) must never happen.
+CAR_YELLOW is 1 must never last 200 ms or longer.
+WALK is 1 must never last 250 ms or longer.
+```
+
+The two timing rules give the brief's 150 ms yellow and 200 ms WALK 50 ms of slack. The WALK rule is a
+reading of the brief: a sketch that restarts WALK when the button is pressed during WALK would break it.
+Calibration: the Crosswalk example's fixed build holds all seven (Masher + Bouncer, 200 tries, seed
+20261101); its buggy build breaks the first rule on try 4.
+
+Check: `node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-full-check.json`
 
 | File | Verdict |
 |---|---|
