@@ -3,8 +3,8 @@
   "mcpServers": {
     "hexorcist": {
       "type": "stdio",
-      "command": "npm",
-      "args": ["run", "-s", "mcp"]
+      "command": "node",
+      "args": ["node_modules/tsx/dist/cli.mjs", "--no-deprecation", "mcp/bin.ts"]
     }
   }
 }
