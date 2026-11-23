@@ -1,0 +1,39 @@
+# Runs the hexorcist-gate action (action.yml in this repo) on the Crosswalk example:
+# the fixed build must pass (HELD), the buggy build must make the gate fail (BROKE, exit code 1).
+name: gate-demo
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fixed-build-holds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          hex: examples/crosswalk/fixed/fixed.hex
+          pins: examples/crosswalk/fixture.json
+          rules: examples/crosswalk/rules.txt
+          seed: "20261101"
+  buggy-build-is-caught:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: gate
+        uses: ./
+        continue-on-error: true
+        with:
+          hex: examples/crosswalk/buggy/buggy.hex
+          pins: examples/crosswalk/fixture.json
+          rules: examples/crosswalk/rules.txt
+          seed: "20261101"
+      - name: The gate must report BROKE with exit code 1
+        shell: bash
+        run: |
+          echo "verdict=${{ steps.gate.outputs.verdict }} exit-code=${{ steps.gate.outputs.exit-code }}"
+          test "${{ steps.gate.outputs.verdict }}" = "BROKE"
+          test "${{ steps.gate.outputs.exit-code }}" = "1"

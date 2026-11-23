@@ -90,6 +90,23 @@ npm run check -- --hex my.hex --pins pins.json --rules rules.txt --json
 
 Exit codes: `0` HELD, `1` BROKE, `2` COULDN'T TELL, `3` input or internal error. COULDN'T TELL never exits 0.
 
+### As a CI gate (GitHub Action)
+
+```yaml
+- uses: lainx06/Hexorcist@main
+  with:
+    hex: build/my-program.hex
+    pins: pins.json
+    rules: rules.txt
+    seed: "20261101"     # optional, as are gremlins and runs
+```
+
+The job fails on BROKE, COULDN'T TELL or an error, and passes on HELD. The verdict, the exit code, the seed and the tries go to the job summary. [`gate-demo.yml`](.github/workflows/gate-demo.yml) runs it on the Crosswalk example: the fixed build passes, the buggy build fails the gate.
+
+### As an MCP server
+
+`npm run mcp` starts a local MCP server on stdio (no network). Tools: `check` (same inputs as the terminal command, returns the same JSON) and `capabilities` (the rule forms, the gremlins and the chip parts that give COULDN'T TELL). In Kiro, add it under MCP servers as the command `npm` with the arguments `run mcp`, started from this folder.
+
 ## How Kiro built this
 
 Kiro wrote all of the product code and tests in this repository. Everything Kiro used is committed in [`.kiro/`](.kiro/):
@@ -108,7 +125,7 @@ How the work was split: Kiro wrote the product code in 13 specs, up to its credi
 Code written by Claude after the Kiro credit limit (each commit message ends in `(claude)`):
 
 - Upload page: hide analog gremlins on uploads, show the "pick a gremlin" message only after a click, page description and no-script text, and the "Try one it can't check" sample.
-- Terminal runner (`cli/`), built from Kiro spec #14 `headless-runner` (`.kiro/specs/headless-runner/`): `npm run check`, JSON output, exit codes, and its tests in `tests/cli/`.
+- Terminal runner (`cli/`), built from Kiro spec #14 `headless-runner` (`.kiro/specs/headless-runner/`): `npm run check`, JSON output, exit codes, and its tests in `tests/cli/`; the GitHub Action (`action.yml`, `cli/step-summary.ts`, `gate-demo.yml`) and the MCP server (`mcp/`), with tests in `tests/mcp/`.
 
 ## Limits
 
