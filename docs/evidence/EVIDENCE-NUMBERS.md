@@ -12,9 +12,9 @@ Rerun them with `npm run bench:evidence`. The bench reads the wall clock only fo
 | CPU | AMD Ryzen 7 7800X3D 8-Core Processor, 16 cores |
 | Node | v26.13.1 |
 | avr8js | 0.21.1 |
-| Date of run (UTC) | 2026-11-16 |
-| Seed ranges | campaignSeed 1 to 100 for buggy builds, 1 to 20 for fixed builds |
-| Wall-clock time | seed sweep 618.8 s, single-press sweep 94.3 s, whole bench 713.1 s |
+| Date of run (UTC) | 2026-11-23 |
+| Seed ranges | campaignSeed 1 to 100 for buggy builds, 1 to 100 for fixed builds |
+| Wall-clock time | seed sweep 1852.2 s, single-press sweep 94.0 s, whole bench 1946.2 s |
 
 ## Seed sweep
 
@@ -23,11 +23,11 @@ One Campaign per seed. Each Campaign uses the committed HEX, `fixture.json`, `ru
 | Example | Build | Seeds | Runs per Campaign | BROKE | HELD | COULDN'T TELL | Violating run number (min / median / max) |
 |---|---|---|---|---|---|---|---|
 | crosswalk | buggy | 1 to 100 | 24 | 99 | 1 | 0 | 1 / 3 / 16 |
-| crosswalk | fixed | 1 to 20 | 24 | 0 | 20 | 0 | not measured |
+| crosswalk | fixed | 1 to 100 | 24 | 0 | 100 | 0 | not measured |
 | garage | buggy | 1 to 100 | 40 | 100 | 0 | 0 | 1 / 6 / 38 |
-| garage | fixed | 1 to 20 | 40 | 0 | 20 | 0 | not measured |
+| garage | fixed | 1 to 100 | 40 | 0 | 100 | 0 | not measured |
 | heartbeat | buggy | 1 to 100 | 24 | 99 | 1 | 0 | 1 / 4 / 17 |
-| heartbeat | fixed | 1 to 20 | 24 | 0 | 20 | 0 | not measured |
+| heartbeat | fixed | 1 to 100 | 24 | 0 | 100 | 0 | not measured |
 
 HELD texts seen:
 
