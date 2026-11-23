@@ -5,6 +5,7 @@ import type { PinRow } from "../model/pin-table";
 import type { LoadedProgram } from "../model/upload-hex";
 import { CROSSWALK_TEXTS } from "./crosswalk";
 import serialHex from "../../../../fixtures/serial_hello/build/serial_hello.ino.hex?raw";
+import serialPins from "../../../../fixtures/serial_hello/pins-with-button.json?raw";
 
 export const SAMPLE_HEX_NAME = "crosswalk-buggy.hex";
 export const SAMPLE_PINS_NAME = "crosswalk-pins.json";
@@ -50,12 +51,8 @@ export function sampleDownloads(): DownloadFile[] {
 
 export const SERIAL_HEX_NAME = "serial-hello.hex";
 
-const SERIAL_PINS = JSON.stringify({
-  pins: [
-    { signal: "LED", port: "B", bit: 5, direction: "output" },
-    { signal: "BUTTON", port: "D", bit: 2, direction: "input", activeLevel: "low" },
-  ],
-});
+/** The same pin map the CLI acceptance test uses: fixtures/serial_hello/pins-with-button.json. */
+const SERIAL_PINS = serialPins;
 
 /** Fewer runs: every run of this program waits on the serial port, so 24 runs take about 20 s. */
 export const SERIAL_FIELDS = { runs: "8", seed: "20261101", runLengthMs: "1000" } as const;
