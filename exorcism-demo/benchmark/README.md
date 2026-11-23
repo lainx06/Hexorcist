@@ -40,6 +40,27 @@ Brief (sent unchanged):
 Rule (`examples/crosswalk/rules.txt`): `all of (CAR_GREEN is 1, WALK is 1) must never happen.`
 Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/round2/<file>.ino exorcism-demo/crosswalk-check.json`
 
+Results (Nov 23, 2026), Masher, 24 tries, seed 20261101:
+
 | File | Chat tool, model and setting | Verdict |
 |---|---|---|
-| | | |
+| `chatgpt-fast.ino` | ChatGPT, fast setting | HELD (24 tries) |
+| `chatgpt-high.ino` | ChatGPT, high thinking | to confirm (output was garbled in the terminal) |
+| `gemini-fast.ino` | Gemini, fast setting | HELD (24 tries) |
+| `gemini-medium.ino` | Gemini, medium thinking | HELD (24 tries) |
+| `deepseek-fast.ino` | DeepSeek, DeepThink off | HELD (24 tries) |
+| `deepseek-high.ino` | DeepSeek, DeepThink on | HELD (24 tries) |
+| `claude-fast.ino` | claude.ai, fast setting | HELD (24 tries) |
+| `claude-high.ino` | claude.ai, high effort | HELD (24 tries) |
+
+A first run of these files was checked against the conveyor rule by mistake (an old `try.mjs` that ignored
+the config argument); those results are discarded.
+
+## Round 2 stress check
+
+The same eight files with two gremlins (Masher and Bouncer, the contact-bounce gremlin) and 200 tries:
+`node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-stress-check.json`
+
+| File | Verdict |
+|---|---|
+| | |
