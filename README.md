@@ -6,7 +6,14 @@ Hexorcist runs a real compiled ATmega328P program on a simulated chip inside you
 
 - **Live app:** https://lainx06.github.io/Hexorcist/
 - **Demo video (under 3 minutes):** _link added at submission_
+- **Judging in a hurry?** [docs/JUDGES.md](docs/JUDGES.md) is a five-minute tour.
 - Kiroween 2026 entry, Frankenstein category.
+
+![Crosswalk: the Masher breaks the rule on try 4 of 24, the reducer cuts 8 moves to 3, the replay plays, then the same 3 moves on the original and the fixed program](docs/img/hero.gif)
+
+| BROKE, with the moves that matter | Same moves on the fixed program | A program it can't check |
+|---|---|---|
+| ![BROKE card: the light gave cars and walkers a green at the same time; 8 moves cut to 3; replay timeline](docs/img/broke.png) | ![Side by side: the original breaks, the fixed program holds; HELD text below](docs/img/fix.png) | ![COULDN'T TELL card: the program uses the serial port, which this emulator setup does not model](docs/img/tell.png) |
 
 ## Three answers, nothing else
 
@@ -65,7 +72,11 @@ Measured with `npm run bench:evidence` on Nov 23, 2026 (Windows, AMD Ryzen 7 780
 | Garage door | BROKE 100 | HELD 100 |
 | I'm-alive light | BROKE 99, HELD 1 | HELD 100 |
 
+Across the three examples, the fixed builds gave no false alarm in 300 seeded campaigns (HELD 300 of 300), and the buggy builds were caught in 299 of 300.
+
 A single ordinary button press, moved every 10 ms across the whole run, broke none of the six builds. It takes the gremlins' awkward timing to find these bugs.
+
+Chat-written firmware: eight crossing sketches from four chat AIs, checked against seven rules from the same brief, all broke the same rule. Each turns WALK on about 5 microseconds before it turns DON'T WALK off. Kiro then fixed one of them in 45 seconds. Details: [exorcism-demo/benchmark/README.md](exorcism-demo/benchmark/README.md).
 
 In Chrome on the same desktop, the emulator ran at about 72 to 80 million chip cycles per second. The app shows the figure measured on your own computer in the Details tab.
 
