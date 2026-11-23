@@ -22,3 +22,12 @@ export function toolVersion(): string {
   const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, "package.json"), "utf8")) as { version?: string };
   return pkg.version ?? "0.0.0";
 }
+
+/** True when the module at moduleUrl is the script node was started with (case-insensitive on Windows). */
+export function isMain(moduleUrl: string): boolean {
+  const argv1 = process.argv[1];
+  if (argv1 === undefined) return false;
+  const a = resolve(fileURLToPath(moduleUrl));
+  const b = resolve(argv1);
+  return process.platform === "win32" ? a.toLowerCase() === b.toLowerCase() : a === b;
+}

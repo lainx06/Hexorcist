@@ -1,7 +1,7 @@
 // headless-runner: the GitHub Action's Markdown summary (Requirement 5.4). Pure stepSummary() plus a
 // small entry: `tsx cli/step-summary.ts <json-file> <exit-code> <stderr-file>` appends to $GITHUB_STEP_SUMMARY.
 import { appendFileSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { isMain } from "./node-io";
 
 const VERDICT_LINE: Record<string, string> = {
   BROKE: "**BROKE**: a rule broke.",
@@ -40,7 +40,7 @@ export function stepSummary(jsonText: string, code: number, stderrText: string):
   return `${lines.join("\n")}\n`;
 }
 
-const isEntry = process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+const isEntry = isMain(import.meta.url);
 if (isEntry) {
   const [jsonFile, codeText, stderrFile] = process.argv.slice(2);
   const read = (f: string | undefined): string => {
