@@ -16,8 +16,8 @@
     "bench:examples": "tsx bench/example-campaign-bench.ts",
     "bench:evidence": "tsx bench/evidence.ts",
     "examples:build": "node scripts/build-examples.mjs",
-    "check": "tsx cli/bin.ts",
-    "mcp": "tsx mcp/bin.ts"
+    "check": "tsx --no-deprecation cli/bin.ts",
+    "mcp": "tsx --no-deprecation mcp/bin.ts"
   },
   "dependencies": {
     "avr8js": "0.21.1"

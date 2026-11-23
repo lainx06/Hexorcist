@@ -106,7 +106,7 @@ describe("headless-runner acceptance (Requirement 9)", () => {
 
   it("task 3: the CLI is wired as `npm run check` and `npm run mcp`, with no dependency change", () => {
     const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, "package.json"), "utf8")) as { scripts: Record<string, string> };
-    expect(pkg.scripts.check).toBe("tsx cli/bin.ts");
-    expect(pkg.scripts.mcp).toBe("tsx mcp/bin.ts");
+    expect(pkg.scripts.check).toBe("tsx --no-deprecation cli/bin.ts");
+    expect(pkg.scripts.mcp).toBe("tsx --no-deprecation mcp/bin.ts");
   });
 });
