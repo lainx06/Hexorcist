@@ -109,16 +109,19 @@ The job fails on BROKE, COULDN'T TELL or an error, and passes on HELD. The verdi
 
 ## How Kiro built this
 
-Kiro wrote all of the product code and tests in this repository. Everything Kiro used is committed in [`.kiro/`](.kiro/):
+Kiro wrote the web app, the engine and their tests in 13 specs, and wrote the 14th spec, the terminal runner. Everything Kiro used is committed in [`.kiro/`](.kiro/). The full story, with the Exorcism Loop and the credit numbers, is in [docs/HOW-KIRO-BUILT-THIS.md](docs/HOW-KIRO-BUILT-THIS.md).
 
-- **13 specs** in [`.kiro/specs/`](.kiro/specs/): 11 features (emulator bridge, bridge output scan, gremlin engine, rule compiler, trace reducer, example firmware, honest verdicts, three UI stages and the upload path) and 2 bugfix specs. The `input-pullup` bugfix came from a real emulator issue found on day one: an unconnected button with a pull-up resistor read as pressed.
+- **14 specs** in [`.kiro/specs/`](.kiro/specs/): 12 features (emulator bridge, bridge output scan, gremlin engine, rule compiler, trace reducer, example firmware, honest verdicts, three UI stages, the upload path and the headless runner) and 2 bugfix specs. The `input-pullup` bugfix came from a real emulator issue found on day one: an unconnected button with a pull-up resistor read as pressed.
 - **Property-based tests** with fast-check throughout. They caught real bugs, including one in how a scene drew fast flickers.
 - **Steering** ([`.kiro/steering/`](.kiro/steering/)): determinism rules, the exact verdict texts, scope, test rules and the banned claim words.
-- **Hooks** ([`.kiro/hooks/`](.kiro/hooks/)):
-  - `guard-before-task` runs before every spec task and blocks the task if copy uses a claim word or engine code reads the clock. It blocked a real task once, when a design doc listed the banned words. (The copy-scan tests caught Kiro itself writing one in a code comment.)
-  - `engine-tests-on-save` and `examples-on-save` run the tests whenever Kiro edits engine code or an example sketch; the second one recompiles the sketches before testing.
+- **Hooks** ([`.kiro/hooks/`](.kiro/hooks/)) on four triggers:
+  - `guard-before-task` (Pre Task Execution) blocks a spec task if copy uses a claim word or engine code reads the clock. It blocked a real task once, when a design doc listed the banned words. (The copy-scan tests caught Kiro itself writing one in a code comment.)
+  - `engine-tests-on-save` and `examples-on-save` (File Save) run the tests whenever Kiro edits engine code or an example sketch; the second one recompiles the sketches before testing.
+  - `hexorcist-check-on-stop` (Agent Stop) runs the check on the demo sketch when the agent finishes; `hexorcist-done-guard` (Pre Tool Use) blocks marking a spec task done until the last check said HELD.
 - **Custom agent** [`rule-skeptic`](.kiro/agents/rule-skeptic.md): read-only, it argues with a rule before you run it (unmapped signals, triggers that can't happen, limits longer than the run) and opens every answer with "Advice, not a verdict."
-- **CI** runs the type check, the guard, every test and the build on each push.
+- **Power** [`power/hexorcist/`](power/hexorcist/): the `check-firmware` skill and a local MCP server with `check` and `capabilities`.
+- **The Exorcism Loop:** Kiro took a crossing sketch written by a chat AI, checked it with the power (BROKE twice), fixed it until the check said HELD, and the Agent Stop hook ran when it finished: 45 seconds, 0.58 credits.
+- **CI** runs the type check, the guard, every test and the build on each push, and `gate-demo` runs the GitHub Action on the Crosswalk example.
 
 How the work was split: Kiro wrote the product code in 13 specs, up to its credit limit. After that, Claude wrote some follow-up code (listed below), each change reviewed and merged by the author. The author directed the project, approved every change and ran the browser checks. Claude also acted as the planning lead: spec prompts, review triage, acceptance checks, this README, and the starting drafts of the hook, agent and workflow files, which the author installed and ran in Kiro. ChatGPT and Gemini gave outside design reviews.
 

@@ -108,6 +108,19 @@ you care about: `must never happen` catches it; `must never last 1 ms or longer`
 replica of the same write order). The fix is to switch lights off before switching others on, as the
 Crosswalk example's fixed build does.
 
+## The Exorcism Loop on `chatgpt-high.ino`
+
+Kiro (Vibe mode, model Auto, with the hexorcist power) got `chatgpt-high.ino` as
+`exorcism-demo/sketch/sketch.ino`, the seven rules, Masher + Bouncer, 24 tries, seed 20261101:
+
+1. BROKE: `all of (WALK is 1, DONT_WALK is 1) must never happen.` Kiro swapped the two writes.
+2. BROKE: `all of (CAR_GREEN is 1, CAR_RED is 1) must never happen.` (car green on before red off at the end
+   of the crossing). Kiro changed the light helper to switch each light off before the next one on.
+3. HELD. 45 seconds, 0.58 credits.
+
+Independent check of Kiro's result (`round2/chatgpt-high-kiro-fixed.ino`): HELD in 200 tries with Masher +
+Bouncer and all seven rules; `overlap.ts` shows WALK and DON'T WALK never on together.
+
 ## Summary
 
 | Round | Sketches | Rules and gremlins | Result |
