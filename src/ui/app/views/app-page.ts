@@ -53,7 +53,7 @@ import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
 import type { StagePhase } from "../model/stage";
-import { STAGE_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
+import { STAGE_TEXT, TAB_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
 import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
@@ -290,6 +290,13 @@ export function mountApp(root: HTMLElement): void {
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
     },
+    onSerialSample: () => {
+      if (lockedNow()) return;
+      upload = U.loadSerialSample(upload);
+      setup.rules.setText(upload.ruleText);
+      ctl.setTexts(upload.fields.runs, upload.fields.seed);
+      afterUploadEdit();
+    },
     onDownloadSample: () => {
       for (const f of sampleDownloads()) offerDownload(f.name, f.text, f.type);
     },
@@ -356,6 +363,7 @@ export function mountApp(root: HTMLElement): void {
     onBlockedUnleash: () => {
       if (!isUpload() || lockedNow()) return;
       upload = U.revealAll(upload);
+      setup.gremlins.reveal();
       paintUpload();
     },
     onExpandChange: () => paintPrimary(),
@@ -713,6 +721,7 @@ export function mountApp(root: HTMLElement): void {
     removeButtons.length = 0;
     tabs.setReplay(null);
     tabs.setPending(false);
+    tabs.setNoReplayNote(null);
     tabs.setFixChange(null);
     tabs.setTryRemoving(null);
     tabs.setCyclesRate(null);
@@ -1016,6 +1025,7 @@ export function mountApp(root: HTMLElement): void {
         cardInput = { kind: "COULDN'T TELL", reason: v.reason, ...(uses === undefined ? {} : { peripheralUses: uses }) };
         setPhase("couldnt-tell");
         stage.showNote(STAGE_TEXT.couldntTell, true);
+        tabs.setNoReplayNote(TAB_TEXT.couldntTell);
         renderAside();
       } else {
         await brokeFlow(c);
@@ -1216,7 +1226,7 @@ export function mountApp(root: HTMLElement): void {
     if (key !== lastFixtureKey) {
       lastFixtureKey = key;
       const labels = U.uploadLabels(upload.rows);
-      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels);
+      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels, true);
       timeline.setFixture(d.previewFixture, labels);
     } else setup.gremlins.setSelected(upload.selected);
     tabs.setGremlinOrder(U.gremlinOrderLine(upload.selected));
