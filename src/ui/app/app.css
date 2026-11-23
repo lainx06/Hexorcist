@@ -4174,3 +4174,12 @@ button[aria-disabled="true"] {
 .upload-check {
   margin-right: var(--s-1);
 }
+
+/* (claude) On the pin-levels stage the note sits over the pin labels: give it a solid panel and fade the columns more. */
+.pin-levels-frame > .stage-overlay .stage-note-block {
+  background: var(--couldnt-tell-surface);
+  border: 1px solid var(--couldnt-tell-line);
+}
+.scene-card.is-dim .pin-levels-frame .pin-levels-columns {
+  opacity: 0.2;
+}

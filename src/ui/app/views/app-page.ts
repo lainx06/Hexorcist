@@ -53,7 +53,7 @@ import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
 import type { StagePhase } from "../model/stage";
-import { STAGE_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
+import { STAGE_TEXT, TAB_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
 import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
@@ -721,6 +721,7 @@ export function mountApp(root: HTMLElement): void {
     removeButtons.length = 0;
     tabs.setReplay(null);
     tabs.setPending(false);
+    tabs.setNoReplayNote(null);
     tabs.setFixChange(null);
     tabs.setTryRemoving(null);
     tabs.setCyclesRate(null);
@@ -1024,6 +1025,7 @@ export function mountApp(root: HTMLElement): void {
         cardInput = { kind: "COULDN'T TELL", reason: v.reason, ...(uses === undefined ? {} : { peripheralUses: uses }) };
         setPhase("couldnt-tell");
         stage.showNote(STAGE_TEXT.couldntTell, true);
+        tabs.setNoReplayNote(TAB_TEXT.couldntTell);
         renderAside();
       } else {
         await brokeFlow(c);
