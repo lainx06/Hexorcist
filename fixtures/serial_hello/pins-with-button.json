@@ -1,0 +1,6 @@
+{
+  "pins": [
+    { "signal": "LED", "port": "B", "bit": 5, "direction": "output" },
+    { "signal": "BUTTON", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" }
+  ]
+}

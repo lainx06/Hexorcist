@@ -45,6 +45,8 @@ const claimFiles = [
   ...walk(join(root, "src", "ui")),
   ...one(join(root, "README.md")),
   ...walk(join(root, "docs")),
+  ...walk(join(root, "cli")),
+  ...walk(join(root, "mcp")),
 ];
 scan(claimFiles, [
   {
@@ -55,9 +57,12 @@ scan(claimFiles, [
 ]);
 
 // b. Determinism in engine code (tests excluded)
-const engineFiles = walk(join(root, "src", "engine")).filter(
-  (f) => /\.[cm]?[jt]sx?$/.test(f) && !rel(f).split("/").includes("__tests__"),
-);
+const engineFiles = [
+  ...walk(join(root, "src", "engine")),
+  // headless-runner: the CLI and the MCP server follow the engine's determinism rules.
+  ...walk(join(root, "cli")),
+  ...walk(join(root, "mcp")),
+].filter((f) => /\.[cm]?[jt]sx?$/.test(f) && !rel(f).split("/").includes("__tests__"));
 scan(engineFiles, [
   {
     re: /\b(Date\.now|performance\.now|setTimeout|setInterval|Math\.random)\b|\bnew\s+Date\s*\(/,

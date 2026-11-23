@@ -1,0 +1,1 @@
+LED is 1 must never last 500 ms or longer.
