@@ -35,8 +35,7 @@ Check settings (`check.json`): Masher, 24 tries, seed 20261101, 1000 ms per try.
 State lives in `.hexorcist/` (git-ignored): `last-verdict.json`, `stop-blocks.json`, and the last Pre Tool
 Use payload in `last-pretooluse.json`.
 
-UNVERIFIED until tried in Kiro: whether Kiro sends an Agent Stop hook's exit-2 output back to the agent, and
-which Pre Tool Use payload marks a spec task done (the guard looks for a status field set to completed or done).
+Seen in Kiro (Nov 24, 2026): marking a spec task done is the tool call `task_update` with `status: "completed"`, and when the guard blocks it (exit code 2), Kiro shows the reason to the agent, which acts on it. Not yet seen: an Agent Stop hook blocking with exit code 2, because every run so far reached HELD before stopping.
 
 ## Tested without Kiro
 
