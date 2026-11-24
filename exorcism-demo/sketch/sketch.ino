@@ -27,24 +27,24 @@ void setState(State next) {
   state = next;
   stateStart = millis();
 
-  digitalWrite(CAR_GREEN, LOW);
-  digitalWrite(CAR_YELLOW, LOW);
-  digitalWrite(CAR_RED, LOW);
-  if (state == GREEN) {
-    digitalWrite(CAR_GREEN, HIGH);
-  } else if (state == YELLOW) {
-    digitalWrite(CAR_YELLOW, HIGH);
-  } else {
-    digitalWrite(CAR_RED, HIGH);
-  }
+  bool g = (state == GREEN);
+  bool y = (state == YELLOW);
+  bool r = (state == RED_BEFORE || state == WALKING || state == RED_AFTER);
+  bool w = (state == WALKING);
+  bool d = (state != WALKING);
 
-  if (state == WALKING) {
-    digitalWrite(DONT_WALK, LOW);
-    digitalWrite(WALK, HIGH);
-  } else {
-    digitalWrite(WALK, LOW);
-    digitalWrite(DONT_WALK, HIGH);
-  }
+  // Turn lamps off first, then turn the new ones on, so two never overlap.
+  if (!g) digitalWrite(CAR_GREEN, LOW);
+  if (!y) digitalWrite(CAR_YELLOW, LOW);
+  if (!r) digitalWrite(CAR_RED, LOW);
+  if (!w) digitalWrite(WALK, LOW);
+  if (!d) digitalWrite(DONT_WALK, LOW);
+
+  if (g) digitalWrite(CAR_GREEN, HIGH);
+  if (y) digitalWrite(CAR_YELLOW, HIGH);
+  if (r) digitalWrite(CAR_RED, HIGH);
+  if (w) digitalWrite(WALK, HIGH);
+  if (d) digitalWrite(DONT_WALK, HIGH);
 }
 
 void setup() {

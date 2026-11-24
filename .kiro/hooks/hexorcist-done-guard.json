@@ -6,11 +6,10 @@
       "trigger": "PreToolUse",
       "action": {
         "type": "command",
-        "command": "npx tsx --no-deprecation cli/hook-guard.ts exorcism-demo/check.json"
+        "command": "npx tsx --no-deprecation cli/hook-guard.ts exorcism-demo/loop-check.json"
       },
       "description": "Blocks marking a task done until the check says HELD.",
       "matcher": "spec",
-      "timeout": 30,
       "enabled": true
     }
   ]
