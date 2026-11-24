@@ -40,7 +40,14 @@ function stop(root: string, args: string[]) {
   return { code, out, err };
 }
 
-const DONE_PAYLOAD = { hook_event_name: "PreToolUse", cwd: "/w", session_id: "s", tool_name: "taskStatus", tool_input: { taskId: "3", status: "completed" } };
+// The real payload Kiro sent when marking a spec task done (logged Nov 24, 2026; paths shortened).
+const DONE_PAYLOAD = {
+  session_id: "sess_9b1f9dd4",
+  hook_event_name: "PreToolUse",
+  cwd: "c:\\w",
+  tool_name: "task_update",
+  tool_input: { tasksFilePath: "c:\\w\\.kiro\\specs\\exorcism-fix\\tasks.md", taskId: "1. Fix the sketch", status: "completed", error: null },
+};
 
 describe("Agent Stop hook", () => {
   it("BROKE blocks (exit 2) and writes the state; no change blocks again; the cap stops blocking; HELD resets", { timeout: T }, () => {
@@ -112,6 +119,8 @@ describe("Pre Tool Use guard", () => {
     expect(isTaskDone(DONE_PAYLOAD)).toBe(true);
     expect(isTaskDone({ tool_name: "x", tool_input: { task: { state: "Done" } } })).toBe(true);
     expect(isTaskDone({ tool_name: "x", tool_input: { status: "in_progress" } })).toBe(false);
+    expect(isTaskDone({ tool_name: "task_update", tool_input: { taskId: "1", status: "in_progress" } })).toBe(false);
+    expect(isTaskDone({ tool_name: "task_update", tool_input: { taskId: "1", status: "not_started" } })).toBe(false);
     expect(isTaskDone({ tool_name: "fsWrite", tool_input: { path: "a.md", text: "status: completed" } })).toBe(false);
     expect(isTaskDone(null)).toBe(false);
   });

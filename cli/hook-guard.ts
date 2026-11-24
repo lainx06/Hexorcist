@@ -2,10 +2,10 @@
 //   npx tsx cli/hook-guard.ts [config.json]   (reads the hook's JSON on stdin)
 // Blocks (exit 2, reason on stderr) a tool call that marks a task done unless the last check of the
 // current program was HELD. Every other tool call is allowed (exit 0). It runs no emulator and makes no
-// network call. Kiro's payload has tool_name and tool_input (kiro.dev/docs/hooks/types); which tool
-// input means "task done" is not documented, so isTaskDone() is a heuristic until a real payload is
-// logged: it looks for a status-like field set to completed/done. Each payload it sees is written to
-// .hexorcist/last-pretooluse.json so the real shape can be read.
+// network call. Kiro's payload has tool_name and tool_input (kiro.dev/docs/hooks/types). The real "task
+// done" call, logged in Kiro on Nov 24, 2026, is tool_name "task_update" with tool_input.status
+// "completed" (plus tasksFilePath and taskId); isTaskDone() matches it exactly and keeps a status-field
+// fallback for other shapes. Each payload it sees is written to .hexorcist/last-pretooluse.json.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { isMain, REPO_ROOT } from "./node-io";
@@ -19,6 +19,11 @@ const STATUS_KEYS = /^(status|state|taskStatus|task_status|newStatus|new_status)
 
 /** True when some status-like field anywhere in the tool input says completed or done. */
 export function isTaskDone(payload: unknown): boolean {
+  const p0 = payload as { tool_name?: unknown; tool_input?: { status?: unknown } } | null;
+  if (p0 !== null && typeof p0 === "object" && p0.tool_name === "task_update") {
+    const st = p0.tool_input?.status;
+    return typeof st === "string" && DONE.test(st.trim());
+  }
   const seen = new Set<unknown>();
   const walk = (v: unknown, depth: number): boolean => {
     if (depth > 6 || v === null || typeof v !== "object" || seen.has(v)) return false;

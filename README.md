@@ -124,9 +124,9 @@ The job fails on BROKE, COULDN'T TELL or an error, and passes on HELD. The verdi
 
 ## How Kiro built this
 
-Kiro wrote the web app, the engine and their tests in 13 specs, and wrote the 14th spec, the terminal runner. Everything Kiro used is committed in [`.kiro/`](.kiro/). The full story, with the Exorcism Loop and the credit numbers, is in [docs/HOW-KIRO-BUILT-THIS.md](docs/HOW-KIRO-BUILT-THIS.md).
+Kiro wrote the web app, the engine and their tests in 13 specs, wrote the 14th spec (the terminal runner), and wrote and ran a 15th, `exorcism-fix`, on camera. Everything Kiro used is committed in [`.kiro/`](.kiro/). The full story, with the Exorcism Loop and the credit numbers, is in [docs/HOW-KIRO-BUILT-THIS.md](docs/HOW-KIRO-BUILT-THIS.md).
 
-- **14 specs** in [`.kiro/specs/`](.kiro/specs/): 12 features (emulator bridge, bridge output scan, gremlin engine, rule compiler, trace reducer, example firmware, honest verdicts, three UI stages, the upload path and the headless runner) and 2 bugfix specs. The `input-pullup` bugfix came from a real emulator issue found on day one: an unconnected button with a pull-up resistor read as pressed.
+- **15 specs** in [`.kiro/specs/`](.kiro/specs/): 12 features (emulator bridge, bridge output scan, gremlin engine, rule compiler, trace reducer, example firmware, honest verdicts, three UI stages, the upload path and the headless runner), 2 bugfix specs, and `exorcism-fix`, a one-task spec Kiro wrote and ran to fix a chat-written sketch while the done-guard hook watched. The `input-pullup` bugfix came from a real emulator issue found on day one: an unconnected button with a pull-up resistor read as pressed.
 - **Property-based tests** with fast-check throughout. They caught real bugs, including one in how a scene drew fast flickers.
 - **Steering** ([`.kiro/steering/`](.kiro/steering/)): determinism rules, the exact verdict texts, scope, test rules and the banned claim words.
 - **Hooks** ([`.kiro/hooks/`](.kiro/hooks/)) on four triggers:

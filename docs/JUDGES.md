@@ -46,7 +46,7 @@ buggy one fails the job) and as an MCP server inside Kiro.
 
 | Question | Where |
 |---|---|
-| How was Kiro used? | [docs/HOW-KIRO-BUILT-THIS.md](HOW-KIRO-BUILT-THIS.md) and [`.kiro/`](../.kiro/): 14 specs, 5 steering files, 5 hooks on 4 triggers, a custom agent |
+| How was Kiro used? | [docs/HOW-KIRO-BUILT-THIS.md](HOW-KIRO-BUILT-THIS.md) and [`.kiro/`](../.kiro/): 15 specs, 5 steering files, 5 hooks on 4 triggers, a custom agent, a power |
 | Is the checker deterministic? | [`.kiro/steering/determinism.md`](../.kiro/steering/determinism.md); the same inputs give the same fingerprint in the browser, the terminal, CI and MCP |
 | How often does it cry wolf? | [docs/evidence/EVIDENCE-NUMBERS.md](evidence/EVIDENCE-NUMBERS.md): fixed builds HELD in 300 of 300 seeded campaigns, buggy builds BROKE in 298 of 300 |
 | What can't it do? | The **Limits** section of the [README](../README.md#limits) |
