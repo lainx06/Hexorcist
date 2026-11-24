@@ -312,8 +312,13 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     showCampaignDone(verdict, tries, violatingRunIndex, plainBroke) {
       const t = fixedCampaignText(verdict, tries, violatingRunIndex, plainBroke);
       cardTone(verdict.verdict === "HELD" ? "held" : verdict.verdict === "BROKE" ? "broke" : "tell");
+      // (claude) The verdict word as a headline, like BROKE on the left card; the prefix keeps the rest.
+      const sep = t.prefix.indexOf(" \u00b7 ");
+      const word = sep > 0 ? t.prefix.slice(0, sep) : null;
+      const rest = sep > 0 ? t.prefix.slice(sep + 3) : t.prefix;
       setChildren(campaignBox, [
-        campaignParagraph(t.prefix, "fix-campaign-prefix"),
+        ...(word === null ? [] : [campaignParagraph(word, "fix-right-word")]),
+        campaignParagraph(rest.charAt(0).toUpperCase() + rest.slice(1), "fix-campaign-prefix"),
         ...t.lines.map((l) => campaignParagraph(l, "fix-campaign-line")),
       ]);
     },

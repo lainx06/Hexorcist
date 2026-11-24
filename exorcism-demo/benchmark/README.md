@@ -112,6 +112,43 @@ you care about: `must never happen` catches it; `must never last 1 ms or longer`
 replica of the same write order). The fix is to switch lights off before switching others on, as the
 Crosswalk example's fixed build does.
 
+## Round 3: motor direction (a brief where a short overlap matters)
+
+Brief (sent unchanged):
+
+> Write a sketch for an ATmega328P board (Uno-compatible) that drives a DC motor through two transistor
+> switches. The FORWARD switch is on pin 8 and the REVERSE switch is on pin 9 (HIGH = on). Turning both on at
+> the same time, even for a moment, shorts the supply. Three buttons are wired to GND (use the internal
+> pull-ups): FORWARD on pin 2, REVERSE on pin 3, STOP on pin 4. Pressing FORWARD runs the motor forward,
+> pressing REVERSE runs it in reverse (it can switch directly from one direction to the other), and STOP turns
+> both switches off. Keep it simple. Reply with the code only.
+
+Rules (`exorcism-demo/motor/rules.txt`), restating the brief:
+
+```
+all of (FORWARD is 1, REVERSE is 1) must never happen.
+Within 50 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0 must be true.
+Within 50 ms after STOP_BUTTON is 0 becomes true, REVERSE is 0 must be true.
+```
+
+Calibration (plain C replicas built with avr-gcc, Masher + Bouncer, 200 tries, seed 20261101): a helper that
+writes FORWARD and then REVERSE breaks the first rule on try 2; one that switches both off before turning one
+on holds all 200 tries.
+
+Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/round3/<file>.ino exorcism-demo/motor-check.json`
+
+| File | Chat tool, model and setting | Verdict |
+|---|---|---|
+| | | |
+
+## In the app
+
+**Your own program → Try a chat-written sketch** loads `chatgpt-high.hex` unedited, with the Crosswalk pins
+and the rule it broke. BROKE on try 1 of 24, one press, and the story says the overlap lasted 4.9
+microseconds.
+
+![The chat-written sketch in the app: walk sign and don't-walk sign both on, one press, 4.9 microseconds](../../docs/img/chat-written.png)
+
 ## The Exorcism Loop on `chatgpt-high.ino`
 
 Kiro (Vibe mode, model Auto, with the hexorcist power) got `chatgpt-high.ino` as

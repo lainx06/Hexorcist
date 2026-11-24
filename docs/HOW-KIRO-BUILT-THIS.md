@@ -81,6 +81,25 @@ and the person can edit right next to it without setting anything off.
 - **Honest verdicts.** HELD always says "Not a proof", and a program that uses a chip part the emulator
   does not model gets COULDN'T TELL instead of a pass.
 
+## Who wrote what
+
+Kiro wrote the web app, the engine and their tests in 13 specs, and wrote the requirements, design and tasks
+of spec #14. The author
+directed the project, approved every change and ran the browser checks. Claude acted as the planning lead
+(spec prompts, review triage, acceptance values, the README, and the starting drafts of the hook, agent and
+workflow files, which the author installed and ran in Kiro) and, after Kiro's credit limit, wrote
+follow-up code in pull requests the author reviewed and merged. Each of those commit messages ends in
+`(claude)`.
+
+Code written by Claude after the Kiro credit limit:
+
+- Upload page: hide analog gremlins on uploads, show the "pick a gremlin" message only after a click, page description and no-script text, and the "Try one it can't check" sample.
+- Terminal runner (`cli/`), built from Kiro spec #14 `headless-runner` (`.kiro/specs/headless-runner/`): `npm run check`, JSON output, exit codes, and its tests in `tests/cli/`; the GitHub Action (`action.yml`, `cli/step-summary.ts`, `gate-demo.yml`) and the MCP server (`mcp/`), with tests in `tests/mcp/`.
+- Hook commands for the Exorcism Loop (`cli/hook-stop.ts`, `cli/hook-guard.ts`), the `exorcism-demo/` device files, and two plain C test programs for it (`tests/cli/conveyor/`).
+- The Kiro power files (`power/hexorcist/`: `plugin.json`, `mcp.json`, the `check-firmware` skill).
+- "Try a chat-written sketch" and the microsecond wording in stories; the fix view's HELD headline; the
+  COULDN'T TELL screen copy.
+
 ## Credits
 
 About 3,940 of the 4,000 Kiro credits were used on the specs and on follow-up fix passes. The upload-path
