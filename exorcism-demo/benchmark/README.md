@@ -137,9 +137,38 @@ on holds all 200 tries.
 
 Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/round3/<file>.ino exorcism-demo/motor-check.json`
 
-| File | Chat tool, model and setting | Verdict |
+Results (Nov 24, 2026), Masher + Bouncer, 200 tries, seed 20261101; same chat tools and settings as round 2:
+
+| File | Verdict |
+|---|---|
+| `chatgpt-fast.ino` | BROKE on try 159: the STOP rule, after a 0.7 ms blip on STOP (see below) |
+| `chatgpt-high.ino` | HELD (200 tries) |
+| `gemini-fast.ino` | HELD (200 tries) |
+| `gemini-medium.ino` | HELD (200 tries) |
+| `deepseek-fast.ino` | HELD (200 tries) |
+| `deepseek-high.ino` | HELD (200 tries) |
+| `claude-fast.ino` | HELD (200 tries) |
+| `claude-high.ino` | HELD (200 tries) |
+
+**No sketch turned both switches on, not even for a microsecond.** Each one switches the old direction off
+before it switches the new one on, and 5 of the 8 also add a wait ("dead time") between the two.
+
+**The one BROKE is not counted as a bug.** The reducer cut it to three moves: the Masher holds FORWARD, then
+the Bouncer pulls STOP low for 0.7 ms and lets go. `chatgpt-fast.ino` waits 10 ms (its "dead time") on every
+loop while a direction button is held, so it reads STOP about once every 10 ms and misses a 0.7 ms blip. A
+person's press lasts far longer and would be seen within about 10 ms, so ignoring a sub-millisecond contact
+blip is acceptable behaviour for a stop button. The rule is too strict here: it starts its 50 ms clock on any
+low level of STOP, and the rule language cannot yet say "pressed for at least N ms".
+
+## Rounds 2 and 3 side by side
+
+| Brief | Did the brief warn about outputs being on together? | Sketches that turned both on at once |
 |---|---|---|
-| | | |
+| Crossing (round 2) | No | 8 of 8 (WALK and DON'T WALK, about 5 µs, on every crossing) |
+| Motor (round 3) | Yes: "even for a moment, shorts the supply" | 0 of 8 |
+
+Told about the hazard, every sketch avoided it; not told, every sketch had it. The check finds what the brief
+forgot to say, and a rule written from what you need catches it whether or not you told the AI.
 
 ## In the app
 
@@ -170,5 +199,6 @@ Bouncer and all seven rules; `overlap.ts` shows WALK and DON'T WALK never on tog
 | 2 crossing | 8 | 1 rule; Masher, 24 tries | 8 HELD |
 | 2 crossing, stress | 8 | 1 rule; Masher + Bouncer, 200 tries | 8 HELD |
 | 2 crossing, full rules | 8 | 7 rules from the brief; Masher + Bouncer, 200 tries | 8 BROKE, all on the same ~5 µs WALK + DON'T WALK overlap |
+| 3 motor, warned | 8 | 3 rules from the brief; Masher + Bouncer, 200 tries | 7 HELD; 1 BROKE on a 0.7 ms STOP blip, not counted as a bug; 0 overlaps |
 
 HELD means no violation in the runs made, not a proof.

@@ -78,7 +78,7 @@ describe("MCP server", () => {
   it("Feature: headless-runner, Property 3: CLI and MCP agree", () => {
     const outcome = fc.oneof(
       fc.record({ verdict: fc.constant("HELD" as const), n: fc.integer({ min: 1, max: 1000 }), text: fc.string() }),
-      fc.record({ verdict: fc.constant("COULDN'T TELL" as const), reason: fc.string(), peripherals: fc.array(fc.constantFrom("USART0", "SPI"), { maxLength: 2 }) }),
+      fc.record({ verdict: fc.constant("COULDN'T TELL" as const), reason: fc.string(), reasonTruncated: fc.boolean(), peripherals: fc.array(fc.constantFrom("USART0", "SPI"), { maxLength: 2 }) }),
     );
     const argsArb = fc.record(
       {

@@ -28,8 +28,10 @@ Call the `check` tool with `hex`, `pins` and `rules` (paths relative to the repo
   the same seed.
 - **HELD**: report the `text` field word for word ("No violation found in N emulated runs of this gremlin
   set. Not a proof."). Do not say the program is correct, proven or bug-free.
-- **COULDN'T TELL**: the program uses a part the emulator does not model (named in `reason`). Say so. Do
-  not report a pass.
+- **COULDN'T TELL**: a rule could not be checked: the program uses a part the emulator does not model, a
+  signal is not in the pin map, or a trigger never happened (named in `reason`). Say so. Do not report a
+  pass. If `reasonTruncated` is true, the reason was cut at 200 characters: check the rules one at a time
+  before saying anything about the rules the cut text does not name.
 
 ## Words to avoid about the result
 Never call a program safe, secure, guaranteed, certified, real-time or bug-free because of a check.
