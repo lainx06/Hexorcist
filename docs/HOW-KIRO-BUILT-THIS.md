@@ -11,7 +11,7 @@ CI runs and Kiro's own credit counter. Anything not yet tried is marked as such.
 | Specs | 14 specs, each with requirements, design and tasks. Kiro wrote all 14 and built the code for 13 of them (the emulator bridge, gremlins, rule compiler, reducer, examples, verdicts and the whole web page). | [`.kiro/specs/`](../.kiro/specs/) |
 | Steering | 5 always-on files: determinism, the exact verdict texts, scope, test rules, product. | [`.kiro/steering/`](../.kiro/steering/) |
 | Hooks | 5 hooks on 4 different triggers (below). | [`.kiro/hooks/`](../.kiro/hooks/) |
-| Custom agent | `rule-skeptic`, read-only, argues with a rule before you run it. Every answer opens with "Advice, not a verdict." | [`.kiro/agents/rule-skeptic.md`](../.kiro/agents/rule-skeptic.md) |
+| Custom agent | `rule-skeptic`, read-only, argues with a rule before you run it. Every answer opens with "Advice, not a verdict." ([a run](#the-rule-skeptic-agent-on-a-bad-rule-set-nov-24-2026)) | [`.kiro/agents/rule-skeptic.md`](../.kiro/agents/rule-skeptic.md) |
 | Power | `hexorcist`: the `check-firmware` skill plus a local MCP server, installed from a folder. | [`power/hexorcist/`](../power/hexorcist/) |
 | MCP | The power's server exposes `check` and `capabilities`; in Kiro the calls show as `@hexorcist/hexorcist/<tool>`. | [`mcp/`](../mcp/) |
 
@@ -43,6 +43,23 @@ in [its `tasks.md`](../.kiro/specs/headless-runner/tasks.md) names the pull requ
 | `examples-on-save` | File Save | Recompiles the example sketches and runs their tests whenever Kiro edits one. |
 | `hexorcist-check-on-stop` | Agent Stop | When the agent finishes, builds the demo sketch and runs the same check as `npm run check`; prints one verdict line, which Kiro adds to the agent's context. |
 | `hexorcist-done-guard` | Pre Tool Use (`spec` tools) | Blocks marking a spec task done unless the last check of the current program was HELD. Not yet seen firing on a real "task done" call. |
+
+## The rule-skeptic agent, on a bad rule set (Nov 24, 2026)
+
+Given three rules for the motor demo's pin map and a 1000 ms run, two of them flawed on purpose, the
+read-only `rule-skeptic` agent answered in 7 seconds for 0.15 credits, reading files only:
+
+- It opened with "Advice, not a verdict."
+- Rule 1 (`all of (FORWARD is 1, REVERSE is 1) must never happen.`): both signals are mapped outputs; useful.
+- Rule 2 (`MOTOR is 1 must never happen.`): MOTOR is not in the pin map, and it would not guess a pin.
+- Rule 3 (`Within 2000 ms after FWD_BUTTON is 0 becomes true, FORWARD is 1 must be true.`): the trigger can
+  happen, but a 2000 ms window never closes inside a 1000 ms run, so a run cannot judge it.
+- Gap: nothing covers STOP. It suggested `Within 200 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0
+  must be true.` and the same for REVERSE, both in accepted sentence forms.
+
+The same three rules sent to the default agent, which ran the check through the power, came back COULDN'T
+TELL with a reason cut at the engine's 200-character limit; the agent then guessed wrongly that the valid
+`all of` rule was unsupported. That is why the CLI and MCP output now carry `reasonTruncated`.
 
 ## The Exorcism Loop (Nov 23, 2026)
 
