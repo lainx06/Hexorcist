@@ -6,6 +6,7 @@ import type { LoadedProgram } from "../model/upload-hex";
 import { CROSSWALK_TEXTS } from "./crosswalk";
 import serialHex from "../../../../fixtures/serial_hello/build/serial_hello.ino.hex?raw";
 import serialPins from "../../../../fixtures/serial_hello/pins-with-button.json?raw";
+import chatHex from "../../../../exorcism-demo/benchmark/round2/chatgpt-high.hex?raw";
 
 export const SAMPLE_HEX_NAME = "crosswalk-buggy.hex";
 export const SAMPLE_PINS_NAME = "crosswalk-pins.json";
@@ -71,3 +72,18 @@ export function serialRows(firstId: number): PinRow[] {
     return { ...row, plainName: label.known ? label.text : "" };
   });
 }
+
+// The chat-written sample: a pedestrian-crossing sketch a chat AI wrote from one brief, unedited
+// (exorcism-demo/benchmark/round2/chatgpt-high.ino), with the Crosswalk pins and the one rule of the seven
+// that it broke. Every light change writes WALK before DON'T WALK, so both are on for about 5 microseconds.
+
+export const CHAT_HEX_NAME = "chat-written-crossing.hex";
+export const CHAT_RULE = "all of (WALK is 1, DONT_WALK is 1) must never happen.";
+export const CHAT_FIELDS = { runs: "24", seed: "20261101", runLengthMs: "1000" } as const;
+
+export function chatProgram(): LoadedProgram {
+  return { name: CHAT_HEX_NAME, text: chatHex, bytes: new TextEncoder().encode(chatHex).length };
+}
+
+/** The Crosswalk pins, with plain names. */
+export const chatRows = (firstId: number): PinRow[] => sampleRows(firstId);

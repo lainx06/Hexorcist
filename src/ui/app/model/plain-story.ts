@@ -12,6 +12,12 @@ export function plainMs(cycles: number): string {
   return `${k >= 1000 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits} ms`;
 }
 
+/** Cycles at 16 MHz as microseconds with one decimal, e.g. 78 cycles gives "4.9 microseconds". */
+export function plainMicros(cycles: number): string {
+  const tenths = Math.round((cycles * 10) / 16);
+  return `${Math.floor(tenths / 10)}.${tenths % 10} microseconds`;
+}
+
 /** Capitalised name of a gremlin; an id without a picker entry is capitalised as is. */
 function gremlinName(id: string): string {
   return Object.prototype.hasOwnProperty.call(PICKER_TEXT, id) ? PICKER_TEXT[id].name : id.charAt(0).toUpperCase() + id.slice(1);
@@ -65,7 +71,9 @@ export function plainStory(a: {
     out.push(
       a.span.cut
         ? `It was still that way ${plainMs(a.span.lengthCycles)} later, when the replay stopped.`
-        : a.spanSentence.split("<Plain_Ms>").join(plainMs(a.span.lengthCycles)),
+        : a.span.lengthCycles < 8000
+          ? `It lasted ${plainMicros(a.span.lengthCycles)}, too short to round to a whole millisecond.`
+          : a.spanSentence.split("<Plain_Ms>").join(plainMs(a.span.lengthCycles)),
     );
   }
   return out.join(" ");

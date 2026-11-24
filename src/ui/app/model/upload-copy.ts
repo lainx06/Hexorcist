@@ -10,6 +10,7 @@ export const UPLOAD_COPY = {
   trySample: "Try the sample",
   downloadSample: "Download the sample",
   trySerialSample: "Try one it can't check",
+  tryChatSample: "Try a chat-written sketch",
   loadedPrefix: "Loaded: ",
   addPin: "Add pin",
   importPins: "Import pin map",

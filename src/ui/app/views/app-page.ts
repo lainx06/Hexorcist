@@ -290,6 +290,13 @@ export function mountApp(root: HTMLElement): void {
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
     },
+    onChatSample: () => {
+      if (lockedNow()) return;
+      upload = U.loadChatSample(upload);
+      setup.rules.setText(upload.ruleText);
+      ctl.setTexts(upload.fields.runs, upload.fields.seed);
+      afterUploadEdit();
+    },
     onSerialSample: () => {
       if (lockedNow()) return;
       upload = U.loadSerialSample(upload);
