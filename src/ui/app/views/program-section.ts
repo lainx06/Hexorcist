@@ -14,10 +14,6 @@ export interface ProgramSectionCallbacks {
   onHexFile(file: File): void;
   onSample(): void;
   onDownloadSample(): void;
-  /** Loads the serial-port program, which gives COULDN'T TELL. */
-  onSerialSample(): void;
-  /** Loads a crossing sketch a chat AI wrote, with the rule it broke. */
-  onChatSample(): void;
   onImport(file: File): void;
   onExport(): void;
   onAddRow(): void;
@@ -54,11 +50,7 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
   const help = el("p", { class: "meta help-line" }, [UPLOAD_COPY.helpLine]);
   const sample = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.trySample]);
   const download = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.downloadSample]);
-  const serial = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.trySerialSample]);
   sample.addEventListener("click", () => cb.onSample());
-  serial.addEventListener("click", () => cb.onSerialSample());
-  const chat = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.tryChatSample]);
-  chat.addEventListener("click", () => cb.onChatSample());
   download.addEventListener("click", () => cb.onDownloadSample());
   const table = createPinTable({ onRemoveRow: (id) => cb.onRemoveRow(id), onEditRow: (id, p) => cb.onEditRow(id, p) });
   const add = el("button", { type: "button", class: "secondary" }, [UPLOAD_COPY.addPin]);
@@ -72,7 +64,7 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
 
   const node = el("section", { class: "setup-section program-section", "aria-labelledby": "program-title" }, [
     el("h2", { class: "section-title", id: "program-title" }, [UPLOAD_COPY.sectionTitle]),
-    el("div", { class: "program-row" }, [hex.node, sample, chat, serial, download]),
+    el("div", { class: "program-row" }, [hex.node, sample, download]),
     loaded,
     hexError,
     parserLine,
@@ -107,8 +99,6 @@ export function createProgramSection(cb: ProgramSectionCallbacks): ProgramSectio
       imp.input.disabled = busy;
       for (const l of [hex.label, imp.label]) l.classList.toggle("is-disabled", busy);
       sample.disabled = busy;
-      serial.disabled = busy;
-      chat.disabled = busy;
       add.disabled = busy || s.rows.length >= MAX_PINS;
       exp.disabled = s.rows.length === 0;
     },

@@ -1,3 +1,0 @@
-all of (FORWARD is 1, REVERSE is 1) must never happen.
-Within 50 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0 must be true.
-Within 50 ms after STOP_BUTTON is 0 becomes true, REVERSE is 0 must be true.

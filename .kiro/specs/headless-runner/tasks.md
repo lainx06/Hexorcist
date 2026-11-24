@@ -2,15 +2,11 @@
 
 ## Overview
 
-Status (Nov 23, 2026): Kiro wrote this spec (requirements, design, tasks; 12.4 credits). Claude implemented every task after Kiro's credit limit, in pull requests the owner reviewed and merged. Each task below names its PR.
-
-
 TypeScript only. One Input_Loader and one `runCheck` feed the CLI, the MCP server, the Action and the hooks. No new npm packages. Property tests from the design are written inside the task that builds the code they test, with `fast-check` and at least 100 iterations each, tagged `Feature: headless-runner, Property N: <title>`. Tests are evidence, not proof.
 
 ## Tasks
 
-- [x] 1. CLI: input loader, runCheck and main
-  - Done by Claude after the Kiro credit limit: PR #2 (cli/input-loader.ts, cli/run-check.ts, cli/main.ts, cli/bin.ts; tests/cli/cli-pure.property.test.ts)
+- [ ] 1. CLI: input loader, runCheck and main
   - Create `cli/input-loader.ts` (`loadInput`, `CheckArgs`, `CheckInput`, `LoadResult`), reading files with `node:fs`, stripping BOM and CR from HEX text, taking defaults from `meta.json` or `UPLOAD_DEFAULTS` and `msToCycles`, and rejecting bad combinations before any file read.
   - Create `cli/run-check.ts` (`runCheck(input, jobs = host)`): one `runCampaignJob`, then `runReductionJob` and `runReplayJob` only on BROKE.
   - Create `cli/main.ts` (`main(argv, io)`, catches every thrown error) and `cli/bin.ts`. Add only the `check` and `mcp` scripts to `package.json`; leave dependency lists unchanged.
@@ -19,8 +15,7 @@ TypeScript only. One Input_Loader and one `runCheck` feed the CLI, the MCP serve
     - **Property 5: Jobs run only as the verdict needs**. Campaign stub called once; reduction and replay stubs called once on BROKE and never otherwise.
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 8.1, 8.2, 8.3, 8.4_
 
-- [x] 2. JSON output and exit codes
-  - Done by Claude after the Kiro credit limit: PR #2 (toJson, toSummary, exitCodeOf; Properties 1 and 2)
+- [ ] 2. JSON output and exit codes
   - In `cli/run-check.ts` add `toJson` (object literals in the design's fixed key order, `JSON.stringify(obj, null, 2) + "\n"`, no BOM, no CR), `toSummary` (BROKE text says "the smallest replay this reducer found"), and `exitCodeOf` (0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 loader or job error).
   - Wire `--json` in `main` so stdout holds exactly one Result_Object; errors go to stderr with no verdict string.
   - Property tests in `tests/cli/`:
@@ -28,23 +23,20 @@ TypeScript only. One Input_Loader and one `runCheck` feed the CLI, the MCP serve
     - **Property 2: Exit code follows the verdict**. Total over outcomes and loader failures; exit 3 prints none of the three verdict strings on stdout.
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [x] 3. Determinism test
-  - Done by Claude after the Kiro credit limit: PR #2 (tests/cli/cli-acceptance.test.ts; scripts/guard.mjs now scans cli/ and mcp/)
+- [ ] 3. Determinism test
   - Add `tests/cli/determinism.test.ts`: run `main` with `--json` twice on the same example and compare stdout bytes; check no timestamp, absolute path, host name or duration appears in the output.
   - Compare the reported fingerprint with the one `runReplayJob` gives on the page's test path (`tests/ui/examples-host.acceptance.test.ts`).
   - Check `node scripts/guard.mjs` reports zero findings for `cli/` (confirm the guard scans that folder; if it does not, report it rather than editing the guard silently).
   - _Requirements: 2.5, 2.7, 3.3, 3.4, 9.6_
 
-- [x] 4. GitHub Action
-  - Done by Claude after the Kiro credit limit: PR #2 (action.yml, cli/step-summary.ts, .github/workflows/gate-demo.yml, which runs the action on every push)
+- [ ] 4. GitHub Action
   - Create `action.yml`: composite action `hexorcist-gate`, required inputs `hex`, `pins`, `rules`, optional `gremlins`, `runs`, `seed`.
   - Steps: validate inputs (write reason to `$GITHUB_STEP_SUMMARY` and exit 1), `npm ci` in `github.action_path`, run the CLI with `set +e` and save the exit code, write the summary, then fail the job unless the code is 0. Later steps only run if `npm ci` succeeded.
   - Create `cli/step-summary.ts` (Markdown with verdict, exit code, seed, runs) and a unit test for it.
   - Smoke test: `action.yml` has the three required inputs and the optional three.
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-- [x] 5. MCP server
-  - Done by Claude after the Kiro credit limit: PR #2 (mcp/server.ts, mcp/bin.ts; tests/mcp/mcp.test.ts, Property 3 and a spawned stdio session)
+- [ ] 5. MCP server
   - Create `mcp/server.ts` (`handleMessage(msg, deps)`, hand-written JSON-RPC 2.0) and `mcp/bin.ts` (newline-delimited stdin and stdout, diagnostics to stderr). Import `cli/input-loader.ts` and `cli/run-check.ts`, never `cli/main.ts`.
   - Tools: `check` (text is the CLI's `toJson` output) and `capabilities` (5 sentence forms, gremlin ids from `GREMLIN_CATALOGUE`, unmodelled peripherals). If `rule-box.ts` does not load under `tsx`, move the five templates into a pure module.
   - Errors: `-32700`, `-32600`, `-32601`, `-32602`; a job error returns `isError: true`; the loop keeps answering later requests.
@@ -53,8 +45,7 @@ TypeScript only. One Input_Loader and one `runCheck` feed the CLI, the MCP serve
   - Unit tests for `tools/list` (exactly `check` and `capabilities`) and each error code.
   - _Requirements: 2.6, 2.7, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 8.5_
 
-- [x] 6. Hook files
-  - Done by Claude after the Kiro credit limit: PR #3 (cli/hook-stop.ts, cli/hook-guard.ts, Property 6 in tests/cli/hooks.test.ts). The two hook files were made by the owner in Kiro's hook editor. Open: the real Pre Tool Use payload for "task done" is still unread, so the guard uses a status-field heuristic.
+- [ ] 6. Hook files
   - Create `cli/hook-stop.ts` and `cli/hook-guard.ts`, the state file `.hexorcist/last-verdict.json` (add `.hexorcist/` to `.gitignore`), and the config `.hexorcist/check.json`.
   - Create `.kiro/hooks/hexorcist-stop.json` and `.kiro/hooks/hexorcist-guard.json` using only the fields in existing hook files and shell-command actions. Read the PreToolUse payload from a real example to fix the matcher (Open Point in the design).
   - Stop hook prints one verdict line, or "No check ran" with the reason and no verdict string. Guard exits 2 unless the verdict is HELD and the HEX hash matches; it starts no emulator and makes no network call.
@@ -63,14 +54,12 @@ TypeScript only. One Input_Loader and one `runCheck` feed the CLI, the MCP serve
   - Smoke test: hook files use only the allowed fields.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
 
-- [x] 7. README section
-  - Done by Claude after the Kiro credit limit: PRs #2 and #3 (README sections "Run it from a terminal", "As a CI gate", "As an MCP server")
+- [ ] 7. README section
   - Add a "Headless runner" section to `README.md`: CLI flags and exit codes, `--json`, the Action inputs, the MCP tools and start command, and the two hooks. Plain, friendly wording. Do not use the words safe, secure, guaranteed, certified, real-time, first, unique or shortest.
   - Add a text scan test over new user-facing strings and the README section for those banned words.
   - _Requirements: 8.6_
 
-- [x] 8. Final acceptance task (Requirement 9)
-  - Done by Claude after the Kiro credit limit: PRs #2 and #3: 9.1 to 9.7 pass in tests/cli/cli-acceptance.test.ts and tests/mcp/mcp.test.ts; no pinned value was changed.
+- [ ] 8. Final acceptance task (Requirement 9)
   - Write the acceptance tests exactly as below, using the committed HEX files, and run them with `vitest --run`:
     - The CLI on the crosswalk buggy example exits 1 with fingerprint `47078989121ebc1d`, try 4 of 24, and moves 8 to 3.
     - The CLI on the garage buggy example exits 1 with fingerprint `616062947f71a1ae`, try 8 of 40, and moves 7 to 3.

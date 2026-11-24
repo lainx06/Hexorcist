@@ -80,7 +80,7 @@ export const STAGE_TEXT = {
   /** Stage line when that replay could not be made. */
   heldFailed: "This try could not be replayed here.",
   /** Dimmed scene line after COULDN'T TELL. */
-  couldntTell: "Nothing to replay.",
+  couldntTell: "This program can't be judged here. The card says why.",
 } as const;
 
 export const CARD_TEXT = {
@@ -105,8 +105,7 @@ export const FIX_TEXT = {
 
 export const TAB_TEXT = {
   names: ["What happened", "Signals", "The fix", "Details"],
-  idle: "The story of the run shows here after you unleash the gremlins.",
-  couldntTell: "No replay: the verdict card explains why this program has no result.",
+  idle: "Nothing has broken yet.",
   fixNotRun: "Press See the fix work to compare.",
 } as const;
 

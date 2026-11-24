@@ -1,9 +1,0 @@
-{
-  "pins": [
-    { "signal": "FWD_BUTTON", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" },
-    { "signal": "REV_BUTTON", "port": "D", "bit": 3, "direction": "input", "activeLevel": "low" },
-    { "signal": "STOP_BUTTON", "port": "D", "bit": 4, "direction": "input", "activeLevel": "low" },
-    { "signal": "FORWARD", "port": "B", "bit": 0, "direction": "output" },
-    { "signal": "REVERSE", "port": "B", "bit": 1, "direction": "output" }
-  ]
-}

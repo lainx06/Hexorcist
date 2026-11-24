@@ -3,7 +3,7 @@ import { GREMLIN_CATALOGUE, findGremlin } from "../../../engine/gremlins/catalog
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import type { RuleForm } from "../../../engine/rules/ir";
 import type { Fixture } from "../../../engine/types";
-import { CHAT_FIELDS, CHAT_RULE, SAMPLE_FIELDS, SERIAL_FIELDS, SERIAL_RULE, chatProgram, chatRows, sampleProgram, sampleRows, sampleRuleText, serialProgram, serialRows } from "../data/upload-sample";
+import { SAMPLE_FIELDS, sampleProgram, sampleRows, sampleRuleText } from "../data/upload-sample";
 import type { CampaignRequest } from "../worker/messages";
 import { checkRuns, checkSeed } from "./fields";
 import type { FieldCheck } from "./fields";
@@ -104,39 +104,20 @@ export function hexReadFailed(s: UploadState, token: number): UploadState {
 }
 
 export function loadSample(s: UploadState): UploadState {
-  return loadBundled(s, sampleProgram(), sampleRows(s.nextRowId), sampleRuleText(), SAMPLE_FIELDS);
-}
-
-/** The COULDN'T TELL sample: a program that uses the serial port, which the emulator does not model. */
-export function loadSerialSample(s: UploadState): UploadState {
-  return loadBundled(s, serialProgram(), serialRows(s.nextRowId), SERIAL_RULE, SERIAL_FIELDS);
-}
-
-/** The chat-written sample: a chat AI's crossing sketch, unedited, with the rule it broke. */
-export function loadChatSample(s: UploadState): UploadState {
-  return loadBundled(s, chatProgram(), chatRows(s.nextRowId), CHAT_RULE, CHAT_FIELDS);
-}
-
-function loadBundled(
-  s: UploadState,
-  program: LoadedProgram,
-  rows: PinRow[],
-  ruleText: string,
-  fields: { readonly runs: string; readonly seed: string; readonly runLengthMs: string },
-): UploadState {
+  const rows = sampleRows(s.nextRowId);
   const next: UploadState = {
     ...s,
-    program,
+    program: sampleProgram(),
     hexError: null,
     reading: null,
     rows,
     nextRowId: s.nextRowId + rows.length,
     importError: null,
-    ruleText,
+    ruleText: sampleRuleText(),
     selected: ["masher"],
     autoMasher: false,
-    fields: { ...fields },
-    lastValid: { runs: Number(fields.runs), runCycles: msToCycles(Number(fields.runLengthMs)) },
+    fields: { ...SAMPLE_FIELDS },
+    lastValid: { runs: Number(SAMPLE_FIELDS.runs), runCycles: msToCycles(Number(SAMPLE_FIELDS.runLengthMs)) },
   };
   return pruneGremlins(next);
 }
