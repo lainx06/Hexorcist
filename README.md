@@ -2,10 +2,12 @@
 
 **AI wrote your gadget's code. Let gremlins break it here, before it breaks for real.**
 
-Hexorcist runs a real compiled ATmega328P program on a simulated chip inside your browser. You write a rule in plain sentences, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
+Hexorcist runs a real compiled ATmega328P program on a simulated chip inside your browser (no board needed). You write a rule in plain sentences, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
 
 - **Live app:** https://lainx06.github.io/Hexorcist/
 - **Demo video (under 3 minutes):** _link added at submission_
+It stitches together parts that don't usually meet: 8-bit microcontroller machine code running cycle by cycle in a browser worker, rules written as plain sentences, seeded scripted gremlins, a delta-debugging reducer, and an MCP server so a Kiro agent can run the same check. It is for makers, students and teachers who put AI-written code on small boards and don't have a lab to test it in.
+
 - **Judging in a hurry?** [docs/JUDGES.md](docs/JUDGES.md) is a five-minute tour.
 - Kiroween 2026 entry, Frankenstein category.
 
@@ -22,6 +24,8 @@ Hexorcist runs a real compiled ATmega328P program on a simulated chip inside you
 | **BROKE** | A rule was broken. You always see the replay that did it. |
 | **HELD** | "No violation found in N emulated runs of this gremlin set. Not a proof." |
 | **COULDN'T TELL** | The rule can't be checked with what's available (a part of the chip that isn't modelled, an unmapped signal, a rule that never triggered). Hexorcist says why instead of guessing. |
+
+Limits, up front: it emulates one chip, the ATmega328P at 16 MHz; the serial port, SPI, the two-wire (I2C) bus, EEPROM, the watchdog and a few other chip parts are not modelled, so programs that use them get COULDN'T TELL. HELD is evidence from the runs made, never a proof.
 
 The checker is deterministic: time is counted in CPU cycles, the gremlins come from a seeded random number generator, and there is no AI and no network in the verdict. The same seed always gives the same result.
 
@@ -72,11 +76,11 @@ Measured with `npm run bench:evidence` on Nov 23, 2026 (Windows, AMD Ryzen 7 780
 | Garage door | BROKE 100 | HELD 100 |
 | I'm-alive light | BROKE 99, HELD 1 | HELD 100 |
 
-Across the three examples, the fixed builds gave no false alarm in 300 seeded campaigns (HELD 300 of 300), and the buggy builds were caught in 299 of 300.
+Across the three examples, the fixed builds gave no false alarm in 300 seeded campaigns (HELD 300 of 300), and the buggy builds were caught in 298 of 300.
 
 A single ordinary button press, moved every 10 ms across the whole run, broke none of the six builds. It takes the gremlins' awkward timing to find these bugs.
 
-Chat-written firmware: eight crossing sketches from four chat AIs, checked against seven rules from the same brief, all broke the same rule. Each turns WALK on about 5 microseconds before it turns DON'T WALK off. Kiro then fixed one of them in 45 seconds. Details: [exorcism-demo/benchmark/README.md](exorcism-demo/benchmark/README.md).
+Chat-written firmware: eight crossing sketches from four chat AIs, checked against seven rules from the same brief, all broke the same rule, each on one ordinary button press: it turns WALK on about 5 microseconds before it turns DON'T WALK off. That catch comes from checking every CPU cycle, not from gremlin timing. With only the headline rule (no green for both), all eight held. Kiro then fixed one of them in 45 seconds. Details: [exorcism-demo/benchmark/README.md](exorcism-demo/benchmark/README.md).
 
 In Chrome on the same desktop, the emulator ran at about 72 to 80 million chip cycles per second. The app shows the figure measured on your own computer in the Details tab.
 

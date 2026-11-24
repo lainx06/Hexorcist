@@ -39,7 +39,7 @@ npm run check -- --example crosswalk            # BROKE, exit code 1, fingerprin
 npm run check -- --example crosswalk --fixed    # HELD, exit code 0
 ```
 
-The same check runs as a GitHub Action (see the `gate-demo` workflow runs: the fixed Crosswalk passes, the
+The same check runs as a GitHub Action (see the [`gate-demo` workflow runs](https://github.com/lainx06/Hexorcist/actions/workflows/gate-demo.yml): the fixed Crosswalk passes, the
 buggy one fails the job) and as an MCP server inside Kiro.
 
 ## What to look at in the repository
@@ -48,6 +48,6 @@ buggy one fails the job) and as an MCP server inside Kiro.
 |---|---|
 | How was Kiro used? | [docs/HOW-KIRO-BUILT-THIS.md](HOW-KIRO-BUILT-THIS.md) and [`.kiro/`](../.kiro/): 14 specs, 5 steering files, 5 hooks on 4 triggers, a custom agent |
 | Is the checker deterministic? | [`.kiro/steering/determinism.md`](../.kiro/steering/determinism.md); the same inputs give the same fingerprint in the browser, the terminal, CI and MCP |
-| How often does it cry wolf? | [docs/evidence/EVIDENCE-NUMBERS.md](evidence/EVIDENCE-NUMBERS.md): fixed builds HELD in 300 of 300 seeded campaigns, buggy builds BROKE in 299 of 300 |
+| How often does it cry wolf? | [docs/evidence/EVIDENCE-NUMBERS.md](evidence/EVIDENCE-NUMBERS.md): fixed builds HELD in 300 of 300 seeded campaigns, buggy builds BROKE in 298 of 300 |
 | What can't it do? | The **Limits** section of the [README](../README.md#limits) |
 | Who wrote what? | README, "How the work was split": Kiro wrote the web app and the engine; Claude wrote the follow-up code after Kiro's credit limit, listed file by file |
