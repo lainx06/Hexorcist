@@ -60,21 +60,21 @@ const broke = fc.record({
   reducedList: fc.array(event, { maxLength: 5 }),
 });
 const held = fc.record({ ...common, verdict: fc.constant("HELD" as const), n: fc.integer({ min: 1, max: 1000 }), text: fc.string() });
-const tell = fc.record({ ...common, verdict: fc.constant("COULDN'T TELL" as const), reason: fc.string(), peripherals: fc.array(word, { maxLength: 3 }) });
+const tell = fc.record({ ...common, verdict: fc.constant("COULDN'T TELL" as const), reason: fc.string(), reasonTruncated: fc.boolean(), peripherals: fc.array(word, { maxLength: 3 }) });
 const resultArb = fc.oneof(broke, held, tell) as fc.Arbitrary<ResultObject>;
 
 /** Builds the object in the design's key order, as runCheck does. */
 function ordered(r: ResultObject): ResultObject {
   const head = { toolVersion: r.toolVersion, verdict: r.verdict, seed: r.seed, runs: r.runs, gremlins: r.gremlins, rules: r.rules };
   if (r.verdict === "HELD") return { ...head, verdict: "HELD", n: r.n, text: r.text };
-  if (r.verdict === "COULDN'T TELL") return { ...head, verdict: "COULDN'T TELL", reason: r.reason, peripherals: r.peripherals };
+  if (r.verdict === "COULDN'T TELL") return { ...head, verdict: "COULDN'T TELL", reason: r.reason, reasonTruncated: r.reasonTruncated, peripherals: r.peripherals };
   return { ...head, verdict: "BROKE", try: r.try, movesBefore: r.movesBefore, movesAfter: r.movesAfter, fingerprint: r.fingerprint, violation: r.violation, reducedList: r.reducedList };
 }
 
 const KEY_ORDER: Record<ResultObject["verdict"], string[]> = {
   BROKE: ["toolVersion", "verdict", "seed", "runs", "gremlins", "rules", "try", "movesBefore", "movesAfter", "fingerprint", "violation", "reducedList"],
   HELD: ["toolVersion", "verdict", "seed", "runs", "gremlins", "rules", "n", "text"],
-  "COULDN'T TELL": ["toolVersion", "verdict", "seed", "runs", "gremlins", "rules", "reason", "peripherals"],
+  "COULDN'T TELL": ["toolVersion", "verdict", "seed", "runs", "gremlins", "rules", "reason", "reasonTruncated", "peripherals"],
 };
 
 describe("headless-runner pure layer", () => {

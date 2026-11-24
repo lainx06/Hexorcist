@@ -3,6 +3,7 @@
 import type { ReducerEvent } from "../src/engine/reducer/types";
 import { runCampaignJob, runReductionJob, runReplayJob } from "../src/ui/app/worker/host";
 import type { JobError } from "../src/ui/app/worker/messages";
+import { REASON_MAX_LENGTH } from "../src/engine/verdict";
 import type { CheckInput } from "./input-loader";
 
 export interface Jobs {
@@ -40,6 +41,8 @@ export interface HeldResult extends Common {
 export interface CouldntTellResult extends Common {
   verdict: "COULDN'T TELL";
   reason: string;
+  /** True when the engine cut the reason at its 200-character limit; check the rules one at a time. */
+  reasonTruncated: boolean;
   peripherals: string[];
 }
 
@@ -72,7 +75,7 @@ export function runCheck(input: CheckInput, toolVersion: string, jobs: Jobs = HO
     for (const u of c.result.peripheralUses?.uses ?? []) if (!ids.includes(u.peripheral)) ids.push(u.peripheral);
     return {
       ok: true,
-      result: { toolVersion, verdict: "COULDN'T TELL", seed: common.seed, runs: common.runs, gremlins: common.gremlins, rules: common.rules, reason: v.reason, peripherals: ids },
+      result: { toolVersion, verdict: "COULDN'T TELL", seed: common.seed, runs: common.runs, gremlins: common.gremlins, rules: common.rules, reason: v.reason, reasonTruncated: v.reason.length >= REASON_MAX_LENGTH, peripherals: ids },
     };
   }
   const red = jobs.reduction({ hex, fixture, ruleSet, originalList: v.trace.eventList, violation: v.trace.violation, runCycles });
@@ -144,7 +147,12 @@ export function toSummary(r: ResultObject): string {
   if (r.verdict === "HELD") {
     body = [r.text, setup, ...rules];
   } else if (r.verdict === "COULDN'T TELL") {
-    body = [r.reason, ...(r.peripherals.length > 0 ? [`Peripherals used: ${r.peripherals.join(", ")}`] : []), setup, ...rules];
+    body = [
+      r.reasonTruncated ? `${r.reason}... (cut at ${REASON_MAX_LENGTH} characters; check the rules one at a time to see each reason)` : r.reason,
+      ...(r.peripherals.length > 0 ? [`Peripherals used: ${r.peripherals.join(", ")}`] : []),
+      setup,
+      ...rules,
+    ];
   } else {
     body = [
       `Broken rule: ${r.violation.rule}`,
