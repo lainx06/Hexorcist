@@ -3,7 +3,7 @@ import { GREMLIN_CATALOGUE, findGremlin } from "../../../engine/gremlins/catalog
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import type { RuleForm } from "../../../engine/rules/ir";
 import type { Fixture } from "../../../engine/types";
-import { SAMPLE_FIELDS, SERIAL_FIELDS, SERIAL_RULE, sampleProgram, sampleRows, sampleRuleText, serialProgram, serialRows } from "../data/upload-sample";
+import { CHAT_FIELDS, CHAT_RULE, SAMPLE_FIELDS, SERIAL_FIELDS, SERIAL_RULE, chatProgram, chatRows, sampleProgram, sampleRows, sampleRuleText, serialProgram, serialRows } from "../data/upload-sample";
 import type { CampaignRequest } from "../worker/messages";
 import { checkRuns, checkSeed } from "./fields";
 import type { FieldCheck } from "./fields";
@@ -110,6 +110,11 @@ export function loadSample(s: UploadState): UploadState {
 /** The COULDN'T TELL sample: a program that uses the serial port, which the emulator does not model. */
 export function loadSerialSample(s: UploadState): UploadState {
   return loadBundled(s, serialProgram(), serialRows(s.nextRowId), SERIAL_RULE, SERIAL_FIELDS);
+}
+
+/** The chat-written sample: a chat AI's crossing sketch, unedited, with the rule it broke. */
+export function loadChatSample(s: UploadState): UploadState {
+  return loadBundled(s, chatProgram(), chatRows(s.nextRowId), CHAT_RULE, CHAT_FIELDS);
 }
 
 function loadBundled(
