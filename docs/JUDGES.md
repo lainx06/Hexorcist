@@ -14,7 +14,7 @@ a green.
 ## 2. See the fix hold (30 seconds)
 
 Press **See the fix work**. The same 3 moves play on the original and the fixed program side by side: the
-original breaks, the fixed one holds, and the card says *"No violation found in 24 emulated runs of this
+original breaks, the fixed one holds. Then the fixed program runs all 24 tries live, and the card says *"No violation found in 24 emulated runs of this
 gremlin set. Not a proof."*
 
 ## 3. See it refuse to guess (30 seconds)

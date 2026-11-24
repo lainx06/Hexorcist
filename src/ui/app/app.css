@@ -4183,3 +4183,23 @@ button[aria-disabled="true"] {
 .scene-card.is-dim .pin-levels-frame .pin-levels-columns {
   opacity: 0.2;
 }
+
+/* (claude) The fixed program's verdict word, the same size as BROKE on the left card. */
+.fix-card--right .fix-right-word {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.fix-card--held .fix-right-word {
+  color: var(--mint);
+}
+.fix-card--broke .fix-right-word {
+  color: var(--coral);
+}
+.fix-card--tell .fix-right-word {
+  color: var(--text);
+}
+/* (claude) COULDN'T TELL on the pin-levels view: no faded pins behind the note. */
+.scene-card.is-dim .pin-levels-frame .pin-levels-columns {
+  opacity: 0;
+}

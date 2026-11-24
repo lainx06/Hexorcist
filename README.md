@@ -101,7 +101,7 @@ npm run check -- --hex my.hex --pins pins.json --rules rules.txt --json
 | `--hex`, `--pins`, `--rules` | Your own program: a plain .hex, a pin map in the "Export pin map" format, and a text file with one rule per line |
 | `--gremlins <id,id>` | Gremlin ids (default: the example's set, or the Masher for your own program) |
 | `--runs`, `--seed`, `--run-ms` | Tries, seed and device time per try, with the same limits as the page |
-| `--json` | One JSON object on stdout, byte-identical for the same inputs on any OS |
+| `--json` | One JSON object on stdout; the same inputs give the same bytes (no times, paths or host names), and the same fingerprints on Windows and Linux |
 
 Exit codes: `0` HELD, `1` BROKE, `2` COULDN'T TELL, `3` input or internal error. COULDN'T TELL never exits 0.
 
@@ -138,14 +138,7 @@ Kiro wrote the web app, the engine and their tests in 13 specs, and wrote the 14
 - **The Exorcism Loop:** Kiro took a crossing sketch written by a chat AI, checked it with the power (BROKE twice), fixed it until the check said HELD, and the Agent Stop hook ran when it finished: 45 seconds, 0.58 credits.
 - **CI** runs the type check, the guard, every test and the build on each push, and `gate-demo` runs the GitHub Action on the Crosswalk example.
 
-How the work was split: Kiro wrote the product code in 13 specs, up to its credit limit. After that, Claude wrote some follow-up code (listed below), each change reviewed and merged by the author. The author directed the project, approved every change and ran the browser checks. Claude also acted as the planning lead: spec prompts, review triage, acceptance checks, this README, and the starting drafts of the hook, agent and workflow files, which the author installed and ran in Kiro. ChatGPT and Gemini gave outside design reviews.
-
-Code written by Claude after the Kiro credit limit (each commit message ends in `(claude)`):
-
-- Upload page: hide analog gremlins on uploads, show the "pick a gremlin" message only after a click, page description and no-script text, and the "Try one it can't check" sample.
-- Terminal runner (`cli/`), built from Kiro spec #14 `headless-runner` (`.kiro/specs/headless-runner/`): `npm run check`, JSON output, exit codes, and its tests in `tests/cli/`; the GitHub Action (`action.yml`, `cli/step-summary.ts`, `gate-demo.yml`) and the MCP server (`mcp/`), with tests in `tests/mcp/`.
-- Hook commands for the Exorcism Loop (`cli/hook-stop.ts`, `cli/hook-guard.ts`), the `exorcism-demo/` device files, and two plain C test programs for it (`tests/cli/conveyor/`).
-- The Kiro power files (`power/hexorcist/`: `plugin.json`, `mcp.json`, the `check-firmware` skill).
+How the work was split: Kiro wrote the web app, the engine and their tests in 13 specs, up to its credit limit. After that, Claude wrote follow-up code in pull requests the author reviewed and merged (each commit message ends in `(claude)`; the list is in [docs/HOW-KIRO-BUILT-THIS.md](docs/HOW-KIRO-BUILT-THIS.md#who-wrote-what)). ChatGPT, Gemini and DeepSeek gave outside reviews.
 
 ## Limits
 
