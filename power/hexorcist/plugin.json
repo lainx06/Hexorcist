@@ -1,0 +1,5 @@
+{
+  "name": "hexorcist",
+  "version": "0.1.0",
+  "description": "Checks small ATmega328P programs with plain-English rules and seeded gremlins on an emulated chip, then reports a replayable trace."
+}

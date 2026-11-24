@@ -153,3 +153,6 @@ dist-ssr
 *.local
 # Example build folders (only <variant>.hex is kept)
 examples/**/build/
+# Headless runner: verdict record and demo build output
+.hexorcist/
+exorcism-demo/build/

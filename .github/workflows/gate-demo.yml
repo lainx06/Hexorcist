@@ -1,0 +1,52 @@
+name: gate-demo
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check the Crosswalk fixed build
+        uses: ./
+        with:
+          hex: examples/crosswalk/fixed/fixed.hex
+          pins: examples/crosswalk/fixture.json
+          rules: examples/crosswalk/rules.txt
+
+  buggy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check the Crosswalk buggy build
+        id: gate
+        continue-on-error: true
+        uses: ./
+        with:
+          hex: examples/crosswalk/buggy/buggy.hex
+          pins: examples/crosswalk/fixture.json
+          rules: examples/crosswalk/rules.txt
+      - name: Fail unless the gate caught the bug
+        env:
+          VERDICT: ${{ steps.gate.outputs.verdict }}
+          EXIT_CODE: ${{ steps.gate.outputs.exit-code }}
+        run: |
+          if [ "$VERDICT" != "BROKE" ] || [ "$EXIT_CODE" != "1" ]; then
+            echo "Expected BROKE with exit code 1, got '$VERDICT' with '$EXIT_CODE'."
+            exit 1
+          fi

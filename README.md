@@ -55,6 +55,58 @@ compiled .hex  ->  emulated ATmega328P (avr8js, in a Web Worker)
 
 Other clock speeds give wrong timings. Programs that use the serial port, SPI, the two-wire bus, EEPROM, the watchdog or analog inputs get COULDN'T TELL, with the part named.
 
+## Headless runner
+
+The same check runs from a terminal, a GitHub Action, an MCP client and two Kiro hooks. All of them call the same worker functions as the page, so the verdict, the try number, the reduced move list and the fingerprint match what the page shows.
+
+### Command line
+
+```
+npm run check -- --example crosswalk
+npm run check -- --example crosswalk --fixed --json
+npm run check -- --hex build/my.hex --pins pins.json --rules rules.txt --gremlins masher,bouncer --runs 24 --seed 20261101 --run-ms 1000
+```
+
+- `--example <crosswalk|garage|heartbeat>` loads a bundled example (add `--fixed` for its fixed build).
+- `--hex`, `--pins` and `--rules` load your own files. Relative paths resolve against the folder you ran the command in. Do not mix them with `--example`.
+- `--gremlins` (comma-separated ids), `--runs`, `--seed` and `--run-ms` are optional. Left out, they come from the example's `meta.json`, or from the defaults the page uses for an uploaded program.
+- `--json` prints exactly one JSON object and nothing else on stdout. The same inputs give the same bytes on Windows, macOS and Linux. It holds no timestamp, path or duration.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | HELD |
+| 1 | BROKE (the trace that did it is printed) |
+| 2 | COULDN'T TELL (the reason is printed) |
+| 3 | Bad input or an internal error. A reason goes to stderr and no verdict is printed. |
+
+For COULDN'T TELL, the JSON has `reason` and then `reasonTruncated`: true when the reason reached the 200-character limit, so it may have been cut.
+
+### GitHub Action
+
+`action.yml` at the repo root is a composite action named `hexorcist-gate`.
+
+- Required inputs: `hex`, `pins`, `rules`. Optional inputs: `gremlins`, `runs`, `seed`.
+- Outputs: `verdict` and `exit-code`, set before the step that fails the job, so a later step can read them.
+- The job fails on exit code 1, 2 or 3 and passes on 0. A Markdown summary with the verdict, exit code, seed and runs goes to the job summary.
+- `.github/workflows/gate-demo.yml` runs it on the crosswalk fixed build (passes) and the buggy build (the run goes green when the gate catches it).
+
+### MCP server
+
+`npm run mcp` starts a stdio JSON-RPC server with two tools: `check` (same inputs as the CLI, same JSON back) and `capabilities` (the five rule sentence forms, the gremlin ids and the parts of the chip that are not modelled). It makes no network call.
+
+### Kiro hooks
+
+Two existing hook files run commands from `cli/`:
+
+- `hexorcist-check-on-stop` runs `cli/hook-stop.ts` when the agent stops. It builds the demo sketch, checks it, and records the verdict in `.hexorcist/last-verdict.json`. With `--block`, a BROKE or COULDN'T TELL verdict sends the agent back to work, up to 3 times in a row.
+- `hexorcist-done-guard` runs `cli/hook-guard.ts` before a spec task is marked done. It blocks the call unless the recorded verdict is HELD for the current `.hex` file.
+
+The demo loop lives in `exorcism-demo/`: `sketch/sketch.ino`, `build.mjs` (needs `arduino-cli`), `crosswalk-full-rules.txt` and `loop-check.json`. Both hooks are enabled from Kiro's hook panel.
+
+### Kiro power
+
+`power/hexorcist` is a power with the MCP server and a skill that tells an agent how to use it. Set the `HEXORCIST_ROOT` environment variable once, to this repo's folder. Details and the launcher log location are in [power/hexorcist/README.md](power/hexorcist/README.md).
+
 ## Evidence
 
 Measured with `npm run bench:evidence` on Nov 16, 2026 (Windows, AMD Ryzen 7 7800X3D, Node 26). These are results of emulated runs, not a proof. Full table: [docs/evidence/EVIDENCE-NUMBERS.md](docs/evidence/EVIDENCE-NUMBERS.md).

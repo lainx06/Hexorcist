@@ -45,6 +45,10 @@ const claimFiles = [
   ...walk(join(root, "src", "ui")),
   ...one(join(root, "README.md")),
   ...walk(join(root, "docs")),
+  // headless runner: CLI, MCP server and Power text
+  ...["cli", "mcp", "power"].flatMap((d) =>
+    walk(join(root, d)).filter((f) => /\.(?:ts|mjs|json|md|yml)$/.test(f)),
+  ),
 ];
 scan(claimFiles, [
   {
@@ -77,6 +81,24 @@ scan(engineFiles, [
   { re: /\bcrypto\.getRandomValues\b/, msg: (w) => `entropy API "${w}" in engine code` },
   { re: /\brandomUUID\b/, msg: (w) => `entropy API "${w}" in engine code` },
   { re: /\brandomBytes\b/, msg: (w) => `entropy API "${w}" in engine code` },
+]);
+
+// b3. Headless runner code (cli/, mcp/): same determinism and network rules
+const runnerFiles = ["cli", "mcp"].flatMap((d) =>
+  walk(join(root, d)).filter((f) => /\.(?:ts|mjs)$/.test(f)),
+);
+scan(runnerFiles, [
+  {
+    re: /\b(Date\.now|performance\.now|setTimeout|setInterval|Math\.random)\b|\bnew\s+Date\s*\(/,
+    msg: (w) => `nondeterministic API "${w.replace(/\s+/g, " ")}" in runner code`,
+  },
+  { re: /\bfetch\s*\(/, msg: () => `network API "fetch(" in runner code` },
+  { re: /\bXMLHttpRequest\b/, msg: (w) => `network API "${w}" in runner code` },
+  { re: /\bWebSocket\b/, msg: (w) => `network API "${w}" in runner code` },
+  {
+    re: /\b(?:from\s*|import\s*\(?\s*|require\s*\(\s*)["'](?:node:)?(?:https?|net|dgram|dns)["']/,
+    msg: (w) => `network module import ${w.replace(/^.*?(["'])/, "$1")} in runner code`,
+  },
 ]);
 
 // c. Isolation: only emulator-bridge.ts may import avr8js
@@ -115,7 +137,7 @@ scan([...one(join(root, "index.html")), ...walk(join(root, "src", "ui"))], [
 ]);
 
 if (findings.length === 0) {
-  console.log("guard: clean");
+  console.log("guard: clean (0 findings)");
   process.exit(0);
 }
 console.log(findings.join("\n"));

@@ -1,0 +1,93 @@
+name: hexorcist-gate
+description: Run the Hexorcist check on a precompiled ATmega328P HEX and fail the job unless no violation is found.
+inputs:
+  hex:
+    description: Path to the HEX file, relative to the workspace.
+    required: true
+  pins:
+    description: Path to the pin fixture JSON.
+    required: true
+  rules:
+    description: Path to the rules text file.
+    required: true
+  gremlins:
+    description: Comma-separated gremlin ids. Leave empty for the default.
+    required: false
+    default: ""
+  runs:
+    description: Number of emulated runs. Leave empty for the default.
+    required: false
+    default: ""
+  seed:
+    description: Campaign seed. Leave empty for the default.
+    required: false
+    default: ""
+outputs:
+  verdict:
+    description: BROKE, HELD or COULDN'T TELL. Empty when the check did not reach a verdict.
+    value: ${{ steps.report.outputs.verdict }}
+  exit-code:
+    description: The CLI exit code (0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 input or job error).
+    value: ${{ steps.report.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      shell: bash
+      env:
+        IN_HEX: ${{ inputs.hex }}
+        IN_PINS: ${{ inputs.pins }}
+        IN_RULES: ${{ inputs.rules }}
+      run: |
+        for name in hex pins rules; do
+          var="IN_$(echo "$name" | tr a-z A-Z)"
+          if [ -z "${!var}" ]; then
+            echo "Hexorcist gate: required input '$name' is missing, so no check ran." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+        done
+
+    - name: Install
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        npm ci || { echo "Hexorcist gate: npm ci failed, so no check ran." >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+
+    - name: Run check
+      id: run
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        IN_HEX: ${{ inputs.hex }}
+        IN_PINS: ${{ inputs.pins }}
+        IN_RULES: ${{ inputs.rules }}
+        IN_GREMLINS: ${{ inputs.gremlins }}
+        IN_RUNS: ${{ inputs.runs }}
+        IN_SEED: ${{ inputs.seed }}
+      run: |
+        set +e
+        abs() { case "$1" in /*) echo "$1" ;; *) echo "$GITHUB_WORKSPACE/$1" ;; esac; }
+        args=(--json --hex "$(abs "$IN_HEX")" --pins "$(abs "$IN_PINS")" --rules "$(abs "$IN_RULES")")
+        [ -n "$IN_GREMLINS" ] && args+=(--gremlins "$IN_GREMLINS")
+        [ -n "$IN_RUNS" ] && args+=(--runs "$IN_RUNS")
+        [ -n "$IN_SEED" ] && args+=(--seed "$IN_SEED")
+        npm run --silent check -- "${args[@]}" > "$RUNNER_TEMP/hexorcist.json" 2> "$RUNNER_TEMP/hexorcist.err"
+        code=$?
+        echo "code=$code" >> "$GITHUB_OUTPUT"
+        exit 0
+
+    - name: Report
+      id: report
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        CODE: ${{ steps.run.outputs.code }}
+      run: |
+        npx tsx --no-deprecation cli/action-report.ts "$RUNNER_TEMP/hexorcist.json" "$CODE" "$RUNNER_TEMP/hexorcist.err"
+
+    - name: Fail the job unless the check held
+      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.code }}
+      run: |
+        if [ "$CODE" != "0" ]; then exit "${CODE:-3}"; fi
