@@ -3,6 +3,10 @@
 Each file here is a sketch written by an AI chat from a fixed brief, saved unedited, then checked with
 `node exorcism-demo/try.mjs <file> [config]` (Masher, 24 tries, seed 20261101, 1000 ms per try).
 A handful of samples from chat tools on one day: evidence about these samples, not a ranking of models.
+
+**Read this first:** with one rule per brief, every sketch held. With seven rules that restate the crossing
+brief, all eight crossing sketches broke the same rule, each on one ordinary button press. The tables below
+show both, in that order.
 Model names are as the chat tool showed them.
 
 ## Round 1: conveyor (Nov 23, 2026)

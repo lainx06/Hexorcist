@@ -1,6 +1,6 @@
 # How Kiro built Hexorcist
 
-Hexorcist was built in Kiro over three weeks (Nov 12 to Dec 4, 2026). This page lists every Kiro feature
+Hexorcist is being built in Kiro during the Kiroween 2026 submission period, starting Nov 12, 2026. This page lists every Kiro feature
 the project uses, where it lives in the repository, and what it did. Numbers come from the repository, the
 CI runs and Kiro's own credit counter. Anything not yet tried is marked as such.
 

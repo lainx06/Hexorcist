@@ -105,7 +105,7 @@ export const FIX_TEXT = {
 
 export const TAB_TEXT = {
   names: ["What happened", "Signals", "The fix", "Details"],
-  idle: "Nothing has broken yet.",
+  idle: "The story of the run shows here after you unleash the gremlins.",
   couldntTell: "No result for this program, so there is nothing to replay. The verdict card says why.",
   fixNotRun: "Press See the fix work to compare.",
 } as const;
