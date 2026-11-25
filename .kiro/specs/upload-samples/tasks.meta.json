@@ -516,6 +516,100 @@
         "chatSessionId": "sess_08689f09-2882-413c-bc21-406e73725712",
         "timestamp": 1795566587806
       }
+    ],
+    "1.3 Write unit tests for the sample data": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634258961
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634299137
+      }
+    ],
+    "2.3 Write unit tests for loading and buttons": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634299714
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634358947
+      }
+    ],
+    "3.3 Write property tests for the wording": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634359544
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634405158
+      }
+    ],
+    "5.3 Write property tests for the picker": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634407343
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634455062
+      }
+    ],
+    "6.2 Write unit tests for the headline": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634457216
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634505351
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634833046
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634851616
+      }
+    ],
+    "7.3 Write unit tests for the text": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634505940
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634556960
+      }
+    ],
+    "8.2 Write property tests for stale pin levels": [
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634559221
+      },
+      {
+        "executionId": "15bf0a5e-f100-47b2-b630-c6909a3de418",
+        "chatSessionId": "sess_e151b959-c2db-486f-a955-c893223659ef",
+        "timestamp": 1795634612043
+      }
     ]
   }
 }

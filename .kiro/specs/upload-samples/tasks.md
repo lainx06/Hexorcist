@@ -48,7 +48,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - Do not touch `data/upload-sample.ts` or `sampleDownloads`.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2, 3.5, 3.6, 3.7_
 
-  - [ ]* 1.3 Write unit tests for the sample data
+  - [x]* 1.3 Write unit tests for the sample data
     - New file `tests/ui/upload-samples-data.test.ts`. Bundled HEX text equals the file on disk byte for byte, `pins.json` content and import result, exact names, rule texts and fields, no network call in the data module.
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 3.1, 3.2, 3.4, 3.6, 3.7_
 
@@ -65,7 +65,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - `app-page.ts`: new handlers that return when `lockedNow()`, call the loaders, on `!r.ok` call `showError(UPLOAD_COPY.sampleLoadError)` and leave `upload` untouched, otherwise assign, `setup.rules.setText`, `ctl.setTexts`, `afterUploadEdit()`.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.10, 3.10_
 
-  - [ ]* 2.3 Write unit tests for loading and buttons
+  - [x]* 2.3 Write unit tests for loading and buttons
     - New file `tests/ui/upload-samples-state.test.ts`: loaders replace earlier program, rule text and settings; a forced failure returns `{ ok: false }` and the original state object is unchanged; button order and labels; `disabled` follows `busy` for all five; `sampleDownloads()` still returns the same two files.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.10, 3.10_
 
@@ -80,7 +80,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - Run the file and confirm it passes. If anything else in the file fails, stop and report.
     - _Requirements: 4.5, 4.6, 4.7_
 
-  - [ ]* 3.3 Write property tests for the wording
+  - [x]* 3.3 Write property tests for the wording
     - New file `tests/ui/plain-story-micro.property.test.ts`.
     - **Property 1: Microsecond sentence matches the cycles/16 formula**, plus a unit assertion that 78 cycles gives "4.9".
     - **Validates: Requirements 4.1, 4.2, 4.3**
@@ -102,7 +102,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - `app-page.ts` `onBlockedUnleash`: call `setup.gremlins.setTried()`.
     - _Requirements: 8.2, 8.3, 8.4, 8.5_
 
-  - [ ]* 5.3 Write property tests for the picker
+  - [x]* 5.3 Write property tests for the picker
     - New file `tests/ui/upload-picker.property.test.ts`. Leave `gremlin-picker.test.ts` untouched.
     - **Property 5: Upload_Path gremlin compatibility requires every target to be a digital input**
     - **Validates: Requirements 8.1**
@@ -116,7 +116,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - Do not edit the `leftCard` line, its children array, or `TAB_TEXT.fixNotRun`.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ]* 6.2 Write unit tests for the headline
+  - [x]* 6.2 Write unit tests for the headline
     - New file `tests/ui/fixed-headline.test.ts`: one per verdict word, colour variable per verdict, DOM order above `replayLine` and `campaignBox`, no headline before a verdict, HELD text from `fixedCampaignText` with the real N.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
@@ -133,7 +133,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - `app-page.ts`: call `setCouldntTell(true)` with the COULDN'T TELL phase and `setCouldntTell(false)` in `clearOutputs()`.
     - _Requirements: 6.2, 6.3, 6.4_
 
-  - [ ]* 7.3 Write unit tests for the text
+  - [x]* 7.3 Write unit tests for the text
     - New file `tests/ui/couldnt-tell-text.test.ts`: `TAB_TEXT.idle` and `STAGE_TEXT.idleTitle` values, What happened and Signals tabs show the idle text before any run, solid note panel, `noReplayNote` shown and idle text absent for COULDN'T TELL, both texts cleared when a new run starts.
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
@@ -143,7 +143,7 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - If the test shows a gap, fix it in `stage.ts` or `scene-pin-levels.ts` with the smallest change. If it passes, make no source change and report that.
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ]* 8.2 Write property tests for stale pin levels
+  - [x]* 8.2 Write property tests for stale pin levels
     - New file `tests/ui/pin-levels-hidden.property.test.ts`.
     - **Property 3: No stale pin levels while the reducer runs and the scene is dimmed**
     - **Validates: Requirements 7.1, 7.2, 7.4**
