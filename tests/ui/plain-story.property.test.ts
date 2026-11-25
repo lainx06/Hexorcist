@@ -76,7 +76,9 @@ function reference(c: { list: ReducerEvent[]; fixture: Fixture; v: number; endin
     parts.push(
       c.span.cut
         ? `It was still that way ${ms(c.span.lengthCycles)} later, when the replay stopped.`
-        : c.spanText.split("<Plain_Ms>").join(ms(c.span.lengthCycles)),
+        : c.span.lengthCycles < 8000
+          ? `It lasted ${(c.span.lengthCycles / 16).toFixed(1)} microseconds, too short to round to a whole millisecond.`
+          : c.spanText.split("<Plain_Ms>").join(ms(c.span.lengthCycles)),
     );
   }
   return parts.join(" ");

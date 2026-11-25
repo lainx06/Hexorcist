@@ -2,7 +2,8 @@
 // disabled chips with their plain reasons beside them, the reasons lined up in one column. Callbacks and state setters only; the page owns the selection.
 import { GREMLIN_CATALOGUE } from "../../../engine/gremlins/catalogue";
 import type { Fixture } from "../../../engine/types";
-import { pickerTile } from "../model/gremlin-picker";
+import type { GremlinDefinition } from "../../../engine/gremlins/catalogue";
+import { incompatibleReason, pickerTile } from "../model/gremlin-picker";
 import type { PickerTile } from "../model/gremlin-picker";
 import { moreNeedText } from "../model/stage-copy";
 import type { SignalLabels } from "../model/signal-labels";
@@ -20,9 +21,16 @@ export interface PickerView {
   /** The chip row, the "N more need other inputs" link, the disabled list and the message. */
   node: HTMLElement;
   /** Rebuilds the chips for a fixture and sets the selected ids. */
-  setFixture(fixture: Fixture, selected: readonly string[], labels?: SignalLabels): void;
+  setFixture(
+    fixture: Fixture,
+    selected: readonly string[],
+    labels?: SignalLabels,
+    compatibleOverride?: (def: GremlinDefinition, fixture: Fixture) => boolean,
+  ): void;
   setSelected(selected: readonly string[]): void;
   setBusy(busy: boolean): void;
+  /** The visitor pressed a blocked "Unleash gremlins"; allows the pick message while nothing is selected. */
+  setTried(): void;
 }
 
 interface Chip {
@@ -43,6 +51,8 @@ export function picker(onToggle: (id: string) => void): PickerView {
   let selected: string[] = [];
   let busy = false;
   let listOpen = false;
+  let touched = false;
+  let tried = false;
 
   const paint = (): void => {
     for (const c of chips) {
@@ -55,7 +65,7 @@ export function picker(onToggle: (id: string) => void): PickerView {
     more.disabled = busy;
     more.setAttribute("aria-expanded", listOpen ? "true" : "false");
     list.hidden = !listOpen || list.childElementCount === 0;
-    message.textContent = selected.length === 0 ? PICKER_COPY.pickOne : "";
+    message.textContent = selected.length === 0 && (touched || tried) ? PICKER_COPY.pickOne : "";
   };
 
   more.addEventListener("click", () => {
@@ -66,10 +76,17 @@ export function picker(onToggle: (id: string) => void): PickerView {
 
   return {
     node,
-    setFixture(fixture, sel, labels) {
+    setFixture(fixture, sel, labels, compatibleOverride) {
       selected = [...sel];
       listOpen = false;
-      const tiles = GREMLIN_CATALOGUE.map((def) => pickerTile(def, fixture, labels));
+      touched = false;
+      tried = false;
+      const tiles = GREMLIN_CATALOGUE.map((def) => {
+        const tile = pickerTile(def, fixture, labels);
+        if (compatibleOverride === undefined) return tile;
+        const compatible = compatibleOverride(def, fixture);
+        return compatible === tile.compatible ? tile : { ...tile, compatible, reason: compatible ? null : incompatibleReason(def) };
+      });
       chips = tiles
         .filter((t) => t.compatible)
         .map((tile) => {
@@ -80,7 +97,10 @@ export function picker(onToggle: (id: string) => void): PickerView {
             mark,
           ]);
           btn.addEventListener("click", () => {
-            if (!busy) onToggle(tile.id);
+            if (busy) return;
+            touched = true;
+            onToggle(tile.id);
+            paint();
           });
           return { tile, btn, mark };
         });
@@ -104,6 +124,10 @@ export function picker(onToggle: (id: string) => void): PickerView {
     },
     setSelected(sel) {
       selected = [...sel];
+      paint();
+    },
+    setTried() {
+      tried = true;
       paint();
     },
     setBusy(b) {

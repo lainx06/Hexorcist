@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="data:," />
     <title>Hexorcist</title>
+    <meta name="description" content="Hexorcist runs a compiled program on a simulated ATmega328P chip. Seeded gremlins attack the program's inputs, and the app reports one of three results: BROKE, HELD, or COULDN'T TELL." />
   </head>
   <body>
+    <noscript>
+      <p>Hexorcist runs a compiled program on a simulated ATmega328P chip, right in this page. Seeded gremlins
+      attack the program's inputs. The app reports one of three results: BROKE, HELD, or COULDN'T TELL.</p>
+      <p>HELD means: "No violation found in N emulated runs of this gremlin set. Not a proof."</p>
+      <p>This page needs scripts turned on to run.</p>
+    </noscript>
     <div id="app"></div>
     <script type="module" src="/src/ui/app/boot.ts"></script>
   </body>

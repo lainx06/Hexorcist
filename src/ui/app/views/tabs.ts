@@ -76,6 +76,8 @@ export interface TabsView {
    * "What happened" and "Signals" say the same instead of "Nothing has broken yet.".
    */
   setPending(pending: boolean): void;
+  /** COULDN'T TELL: "What happened" and "Signals" say there is no replay instead of the idle text. */
+  setCouldntTell(on: boolean): void;
   /**
    * "The fix" while the Fix_View is open: the explanation and a button to the "What the fix changed" panel, which
    * is the one place the code change shows. Null shows "Press See the fix work to compare.".
@@ -170,6 +172,7 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
   // What happened
   const happenedIdle = el("p", { class: "tab-idle" }, [TAB_TEXT.idle]);
   let pending = false;
+  let couldntTell = false;
   const happenedBody = el("div", { class: "happened-body" });
 
   // Signals
@@ -212,7 +215,7 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
 
   function paintReplay(): void {
     const d = replayData;
-    const idleText = pending ? STAGE_TEXT.storyPlaceholder : TAB_TEXT.idle;
+    const idleText = pending ? STAGE_TEXT.storyPlaceholder : couldntTell ? TAB_TEXT.noReplayNote : TAB_TEXT.idle;
     happenedIdle.textContent = idleText;
     signalsIdle.textContent = idleText;
     happenedIdle.hidden = hasReplay;
@@ -297,6 +300,10 @@ export function createTabs(timeline: TimelineView, replayAgain: ReplayAgainRow =
     },
     setPending(on) {
       pending = on;
+      paintReplay();
+    },
+    setCouldntTell(on) {
+      couldntTell = on;
       paintReplay();
     },
     setFixChange(id, onOpenCode = () => undefined) {

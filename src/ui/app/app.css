@@ -2854,6 +2854,11 @@ button:disabled {
   border-radius: var(--r-sm);
 }
 
+/* Fully opaque note panel (COULDN'T TELL). Same colour as .scene-frame, without the D9 alpha. */
+.stage-overlay .stage-note-block.stage-note-block--solid {
+  background: #0E1513;
+}
+
 .shrink-count {
   color: var(--muted);
 }
@@ -3677,6 +3682,24 @@ button:disabled {
 .fix-card--tell {
   background: var(--couldnt-tell-surface);
   border-color: var(--couldnt-tell-line);
+}
+
+.fixed-verdict-headline {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.fix-card--held .fixed-verdict-headline {
+  color: var(--mint);
+}
+
+.fix-card--broke .fixed-verdict-headline {
+  color: var(--coral);
+}
+
+.fix-card--tell .fixed-verdict-headline {
+  color: var(--text-2);
 }
 
 /* "What the fix changed": one panel with the explanation, the two buttons and the code change. */

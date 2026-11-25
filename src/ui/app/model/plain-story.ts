@@ -12,6 +12,15 @@ export function plainMs(cycles: number): string {
   return `${k >= 1000 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits} ms`;
 }
 
+/** Spans under this many cycles (0.5 ms at 16 MHz) are told in microseconds. */
+export const SHORT_SPAN_LIMIT_CYCLES = 8000;
+
+/** Cycles to microseconds at 16 MHz, one decimal always shown, integer maths: 78 gives "4.9". */
+export function microseconds(cycles: number): string {
+  const tenths = Math.floor((cycles * 10 + 8) / 16);
+  return `${String(Math.floor(tenths / 10))}.${String(tenths % 10)}`;
+}
+
 /** Capitalised name of a gremlin; an id without a picker entry is capitalised as is. */
 function gremlinName(id: string): string {
   return Object.prototype.hasOwnProperty.call(PICKER_TEXT, id) ? PICKER_TEXT[id].name : id.charAt(0).toUpperCase() + id.slice(1);
@@ -65,7 +74,9 @@ export function plainStory(a: {
     out.push(
       a.span.cut
         ? `It was still that way ${plainMs(a.span.lengthCycles)} later, when the replay stopped.`
-        : a.spanSentence.split("<Plain_Ms>").join(plainMs(a.span.lengthCycles)),
+        : a.span.lengthCycles < SHORT_SPAN_LIMIT_CYCLES
+          ? `It lasted ${microseconds(a.span.lengthCycles)} microseconds, too short to round to a whole millisecond.`
+          : a.spanSentence.split("<Plain_Ms>").join(plainMs(a.span.lengthCycles)),
     );
   }
   return out.join(" ");
