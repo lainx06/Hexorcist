@@ -89,7 +89,7 @@ For COULDN'T TELL, the JSON has `reason` and then `reasonTruncated`: true when t
 ### Kiro hooks
 Two hook files run commands from `cli/`. Both files currently read `"enabled": true`. The stop hook has a 300-second timeout.
 - `hexorcist-check-on-stop` runs `cli/hook-stop.ts` when the agent stops. It builds the demo sketch, checks it, and records the verdict in `.hexorcist/last-verdict.json`. With `--block`, a BROKE or COULDN'T TELL verdict sends the agent back to work, up to 3 times in a row.
-- `hexorcist-done-guard` runs `cli/hook-guard.ts` before a spec task is marked done. It blocks the call unless the recorded verdict is HELD for the current `.hex` file.
+- `hexorcist-done-guard` runs `cli/hook-guard.ts` before a spec task is marked done. It blocks the call unless the recorded verdict is HELD for the current `.hex` file. It sees only Kiro's task tool (`task_update` with status `completed`). A change to `tasks.md` made by a shell command or a file edit is not blocked.
 The demo loop lives in `exorcism-demo/`: `sketch/sketch.ino`, `build.mjs` (needs a command-line sketch compiler on your PATH), `crosswalk-full-rules.txt` and `loop-check.json`. Three more hooks are described under [How this was built](#how-this-was-built).
 ### Kiro power
 `power/hexorcist` is a power with the MCP server and a skill (`check-firmware`) that tells an agent to call `capabilities` before any other tool, write rules in the five sentence forms, then call `check`. Set the `HEXORCIST_ROOT` environment variable once, to this repo's folder. Details and the launcher log location are in [power/hexorcist/README.md](power/hexorcist/README.md).

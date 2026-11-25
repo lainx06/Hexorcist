@@ -34,20 +34,20 @@ export function decideGuard(record: VerdictRecord | null, currentHash: string | 
     return {
       exitCode: 2,
       message:
-        "Blocked: no verdict is recorded. Run the check before marking the task done (the Stop hook does this, or run npm run check), fix anything it finds, then mark the task done.",
+        "Blocked: no verdict is recorded. Only the Stop hook records one: it builds and checks the sketch when you finish your turn. Fix the program, let the Stop hook run, then mark the task done.",
     };
   }
   if (record.verdict !== "HELD") {
     return {
       exitCode: 2,
-      message: `Blocked: the recorded verdict is ${record.verdict}. Fix the program, run the check again, and mark the task done only after it says HELD.`,
+      message: `Blocked: the recorded verdict is ${record.verdict}. Fix the program, let the Stop hook run again, and mark the task done only after it records HELD.`,
     };
   }
   if (currentHash === null || currentHash !== record.hexSha256) {
     return {
       exitCode: 2,
       message:
-        "Blocked: the recorded check is out of date (the HEX file changed or is missing). Build and run the check again before marking the task done.",
+        "Blocked: the recorded check is out of date (the HEX file changed or is missing). Let the Stop hook build and check again, then mark the task done.",
     };
   }
   return { exitCode: 0 };
