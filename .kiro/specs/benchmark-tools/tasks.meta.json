@@ -11,6 +11,18 @@
     "4.6 Write property test for repeat determinism": {
       "status": "passed",
       "lastRunTimestamp": 1795570951943
+    },
+    "1.4 Write property test for pin fixture signal list": {
+      "status": "passed",
+      "lastRunTimestamp": 1795629299779
+    },
+    "2.3 Write property test for argv pass-through": {
+      "status": "passed",
+      "lastRunTimestamp": 1795629365267
+    },
+    "2.5 Write property test for missing or wrong-typed keys": {
+      "status": "passed",
+      "lastRunTimestamp": 1795629448813
     }
   },
   "executionHistory": {
@@ -405,6 +417,122 @@
         "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
         "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
         "timestamp": 1795571380847
+      }
+    ],
+    "1.3 Write example tests for configs, fixture, and rules": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629221489
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629272877
+      },
+      {
+        "executionId": "757a81f7-db06-48e4-a6f5-b93d6357686a",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795630114089
+      },
+      {
+        "executionId": "757a81f7-db06-48e4-a6f5-b93d6357686a",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795630139985
+      }
+    ],
+    "1.4 Write property test for pin fixture signal list": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629273459
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629306420
+      }
+    ],
+    "2.2 Write example tests for the Try_Script": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629306979
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629343503
+      }
+    ],
+    "2.3 Write property test for argv pass-through": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629344213
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629372561
+      }
+    ],
+    "2.4 Write property test for path resolution": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629373086
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629421946
+      }
+    ],
+    "2.5 Write property test for missing or wrong-typed keys": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629422076
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629455909
+      }
+    ],
+    "2.6 Write property test for sketch source left untouched": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629456321
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629510227
+      }
+    ],
+    "4.3 Write example tests for the Overlap_Script": [
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629510636
+      },
+      {
+        "executionId": "c2424f68-3863-4470-b1f1-b3b070473953",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795629585948
+      },
+      {
+        "executionId": "757a81f7-db06-48e4-a6f5-b93d6357686a",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795630140583
+      },
+      {
+        "executionId": "af560de3-2987-49f9-8669-3acededc03fa",
+        "chatSessionId": "sess_d07bae7f-8426-4640-8d84-08f6a9afc423",
+        "timestamp": 1795632220878
       }
     ]
   }
