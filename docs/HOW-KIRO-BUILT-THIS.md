@@ -34,9 +34,9 @@ Every spec folder has `design.md` and `tasks.md`. Fifteen have `requirements.md`
 | `held-text` | Bugfix. The HELD text did not say "emulated" and read "1 runs" for one run. |
 | `bench-ui-core`, `bench-ui-examples`, `bench-ui-stage`, `bench-ui-upload` | The web app, in four stages: the Crosswalk flow, the three-example gallery and plain view, the stage layout, and the "Your own program" path. |
 | `headless-runner` | The terminal check, Action, MCP server, hook scripts and power. All 24 task lines are ticked. |
-| `upload-samples` | Small web-app additions. 38 task lines are ticked; 7 optional test tasks (marked `*`) are not. |
+| `upload-samples` | Small web-app additions. All 45 task lines are ticked; none are unticked. |
 | `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. That done-guard run used the earlier hook scripts, which were removed in `5d54110` and rebuilt by Kiro in `6a081de`. |
-| `benchmark-tools` | The benchmark scripts and README. 29 task lines are ticked; 8 optional test tasks are not, each noted "skipped by the owner, not done". |
+| `benchmark-tools` | The benchmark scripts and README. All 37 task lines are ticked; none are unticked. |
 `upload-samples/requirements.md` names one allowed test change (the expected text in Property 21 of `tests/ui/plain-story.property.test.ts`, for spans under 8000 cycles only), and says acceptance tests written by the user must not be changed, weakened or deleted to make them pass.
 The `headless-runner` plan says its property tests use fast-check, with at least 100 iterations each, tagged like `Feature: headless-runner, Property N: <title>`. Tests are evidence, not proof.
 ## Steering
