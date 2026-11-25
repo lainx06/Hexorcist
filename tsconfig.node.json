@@ -16,6 +16,6 @@
     "allowImportingTsExtensions": true,
     "noImplicitAny": false
   },
-  "include": ["scripts", "bench", "cli", "mcp", "src/**/__tests__/**/*.ts", "tests", "src/vite-env.d.ts"],
+  "include": ["scripts", "bench", "cli", "mcp", "src/**/__tests__/**/*.ts", "tests", "exorcism-demo/**/*.ts", "src/vite-env.d.ts"],
   "exclude": ["node_modules"]
 }
