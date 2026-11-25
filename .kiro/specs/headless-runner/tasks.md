@@ -149,6 +149,18 @@ Property tests from the design are written inside the task that builds the code 
   - **Note:** If an acceptance test and the system disagree, stop and report what the test expects, what actually happened, and the evidence (including the trace). Never change, weaken, or delete the test. Wait for the owner's decision.
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
+- [x] 9. Power manifests (Agent Plugins 1.0.0)
+  - Fix, owner-reported on Nov 24, 2026. Kiro said: "plugin.json has an unsupported or missing $schema".
+  - Edit `power/hexorcist/plugin.json`, keeping every existing field. Add `"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"`, `author`, `keywords`, `homepage` set to `"https://lainx06.github.io/Hexorcist/"`, `repository` set to `"https://github.com/lainx06/Hexorcist"`, and `license` set to `"MIT"`.
+  - The owner has not given an author name. Use `"lainx06"` (taken from the repository URL) and flag it in the report so the owner can confirm or replace it.
+  - Edit `power/hexorcist/mcp.json`: add `"$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"` and add `"type": "stdio"` to the server entry. The inline Launcher script string is unchanged.
+  - Edit `tests/cli/power.test.ts`: add one new test that checks both `$schema` values and the `stdio` server type. Existing tests in that file stay as they are, none weakened or removed.
+  - Owner-approved (Nov 24, 2026): the existing test in `tests/cli/power.test.ts` "mcp.json runs node -e with no npm, absolute path, plugin-root variable or launcher file" changes only its Windows-drive-path check. It scans only the `args` strings of the `mcp.json` server entry (not the whole file text) for a drive path, because the required `$schema` URL contains "s:/". Every other check in that test is unchanged.
+  - Owner-approved (Nov 24, 2026): `plugin.json` `author` is an object `{"name": "lainx06", "url": "https://github.com/lainx06"}`.
+  - Run `npx vitest --run tests/cli/power.test.ts` and `node scripts/guard.mjs`, and report both results (guard: zero findings expected; report any finding rather than editing the guard silently).
+  - Delete any debug scripts before reporting the task done.
+  - _Requirements: 10.1, 10.2, 10.3_
+
 ## Notes
 
 - No optional tasks. Property tests sit inside the task that builds the code they cover.
@@ -170,7 +182,8 @@ Property tests from the design are written inside the task that builds the code 
     { "id": 3, "tasks": ["2.2", "3.1", "4.1", "5.1", "6.2"] },
     { "id": 4, "tasks": ["3.2", "4.2", "6.3", "6.4", "7.1"] },
     { "id": 5, "tasks": ["7.2"] },
-    { "id": 6, "tasks": ["8"] }
+    { "id": 6, "tasks": ["8"] },
+    { "id": 7, "tasks": ["9"] }
   ]
 }
 ```

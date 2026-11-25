@@ -61,10 +61,17 @@ describe("power/hexorcist files", () => {
     expect(server.args[0]).toBe("-e");
     expect(server.args).toHaveLength(2);
     expect(mcpText).not.toMatch(/\bnpm\b/i);
-    expect(mcpText).not.toMatch(/[A-Za-z]:[\\/]/);
+    for (const arg of server.args) expect(arg).not.toMatch(/[A-Za-z]:[\\/]/);
     expect(mcpText).not.toMatch(/(^|[\s"'=])\/[A-Za-z]/);
     expect(mcpText).not.toMatch(/PLUGIN_ROOT|\$\{|%[A-Z_]+%/);
     expect(mcpText).not.toMatch(/launch\.mjs|\.mjs["']\s*[,\]]/);
+  });
+
+  it("both manifests carry the Agent Plugins 1.0.0 $schema and the server type is stdio", () => {
+    const plugin = JSON.parse(fs.readFileSync(path.join(powerDir, "plugin.json"), "utf8"));
+    expect(plugin.$schema).toBe("https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+    expect(mcp.$schema).toBe("https://agent-plugins.org/schemas/1.0.0/mcp.schema.json");
+    expect((Object.values(mcp.mcpServers)[0] as { type: string }).type).toBe("stdio");
   });
 
   it("the inline script reads no clock or random value, makes no network call and installs nothing", () => {

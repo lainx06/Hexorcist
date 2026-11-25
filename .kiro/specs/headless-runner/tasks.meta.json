@@ -268,6 +268,18 @@
         "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
         "timestamp": 1795561621069
       }
+    ],
+    "9. Power manifests (Agent Plugins 1.0.0)": [
+      {
+        "executionId": "f8d54a10-5529-4470-896b-684a76e40b05",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795572919222
+      },
+      {
+        "executionId": "e1964dea-e6c7-44a5-a7aa-5fd83446afd6",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573064143
+      }
     ]
   }
 }

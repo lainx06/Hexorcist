@@ -1,6 +1,6 @@
 # Hexorcist
 **AI wrote your gadget's code. Let gremlins break it here, before it breaks for real.**
-Hexorcist checks small ATmega328P programs before they go on a board. It runs a compiled program on a simulated chip inside your browser. You write a rule in plain sentences, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
+Hexorcist checks small ATmega328P programs before they go on a board. It runs a compiled program on a simulated chip inside your browser. You write a rule as a short sentence, in one of five set forms, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
 - **Live app:** https://lainx06.github.io/Hexorcist/
 - **Demo video (under 3 minutes):** _link added at submission_
 - Kiroween 2026 entry, Frankenstein category.
@@ -22,7 +22,7 @@ The checker is deterministic: time is counted in CPU cycles, the gremlins come f
 - **Gremlins are scripted and seeded.** They explore awkward input timing, not every possible input.
 - **Illustrations.** The crosswalk, garage and I'm-alive scenes are drawings driven by the program's outputs, and each is labelled "Illustrative". Your own program gets a "Pin levels" view instead.
 - **No compiling here.** Nothing is compiled in the browser or on a server; you bring a compiled `.hex`, or use a bundled example.
-- **Long reasons.** A COULDN\'T TELL reason can reach a 200-character limit. The CLI and MCP JSON carry `reasonTruncated` to say when it did.
+- **Long reasons.** A COULDN'T TELL reason can reach a 200-character limit. The CLI and MCP JSON carry `reasonTruncated` to say when it did.
 - **The AI benchmark is a small sample.** Eight chat-written sketches per brief, one seed, one gremlin set. See [exorcism-demo/benchmark/README.md](exorcism-demo/benchmark/README.md).
 ## Try it in 60 seconds
 1. Open the [live app](https://lainx06.github.io/Hexorcist/). **Crosswalk** is already selected, with its rule: *cars and walkers must never get a green at the same time.*
@@ -122,7 +122,7 @@ Everything Kiro used is committed in [`.kiro/`](.kiro/). The longer write-up, fr
 - **CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs the type check, the guard, every test and the build. `pages.yml` publishes the static site to GitHub Pages.
 ### Disclosure: code originally written with another AI coding assistant
 Some code was originally written with another AI coding assistant, not with Kiro: the command-line runner (`cli/`), the MCP server, the power, the hook scripts, the GitHub Action, the benchmark scripts, and a few text changes in the web app. On Nov 24, 2026, one commit (`5d54110`, "Remove code written outside Kiro; Kiro rebuilds it next") removed all of it. Kiro then rebuilt it from its own specs: `headless-runner`, `upload-samples` and `benchmark-tools`. The git history keeps the earlier versions, and commits from that assistant end in "(claude)".
-Other work on this repo was also planned with that assistant, according to the earlier README: spec prompts, review triage, acceptance checks, and drafts of the hook, agent and workflow files. The author directed the project, approved every change and ran the browser checks.
+Other work on this repo was also planned or drafted with that assistant: spec prompts, the steering files, drafts of the hook, agent and workflow files, review triage and acceptance checks. The author directed the project, approved every change and ran the browser checks.
 ## Develop
 ```
 npm ci

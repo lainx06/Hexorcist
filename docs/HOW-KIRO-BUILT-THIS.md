@@ -9,7 +9,7 @@ On Nov 24, 2026, one commit removed all of it: `5d54110`, "Remove code written o
 | `upload-samples` | The two extra sample programs, the microsecond wording, the fixed-program headline, the COULDN'T TELL screen text | `175f7f0`, then `3c8a85c` (task 15) |
 | `benchmark-tools` | `exorcism-demo/try.mjs`, `measure-overlap.ts`, the config files, the motor files, the benchmark README | `5c69c37` |
 The header of `headless-runner/tasks.md` says the plan was written "fresh by Kiro" and that nothing was restored from git history, an earlier branch or a stash. The git history still holds the earlier versions, and commits from the other assistant end in "(claude)".
-The earlier README also said the same assistant planned the project: spec prompts, review triage, acceptance checks, and drafts of the hook, agent and workflow files. Those files are in this repository now.
+The same assistant also planned or drafted other work on this repo: spec prompts, the steering files, drafts of the hook, agent and workflow files, review triage and acceptance checks. Those files are in this repository now.
 ## At a glance
 | Kiro feature | What the repository has | Where |
 |---|---|---|
@@ -35,7 +35,7 @@ Every spec folder has `design.md` and `tasks.md`. Fifteen have `requirements.md`
 | `bench-ui-core`, `bench-ui-examples`, `bench-ui-stage`, `bench-ui-upload` | The web app, in four stages: the Crosswalk flow, the three-example gallery and plain view, the stage layout, and the "Your own program" path. |
 | `headless-runner` | The terminal check, Action, MCP server, hook scripts and power. All 24 task lines are ticked. |
 | `upload-samples` | Small web-app additions. 38 task lines are ticked; 7 optional test tasks (marked `*`) are not. |
-| `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. |
+| `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. That done-guard run used the earlier hook scripts, which were removed in `5d54110` and rebuilt by Kiro in `6a081de`. |
 | `benchmark-tools` | The benchmark scripts and README. 29 task lines are ticked; 8 optional test tasks are not, each noted "skipped by the owner, not done". |
 `upload-samples/requirements.md` names one allowed test change (the expected text in Property 21 of `tests/ui/plain-story.property.test.ts`, for spans under 8000 cycles only), and says acceptance tests written by the user must not be changed, weakened or deleted to make them pass.
 The `headless-runner` plan says its property tests use fast-check, with at least 100 iterations each, tagged like `Feature: headless-runner, Property N: <title>`. Tests are evidence, not proof.
