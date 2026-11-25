@@ -9,6 +9,7 @@
         "command": "npx tsx --no-deprecation cli/hook-stop.ts exorcism-demo/loop-check.json --block"
       },
       "description": "Builds and checks the demo sketch when the agent finishes.",
+      "timeout": 300,
       "enabled": true
     }
   ]
