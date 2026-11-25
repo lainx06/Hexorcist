@@ -179,6 +179,8 @@ Observed Kiro behaviour (Nov 24, 2026): a Pre Tool Use hook receives JSON on std
 
 Kiro starts power MCP servers with the working folder set to the user's `.kiro` powers folder, not the repo, and `npm` cannot be spawned directly on Windows. No plugin-root variable is relied on, so the repo folder comes from `HEXORCIST_ROOT`, which the user sets once.
 
+Owner-reported (Nov 24, 2026): through the Power, `check` failed on relative paths with `Cannot read the file "exorcism-demo/build/sketch.hex"` while full paths returned HELD, because the Launcher set `INIT_CWD` to its own working folder (the powers folder). Criteria 10.15 to 10.18 replace that rule: the Launcher sets `INIT_CWD` to the repo folder.
+
 #### Acceptance Criteria
 
 1. THE headless runner SHALL provide the Power in the Agent Plugins format, containing `plugin.json`, `mcp.json`, `README.md`, and `skills/check-firmware/SKILL.md`.
@@ -195,6 +197,10 @@ Kiro starts power MCP servers with the working folder set to the user's `.kiro` 
 12. THE `SKILL.md` file SHALL tell the agent to quote HELD_Text word for word and to describe a BROKE reduced list as "the smallest replay this reducer found".
 13. THE `README.md` file SHALL state that the user sets `HEXORCIST_ROOT` once, how to set it, and where the Launcher writes its log.
 14. THE Power files SHALL leave the Banned_Words out of their text.
+15. WHEN the Launcher starts the MCP_Server, THE Launcher SHALL set `INIT_CWD` in the child process environment to the repo folder it found under criterion 10.4 (the `HEXORCIST_ROOT` value, or the current working directory when `HEXORCIST_ROOT` is not set), whether or not `INIT_CWD` was already set in the Launcher's own environment.
+16. WHEN the MCP_Server receives a relative file path in `check` input from a Launcher-started process, THE Input_Loader SHALL resolve that path against the repo folder, and THE Input_Loader SHALL resolve an absolute path unchanged.
+17. THE `README.md` file and THE `SKILL.md` file SHALL each state that relative paths resolve against the Hexorcist repo folder and that files elsewhere need full paths.
+18. WHEN `npm run mcp` or `npm run check` runs, THE headless runner SHALL keep resolving relative paths against the `INIT_CWD` value that npm sets, as in criteria 1.9 and 1.10.
 
 ### Requirement 11: Gate demo workflow
 

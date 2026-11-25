@@ -280,6 +280,18 @@
         "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
         "timestamp": 1795573064143
       }
+    ],
+    "10. Launcher resolves relative paths against the repo folder": [
+      {
+        "executionId": "fd51600f-2a4a-4ba1-bcbc-ed0c48487c82",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573956297
+      },
+      {
+        "executionId": "fd51600f-2a4a-4ba1-bcbc-ed0c48487c82",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573998492
+      }
     ]
   }
 }

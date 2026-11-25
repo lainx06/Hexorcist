@@ -124,7 +124,7 @@ Property tests from the design are written inside the task that builds the code 
   - [x] 7.1 Power at power/hexorcist
     - Create exactly four files: `power/hexorcist/plugin.json`, `mcp.json`, `README.md` and `skills/check-firmware/SKILL.md`. There is no `launch.mjs` and no other launcher file.
     - `mcp.json`: one server with `"command": "node"` and `"args": ["-e", "<inline Launcher script>"]`. It never names `npm`, holds no absolute path, uses no plugin-root variable and references no launcher file. The script is a single dependency-free CommonJS string that reads cleanly as one JSON string.
-    - Inline Launcher behaviour: root from `HEXORCIST_ROOT` else the working directory; require `mcp/bin.ts` and the repo's `tsx` entry (`node_modules/tsx/dist/cli.mjs`, or the `bin` field of `tsx/package.json` if the path differs); spawn with `process.execPath`, `--no-deprecation`, `stdio: "inherit"`, `INIT_CWD` set to the Launcher's working folder unless already set; on a missing file or spawn error append the cause to `hexorcist-launcher.log` in the OS temp folder, write nothing to stdout, exit non-zero; on child exit, exit with the child's code. No clock, no random, no network, no install.
+    - Inline Launcher behaviour: root from `HEXORCIST_ROOT` else the working directory; require `mcp/bin.ts` and the repo's `tsx` entry (`node_modules/tsx/dist/cli.mjs`, or the `bin` field of `tsx/package.json` if the path differs); spawn with `process.execPath`, `--no-deprecation`, `stdio: "inherit"`, `INIT_CWD` set to the repo folder it found, unconditionally (changed by task 10; this task originally set the Launcher's working folder unless already set); on a missing file or spawn error append the cause to `hexorcist-launcher.log` in the OS temp folder, write nothing to stdout, exit non-zero; on child exit, exit with the child's code. No clock, no random, no network, no install.
     - `SKILL.md`: call `capabilities` before any other tool; write rules only in the five forms it returns; call `check` after writing rules; quote HELD_Text word for word; call a BROKE reduced list "the smallest replay this reducer found"; document `reasonTruncated` with the exact sentence "true when the reason reached the 200-character limit, so it may have been cut".
     - `README.md`: that the user sets `HEXORCIST_ROOT` once, how to set it (one PowerShell example, one POSIX shell example), the log file name `hexorcist-launcher.log` and its location in the OS temp folder, and `reasonTruncated` with the same exact sentence.
     - Tests: file list is exactly the four files; `mcp.json` has command `node`, args starting `-e`, no absolute path, no plugin-root variable, no `npm` and no launcher file reference; extract the inline script and run it with `node -e`: `HEXORCIST_ROOT` on an empty temp folder exits non-zero, logs, prints nothing to stdout; `HEXORCIST_ROOT` unset with the working folder at the repo answers `initialize`; `HEXORCIST_ROOT` set to the repo with a different working folder answers `initialize`; text scan of the inline script (clock, random, network, install); text scan of `SKILL.md` for the four instructions; `README.md` and `SKILL.md` each contain the exact `reasonTruncated` sentence; `README.md` names `HEXORCIST_ROOT` and the log file; banned-word scan of all Power text (the guard scans `power/` for banned words, the code-pattern rules for the script string are covered by the text scan).
@@ -161,6 +161,17 @@ Property tests from the design are written inside the task that builds the code 
   - Delete any debug scripts before reporting the task done.
   - _Requirements: 10.1, 10.2, 10.3_
 
+- [x] 10. Launcher resolves relative paths against the repo folder
+  - Fix, owner-reported on Nov 24, 2026. Through the power, `check` failed on relative paths ("Cannot read the file \"exorcism-demo/build/sketch.hex\"") while full paths returned HELD. Kiro starts power MCP servers in its powers folder and the Launcher set `INIT_CWD` to that working folder.
+  - Edit the inline Launcher in `power/hexorcist/mcp.json`: set `INIT_CWD` in the child environment to the repo folder it found (`HEXORCIST_ROOT`, or the current-folder fallback), unconditionally. Change nothing else in the script, and keep `$schema` and `"type": "stdio"`.
+  - `npm run mcp` and `npm run check` keep their behaviour (npm sets `INIT_CWD`). `cli/input-loader.ts` is not changed.
+  - Edit `power/hexorcist/README.md` and `power/hexorcist/skills/check-firmware/SKILL.md`: each says relative paths resolve against the Hexorcist repo folder and to use full paths for files elsewhere. Keep the exact `reasonTruncated` sentence and avoid the Banned_Words.
+  - Edit `tests/cli/power.test.ts`: add one new test that runs the real Launcher (extracted from `mcp.json`, run with `node -e`) from a different temp working folder with `HEXORCIST_ROOT` set to the repo, sends `initialize` and a `check` call with a relative hex path, and expects a Result_Object instead of a "Cannot read the file" error. Existing tests stay as they are, none weakened or removed.
+  - If any existing test asserts the old `INIT_CWD` behaviour, do not edit it. Report which test, what it expects, what happened, and the evidence, then wait for the owner's decision. A search of `tests/cli/power.test.ts` on Nov 24, 2026 found no such assertion.
+  - Run `npx vitest --run tests/cli/power.test.ts` and `node scripts/guard.mjs`, and report both results (guard: zero findings expected; report any finding rather than editing the guard silently).
+  - Delete any debug scripts before reporting the task done.
+  - _Requirements: 10.4, 10.15, 10.16, 10.17, 10.18_
+
 ## Notes
 
 - No optional tasks. Property tests sit inside the task that builds the code they cover.
@@ -183,7 +194,8 @@ Property tests from the design are written inside the task that builds the code 
     { "id": 4, "tasks": ["3.2", "4.2", "6.3", "6.4", "7.1"] },
     { "id": 5, "tasks": ["7.2"] },
     { "id": 6, "tasks": ["8"] },
-    { "id": 7, "tasks": ["9"] }
+    { "id": 7, "tasks": ["9"] },
+    { "id": 8, "tasks": ["10"] }
   ]
 }
 ```

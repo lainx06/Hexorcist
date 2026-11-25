@@ -4,7 +4,9 @@ Lets an agent in Kiro run Hexorcist checks on ATmega328P HEX files through an MC
 
 ## Set HEXORCIST_ROOT once
 
-Kiro starts this server from its own folder, so the power needs to know where your Hexorcist repo is. Set the environment variable `HEXORCIST_ROOT` to the repo folder, once. The repo needs `npm ci` run in it already. If the variable is not set, the power uses its working folder.
+Kiro starts this server from its own folder, so the power needs to know where your Hexorcist repo is. Set the environment variable `HEXORCIST_ROOT` to the repo folder, once. The repo needs `npm ci` run in it already. If the variable is not set, the power uses its working folder as the repo folder.
+
+Relative paths you give to `check` resolve against the Hexorcist repo folder, whatever folder Kiro started in. Use full paths for files that live elsewhere.
 
 PowerShell (stored for your user account):
 

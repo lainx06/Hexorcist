@@ -114,6 +114,45 @@ describe("inline Launcher run with node -e", () => {
   });
 });
 
+describe("inline Launcher resolves relative paths against the repo folder", () => {
+  it("a relative hex, pins and rules check from a different working folder answers HELD", () => {
+    const other = fs.mkdtempSync(path.join(os.tmpdir(), "hex-power-"));
+    try {
+      const call = `${JSON.stringify({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: {
+          name: "check",
+          arguments: {
+            hex: "examples/heartbeat/fixed/fixed.hex",
+            pins: "examples/heartbeat/fixture.json",
+            rules: "examples/heartbeat/rules.txt",
+          },
+        },
+      })}\n`;
+      const merged: NodeJS.ProcessEnv = { ...process.env, HEXORCIST_ROOT: repoDir };
+      delete merged.INIT_CWD;
+      const r = spawnSync(process.execPath, ["-e", script], {
+        cwd: other,
+        env: merged,
+        input: INIT + call,
+        encoding: "utf8",
+        timeout: 120000,
+      });
+      const replies = r.stdout.split("\n").filter((l) => l.trim() !== "").map((l) => JSON.parse(l));
+      const reply = replies.find((x) => x.id === 2);
+      expect(reply).toBeDefined();
+      expect(reply.result.isError).not.toBe(true);
+      const text: string = reply.result.content[0].text;
+      expect(text).not.toContain("Cannot read the file");
+      expect(text).toContain("HELD");
+    } finally {
+      fs.rmSync(other, { recursive: true, force: true });
+    }
+  }, 150000);
+});
+
 describe("Power text", () => {
   const skill = fs.readFileSync(path.join(powerDir, "skills", "check-firmware", "SKILL.md"), "utf8");
   const readme = fs.readFileSync(path.join(powerDir, "README.md"), "utf8");
