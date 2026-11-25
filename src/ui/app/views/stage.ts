@@ -154,6 +154,8 @@ export function createStage(playback: Playback, initial: DeviceId = "crosswalk")
     sceneCard.classList.toggle("is-idle", kind === "idle");
     sceneCard.classList.toggle("is-dim", kind === "dim");
     sceneCard.classList.toggle("is-broke", false);
+    // Every look clears the solid-note hiding; only showNote with `solid` sets it again, after this call.
+    sceneCard.classList.toggle("is-levels-hidden", false);
   }
 
   function drawScene(cursor: number): void {
@@ -357,6 +359,7 @@ export function createStage(playback: Playback, initial: DeviceId = "crosswalk")
       stripVisible(false);
       showLabel(null);
       hidePlayer(true);
+      sceneCard.classList.toggle("is-levels-hidden", opts?.solid === true);
       overlayText(null, [line], opts?.solid === true ? "stage-note-block stage-note-block--solid" : "stage-note-block");
     },
     showReduceError() {

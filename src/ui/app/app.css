@@ -2856,7 +2856,14 @@ button:disabled {
 
 /* Fully opaque note panel (COULDN'T TELL). Same colour as .scene-frame, without the D9 alpha. */
 .stage-overlay .stage-note-block.stage-note-block--solid {
+  padding: var(--s-4) var(--s-5);
   background: #0E1513;
+  border: 1px solid var(--line);
+}
+
+/* COULDN'T TELL: no pin labels or levels behind the note. */
+.scene-card.is-levels-hidden .pin-levels-columns {
+  visibility: hidden;
 }
 
 .shrink-count {

@@ -211,6 +211,15 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     - If nothing references either, remove the entry from `src/ui/app/model/stage-copy.ts`. If anything references it, leave it and report where.
     - _Requirements: 6.1_
 
+- [x] 15. COULDN'T TELL screen cleanup
+  - [x] 15.1 COULDN'T TELL screen: hide pin-level columns and style the note as a panel
+    - When the verdict is COULDN'T TELL, the pin-level columns are hidden: no labels or levels are visible (for example "BUTTON not pressed" and "LED not driven" must not show).
+    - The "Nothing to replay." note is a clearly visible panel: padding, a border using the existing line token, the solid background, centred in the stage.
+    - Nothing else on the screen changes. Edit only `stage.ts`, `scene-pin-levels.ts` and `app.css` as needed, with the smallest change.
+    - Add a NEW source-level test in a new file, like `tests/ui/pin-levels-hidden.test.ts` (Requirement 7) but a separate file (for example `tests/ui/couldnt-tell-screen.test.ts`). Do not edit existing tests, including `tests/ui/pin-levels-hidden.test.ts`.
+    - Then run `npx vitest --run tests/ui`, `npm run typecheck` and `node scripts/guard.mjs`. If an existing test fails, stop and report what it expects, what happened, and the evidence. Wait for the user's decision.
+    - _Requirements: 6.1, 7.1_
+
 ## Notes
 
 - Tasks marked `*` are optional extras (unit and property tests beyond the required ones). Required tests: the Property 21 update (3.2), the regression test (8.1), the scan test (9.2) and the acceptance tests with cross-checks (10.1 to 10.4).
@@ -235,7 +244,8 @@ The user observed these earlier with the same engine. Tasks 10.3 and 10.4 compar
     { "id": 9, "tasks": ["10.3", "10.4"] },
     { "id": 10, "tasks": ["11.1"] },
     { "id": 11, "tasks": ["11.2"] },
-    { "id": 12, "tasks": ["13.1", "14.1"] }
+    { "id": 12, "tasks": ["13.1", "14.1"] },
+    { "id": 13, "tasks": ["15.1"] }
   ]
 }
 ```
