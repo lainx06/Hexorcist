@@ -5,17 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="data:," />
     <title>Hexorcist</title>
-    <meta name="description" content="Hexorcist runs a real compiled ATmega328P program on a simulated chip in your browser, lets scripted gremlins attack its inputs, and checks rules you write in plain sentences. Three answers only: BROKE (with a shrunk replay of the moves that did it), HELD (no violation found in N emulated runs, not a proof) or COULDN'T TELL." />
+    <meta name="description" content="Hexorcist runs a compiled program on a simulated ATmega328P chip. Seeded gremlins attack the program's inputs, and the app reports one of three results: BROKE, HELD, or COULDN'T TELL." />
   </head>
   <body>
-    <div id="app"></div>
     <noscript>
-      <h1>Hexorcist</h1>
-      <p>AI wrote your gadget's code. Let gremlins break it here, before it breaks for real.</p>
-      <p>Hexorcist runs a real compiled ATmega328P program on a simulated chip in your browser. You write a rule in plain sentences, pick gremlins (small scripted pests, not AI) that poke the program's inputs at awkward moments, and get one of three answers: BROKE, with a replay shrunk to the few moves that broke the rule; HELD: "No violation found in N emulated runs of this gremlin set. Not a proof."; or COULDN'T TELL, when the program uses something that is not modelled.</p>
-      <p>Built-in examples: a crosswalk, a garage door and an I'm-alive light, each with a buggy and a fixed build. You can also load your own compiled .hex file; it never leaves your browser.</p>
-      <p>This app needs JavaScript. Source code and evidence: https://github.com/lainx06/Hexorcist</p>
+      <p>Hexorcist runs a compiled program on a simulated ATmega328P chip, right in this page. Seeded gremlins
+      attack the program's inputs. The app reports one of three results: BROKE, HELD, or COULDN'T TELL.</p>
+      <p>HELD means: "No violation found in N emulated runs of this gremlin set. Not a proof."</p>
+      <p>This page needs scripts turned on to run.</p>
     </noscript>
+    <div id="app"></div>
     <script type="module" src="/src/ui/app/boot.ts"></script>
   </body>
 </html>

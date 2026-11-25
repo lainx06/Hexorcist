@@ -3,11 +3,21 @@ import { GREMLIN_CATALOGUE, findGremlin } from "../../../engine/gremlins/catalog
 import type { GremlinSpec } from "../../../engine/gremlins/catalogue";
 import type { RuleForm } from "../../../engine/rules/ir";
 import type { Fixture } from "../../../engine/types";
-import { CHAT_FIELDS, CHAT_RULE, SAMPLE_FIELDS, SERIAL_FIELDS, SERIAL_RULE, chatProgram, chatRows, sampleProgram, sampleRows, sampleRuleText, serialProgram, serialRows } from "../data/upload-sample";
+import { SAMPLE_FIELDS, sampleProgram, sampleRows, sampleRuleText } from "../data/upload-sample";
+import {
+  CHAT_SKETCH_FIELDS,
+  CHAT_SKETCH_RULE_TEXT,
+  UNJUDGEABLE_FIELDS,
+  UNJUDGEABLE_RULE_TEXT,
+  chatSketchProgram,
+  chatSketchRows,
+  unjudgeableProgram,
+  unjudgeableRows,
+} from "../data/upload-samples-extra";
 import type { CampaignRequest } from "../worker/messages";
 import { checkRuns, checkSeed } from "./fields";
 import type { FieldCheck } from "./fields";
-import { PICKER_TEXT, isCompatible } from "./gremlin-picker";
+import { PICKER_TEXT, isCompatibleForUpload } from "./gremlin-picker";
 import { importPinMap } from "./pin-map-file";
 import { MAX_PINS, checkPinTable, newDigitalRow, previewFixture, setDirection } from "./pin-table";
 import type { PinRow, PinTableCheck, RowPatch } from "./pin-table";
@@ -15,6 +25,7 @@ import type { SignalLabels } from "./signal-labels";
 import { triesLine } from "./stage-copy";
 import { UPLOAD_COPY, HEX_ERROR_TEXT, fill } from "./upload-copy";
 import { UPLOAD_DEFAULTS, checkRunLength, msToCycles } from "./upload-fields";
+import { hexCheck } from "./upload-hex";
 import type { HexCheckResult, HexError, LoadedProgram } from "./upload-hex";
 import { checkUploadRule, uploadPatterns } from "./upload-rule";
 import type { UploadRuleCheck } from "./upload-rule";
@@ -71,7 +82,7 @@ export function initialUpload(): UploadState {
 
 const compatibleWith = (id: string, fixture: Fixture): boolean => {
   const def = findGremlin(id);
-  return def !== undefined && isCompatible(def, fixture);
+  return def !== undefined && isCompatibleForUpload(def, fixture);
 };
 
 /** Drop gremlins that no longer fit the table; keep the Masher preselection rules. */
@@ -104,43 +115,77 @@ export function hexReadFailed(s: UploadState, token: number): UploadState {
 }
 
 export function loadSample(s: UploadState): UploadState {
-  return loadBundled(s, sampleProgram(), sampleRows(s.nextRowId), sampleRuleText(), SAMPLE_FIELDS);
-}
-
-/** The COULDN'T TELL sample: a program that uses the serial port, which the emulator does not model. */
-export function loadSerialSample(s: UploadState): UploadState {
-  return loadBundled(s, serialProgram(), serialRows(s.nextRowId), SERIAL_RULE, SERIAL_FIELDS);
-}
-
-/** The chat-written sample: a chat AI's crossing sketch, unedited, with the rule it broke. */
-export function loadChatSample(s: UploadState): UploadState {
-  return loadBundled(s, chatProgram(), chatRows(s.nextRowId), CHAT_RULE, CHAT_FIELDS);
-}
-
-function loadBundled(
-  s: UploadState,
-  program: LoadedProgram,
-  rows: PinRow[],
-  ruleText: string,
-  fields: { readonly runs: string; readonly seed: string; readonly runLengthMs: string },
-): UploadState {
+  const rows = sampleRows(s.nextRowId);
   const next: UploadState = {
     ...s,
-    program,
+    program: sampleProgram(),
     hexError: null,
     reading: null,
     rows,
     nextRowId: s.nextRowId + rows.length,
     importError: null,
-    ruleText,
+    ruleText: sampleRuleText(),
     selected: ["masher"],
     autoMasher: false,
-    fields: { ...fields },
-    lastValid: { runs: Number(fields.runs), runCycles: msToCycles(Number(fields.runLengthMs)) },
+    fields: { ...SAMPLE_FIELDS },
+    lastValid: { runs: Number(SAMPLE_FIELDS.runs), runCycles: msToCycles(Number(SAMPLE_FIELDS.runLengthMs)) },
   };
   return pruneGremlins(next);
 }
 
+export type SampleLoadResult = { ok: true; state: UploadState } | { ok: false };
+
+interface ExtraSample {
+  program: () => LoadedProgram;
+  rows: (firstId: number) => PinRow[];
+  ruleText: string;
+  fields: { readonly runs: string; readonly seed: string; readonly runLengthMs: string };
+}
+
+/** Builds the next state from a bundled sample; { ok: false } if its HEX or pin map is unusable. `s` is never mutated. */
+function loadExtraSample(s: UploadState, sample: ExtraSample): SampleLoadResult {
+  try {
+    const program = sample.program();
+    if (program.text.trim() === "" || program.bytes === 0) return { ok: false };
+    if (!hexCheck(program.name, program.bytes, program.text).ok) return { ok: false };
+    const rows = sample.rows(s.nextRowId);
+    const next: UploadState = {
+      ...s,
+      program,
+      hexError: null,
+      reading: null,
+      rows,
+      nextRowId: s.nextRowId + rows.length,
+      importError: null,
+      ruleText: sample.ruleText,
+      selected: ["masher"],
+      autoMasher: false,
+      fields: { ...sample.fields },
+      lastValid: { runs: Number(sample.fields.runs), runCycles: msToCycles(Number(sample.fields.runLengthMs)) },
+    };
+    return { ok: true, state: pruneGremlins(next) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export function loadChatSketchSample(s: UploadState): SampleLoadResult {
+  return loadExtraSample(s, {
+    program: chatSketchProgram,
+    rows: chatSketchRows,
+    ruleText: CHAT_SKETCH_RULE_TEXT,
+    fields: CHAT_SKETCH_FIELDS,
+  });
+}
+
+export function loadUnjudgeableSample(s: UploadState): SampleLoadResult {
+  return loadExtraSample(s, {
+    program: unjudgeableProgram,
+    rows: unjudgeableRows,
+    ruleText: UNJUDGEABLE_RULE_TEXT,
+    fields: UNJUDGEABLE_FIELDS,
+  });
+}
 // Pin_Table
 
 export function addRow(s: UploadState): UploadState {

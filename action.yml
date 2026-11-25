@@ -1,67 +1,59 @@
 name: hexorcist-gate
-description: >-
-  Runs a compiled ATmega328P program on the Hexorcist emulator, attacks its inputs with seeded scripted
-  gremlins, and fails the job on BROKE or COULDN'T TELL. HELD means no violation was found in the runs made;
-  it is not a proof.
+description: Run the Hexorcist check on a precompiled ATmega328P HEX and fail the job unless no violation is found.
 inputs:
   hex:
-    description: Path to the plain .hex file, relative to the repository root.
+    description: Path to the HEX file, relative to the workspace.
     required: true
   pins:
-    description: Path to the pin map JSON (the page's "Export pin map" format), relative to the repository root.
+    description: Path to the pin fixture JSON.
     required: true
   rules:
-    description: Path to a text file with one rule sentence per line, relative to the repository root.
+    description: Path to the rules text file.
     required: true
   gremlins:
-    description: Comma-separated gremlin ids. Default is the Masher.
+    description: Comma-separated gremlin ids. Leave empty for the default.
     required: false
     default: ""
   runs:
-    description: Tries, 1 to 1000. Default 24.
+    description: Number of emulated runs. Leave empty for the default.
     required: false
     default: ""
   seed:
-    description: Seed, 0 to 4294967295. Default 20261100.
+    description: Campaign seed. Leave empty for the default.
     required: false
     default: ""
 outputs:
   verdict:
-    description: BROKE, HELD or COULDN'T TELL (empty on an input or internal error).
-    value: ${{ steps.run.outputs.verdict }}
+    description: BROKE, HELD or COULDN'T TELL. Empty when the check did not reach a verdict.
+    value: ${{ steps.report.outputs.verdict }}
   exit-code:
-    description: 0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 input or internal error.
-    value: ${{ steps.run.outputs.code }}
+    description: The CLI exit code (0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 input or job error).
+    value: ${{ steps.report.outputs.exit-code }}
 runs:
   using: composite
   steps:
-    - name: Check inputs
+    - name: Validate inputs
       shell: bash
       env:
         IN_HEX: ${{ inputs.hex }}
         IN_PINS: ${{ inputs.pins }}
         IN_RULES: ${{ inputs.rules }}
       run: |
-        missing=""
-        [ -z "$IN_HEX" ] && missing="$missing hex"
-        [ -z "$IN_PINS" ] && missing="$missing pins"
-        [ -z "$IN_RULES" ] && missing="$missing rules"
-        if [ -n "$missing" ]; then
-          printf '## Hexorcist gate\n\nNo check ran: missing input(s):%s\n' "$missing" >> "$GITHUB_STEP_SUMMARY"
-          exit 1
-        fi
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - name: Install the runner
+        for name in hex pins rules; do
+          var="IN_$(echo "$name" | tr a-z A-Z)"
+          if [ -z "${!var}" ]; then
+            echo "Hexorcist gate: required input '$name' is missing, so no check ran." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+        done
+
+    - name: Install
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
-        if ! npm ci --no-audit --no-fund; then
-          printf '## Hexorcist gate\n\nNo check ran: npm ci failed in the action folder.\n' >> "$GITHUB_STEP_SUMMARY"
-          exit 1
-        fi
-    - name: Run the check
+        npm ci || { echo "Hexorcist gate: npm ci failed, so no check ran." >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+
+    - name: Run check
       id: run
       shell: bash
       working-directory: ${{ github.action_path }}
@@ -74,26 +66,28 @@ runs:
         IN_SEED: ${{ inputs.seed }}
       run: |
         set +e
-        args=(--hex "$GITHUB_WORKSPACE/$IN_HEX" --pins "$GITHUB_WORKSPACE/$IN_PINS" --rules "$GITHUB_WORKSPACE/$IN_RULES" --json)
+        abs() { case "$1" in /*) echo "$1" ;; *) echo "$GITHUB_WORKSPACE/$1" ;; esac; }
+        args=(--json --hex "$(abs "$IN_HEX")" --pins "$(abs "$IN_PINS")" --rules "$(abs "$IN_RULES")")
         [ -n "$IN_GREMLINS" ] && args+=(--gremlins "$IN_GREMLINS")
         [ -n "$IN_RUNS" ] && args+=(--runs "$IN_RUNS")
         [ -n "$IN_SEED" ] && args+=(--seed "$IN_SEED")
-        npx tsx cli/bin.ts "${args[@]}" > "$RUNNER_TEMP/hexorcist.json" 2> "$RUNNER_TEMP/hexorcist.err"
+        npm run --silent check -- "${args[@]}" > "$RUNNER_TEMP/hexorcist.json" 2> "$RUNNER_TEMP/hexorcist.err"
         code=$?
         echo "code=$code" >> "$GITHUB_OUTPUT"
-        verdict=$(node -e 'try{process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict)}catch{}' "$RUNNER_TEMP/hexorcist.json")
-        echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
-        cat "$RUNNER_TEMP/hexorcist.err" >&2
         exit 0
-    - name: Write the summary
+
+    - name: Report
+      id: report
       shell: bash
       working-directory: ${{ github.action_path }}
-      run: npx tsx cli/step-summary.ts "$RUNNER_TEMP/hexorcist.json" "${{ steps.run.outputs.code }}" "$RUNNER_TEMP/hexorcist.err"
-    - name: Pass or fail
-      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.code }}
       run: |
-        code="${{ steps.run.outputs.code }}"
-        if [ "$code" != "0" ]; then
-          echo "Hexorcist gate: exit code $code (0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 error)." >&2
-          exit 1
-        fi
+        npx tsx --no-deprecation cli/action-report.ts "$RUNNER_TEMP/hexorcist.json" "$CODE" "$RUNNER_TEMP/hexorcist.err"
+
+    - name: Fail the job unless the check held
+      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.code }}
+      run: |
+        if [ "$CODE" != "0" ]; then exit "${CODE:-3}"; fi

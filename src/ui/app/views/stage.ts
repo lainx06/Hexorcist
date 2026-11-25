@@ -90,9 +90,10 @@ export interface StageView {
   /**
    * One line of text in place of a replay: no strip and no Player. `dim` dims the Scene (COULDN'T TELL, a replay
    * that could not be shown); without it the Scene looks idle (a replay is being made ready).
+   * `solid` makes the note panel fully opaque. No replay controls show in either case.
    */
-  showNote(line: string, dim: boolean): void;
-  /** Reduce error: dimmed Scene, no strip and no Player. The message goes in the Aside's Reduction_Card. */
+  showNote(line: string, dim: boolean, opts?: { solid?: boolean }): void;
+  /** Reduce error: Scene un-dimmed and, on Upload, still blank; no strip and no Player. The message goes in the Aside's Reduction_Card. */
   showReduceError(): void;
   dispose(): void;
 }
@@ -153,6 +154,8 @@ export function createStage(playback: Playback, initial: DeviceId = "crosswalk")
     sceneCard.classList.toggle("is-idle", kind === "idle");
     sceneCard.classList.toggle("is-dim", kind === "dim");
     sceneCard.classList.toggle("is-broke", false);
+    // Every look clears the solid-note hiding; only showNote with `solid` sets it again, after this call.
+    sceneCard.classList.toggle("is-levels-hidden", false);
   }
 
   function drawScene(cursor: number): void {
@@ -349,18 +352,19 @@ export function createStage(playback: Playback, initial: DeviceId = "crosswalk")
       hidePlayer(false);
       drawScene(playback.cursor());
     },
-    showNote(line, dim) {
+    showNote(line, dim, opts) {
       shown = null;
       look(dim ? "dim" : "idle");
       strip.clear();
       stripVisible(false);
       showLabel(null);
       hidePlayer(true);
-      overlayText(null, [line], "stage-note-block");
+      sceneCard.classList.toggle("is-levels-hidden", opts?.solid === true);
+      overlayText(null, [line], opts?.solid === true ? "stage-note-block stage-note-block--solid" : "stage-note-block");
     },
     showReduceError() {
       shown = null;
-      look("dim");
+      look("idle");
       strip.clear();
       stripVisible(false);
       showLabel(null);

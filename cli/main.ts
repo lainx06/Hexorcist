@@ -1,100 +1,95 @@
-// headless-runner: `npm run check -- <args>` (Requirements 1, 3, 4). main() returns the exit code and
-// writes through the io it is given, so tests can call it without a child process.
-import type { CheckArgs, LoadResult, TextReader } from "./input-loader";
+// main(argv, io): parse flags, load input, run the check, print, return the exit code.
+// Every thrown error becomes one stderr line and exit code 3. No clock, no random source, no network.
+import path from "node:path";
 import { loadInput } from "./input-loader";
-import type { CheckInput } from "./input-loader";
-import type { CheckOutcome } from "./run-check";
+import type { CheckArgs, LoaderEnv, LoadResult } from "./input-loader";
 import { exitCodeOf, runCheck, toJson, toSummary } from "./run-check";
+import type { CheckOutcome } from "./run-check";
 
-export interface Io {
-  out(text: string): void;
-  err(text: string): void;
-  reader: TextReader;
-  toolVersion: string;
+export interface MainIo {
+  stdout(text: string): void;
+  stderr(text: string): void;
+  env: LoaderEnv;
+  /** Tests pass stubs; the default is the real loader and runner. */
+  load?: (args: CheckArgs, env: LoaderEnv) => LoadResult;
+  run?: (input: Extract<LoadResult, { ok: true }>["input"]) => CheckOutcome;
 }
 
-export interface Deps {
-  load: (args: CheckArgs, reader: TextReader) => LoadResult;
-  check: (input: CheckInput, toolVersion: string) => CheckOutcome;
-}
-
-const DEFAULT_DEPS: Deps = { load: loadInput, check: (input, v) => runCheck(input, v) };
-
-export const USAGE = [
-  "Usage:",
-  "  npm run check -- --example <crosswalk|garage|heartbeat> [--fixed] [options]",
-  "  npm run check -- --hex <file.hex> --pins <pins.json> --rules <rules.txt> [options]",
-  "Options:",
-  "  --gremlins <id,id>   gremlin ids (default: the example's set, or the Masher for your own program)",
-  "  --runs <n>           tries (1 to 1000)",
-  "  --seed <n>           seed (0 to 4294967295)",
-  "  --run-ms <n>         device time per try in ms (1 to 60000)",
-  "  --json               print one JSON object instead of the summary",
-  "Exit codes: 0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 input or internal error.",
-].join("\n");
-
-const VALUE_FLAGS: Record<string, keyof CheckArgs> = {
+const VALUE_FLAGS: Record<string, "example" | "hex" | "pins" | "rules" | "gremlins"> = {
   "--example": "example",
   "--hex": "hex",
   "--pins": "pins",
   "--rules": "rules",
   "--gremlins": "gremlins",
+};
+const NUMBER_FLAGS: Record<string, "runs" | "seed" | "runMs"> = {
   "--runs": "runs",
   "--seed": "seed",
   "--run-ms": "runMs",
 };
 
-export type Parsed = { ok: true; args: CheckArgs; json: boolean; help: boolean } | { ok: false; reason: string };
+type Parsed = { ok: true; args: CheckArgs; json: boolean } | { ok: false; reason: string };
 
-export function parseArgv(argv: readonly string[]): Parsed {
+/** A number flag that is not a plain integer becomes NaN, which the loader rejects. */
+const toNumber = (text: string): number => (/^-?\d+$/.test(text) ? Number(text) : Number.NaN);
+
+export function parseArgs(argv: readonly string[]): Parsed {
   const args: CheckArgs = {};
   let json = false;
-  let help = false;
   for (let i = 0; i < argv.length; i++) {
-    const a = argv[i] as string;
-    if (a === "--json") json = true;
-    else if (a === "--fixed") args.fixed = true;
-    else if (a === "--help" || a === "-h") help = true;
-    else if (a in VALUE_FLAGS) {
-      const v = argv[i + 1];
-      if (v === undefined || v.startsWith("--")) return { ok: false, reason: `${a} needs a value.` };
-      const key = VALUE_FLAGS[a] as keyof CheckArgs;
-      if (args[key] !== undefined) return { ok: false, reason: `${a} was given twice.` };
-      (args as Record<string, string>)[key] = v;
-      i++;
-    } else return { ok: false, reason: `Unknown argument "${a}". Run with --help for the options.` };
+    const flag = argv[i] as string;
+    if (flag === "--json") {
+      json = true;
+      continue;
+    }
+    if (flag === "--fixed") {
+      args.fixed = true;
+      continue;
+    }
+    const valueKey = VALUE_FLAGS[flag];
+    const numberKey = NUMBER_FLAGS[flag];
+    if (valueKey === undefined && numberKey === undefined) return { ok: false, reason: `Unknown argument "${flag}".` };
+    const value = argv[i + 1];
+    if (value === undefined) return { ok: false, reason: `${flag} needs a value.` };
+    i++;
+    if (valueKey !== undefined) args[valueKey] = value;
+    else if (numberKey !== undefined) args[numberKey] = toNumber(value);
   }
-  return { ok: true, args, json, help };
+  return { ok: true, args, json };
 }
 
-/** One line, no stack trace. */
-const oneLine = (s: string): string => s.replace(/\s*\n\s*/g, " ").trim();
+const oneLine = (s: string): string => s.replace(/\s*[\r\n]+\s*/g, " ");
 
-export function main(argv: readonly string[], io: Io, deps: Deps = DEFAULT_DEPS): 0 | 1 | 2 | 3 {
+/** The `version` field of package.json in the repo folder. */
+const toolVersionOf = (env: LoaderEnv): string => {
+  const pkg: unknown = JSON.parse(env.readText(path.join(env.repoDir, "package.json")));
+  const v = (pkg as { version?: unknown }).version;
+  if (typeof v !== "string") throw new Error("package.json has no version string.");
+  return v;
+};
+
+export function main(argv: readonly string[], io: MainIo): number {
   try {
-    const parsed = parseArgv(argv);
+    const parsed = parseArgs(argv);
     if (!parsed.ok) {
-      io.err(`${oneLine(parsed.reason)}\n`);
+      io.stderr(`${oneLine(parsed.reason)}\n`);
       return 3;
     }
-    if (parsed.help) {
-      io.out(`${USAGE}\n`);
-      return 0;
-    }
-    const loaded = deps.load(parsed.args, io.reader);
+    const loaded = (io.load ?? loadInput)(parsed.args, io.env);
     if (!loaded.ok) {
-      io.err(`${oneLine(loaded.reason)}\n`);
+      io.stderr(`${oneLine(loaded.reason)}\n`);
       return 3;
     }
-    const outcome = deps.check(loaded.input, io.toolVersion);
+    const outcome = (io.run ?? runCheck)(loaded.input);
     if (!outcome.ok) {
-      io.err(`The ${outcome.job} job failed (${outcome.error.kind}): ${oneLine(outcome.error.message)}\n`);
+      io.stderr(`The ${outcome.job} job failed: ${oneLine(outcome.error.message)}\n`);
       return 3;
     }
-    io.out(parsed.json ? toJson(outcome.result) : toSummary(outcome.result));
+    if (parsed.json) io.stdout(toJson(loaded.input, outcome, toolVersionOf(io.env)));
+    else io.stdout(toSummary(loaded.input, outcome));
     return exitCodeOf(outcome);
   } catch (e) {
-    io.err(`Internal error: ${oneLine(e instanceof Error ? e.message : String(e))}\n`);
+    io.stderr(`${oneLine(e instanceof Error ? e.message : String(e))}\n`);
     return 3;
   }
 }

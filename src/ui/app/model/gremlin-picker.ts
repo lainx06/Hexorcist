@@ -35,6 +35,11 @@ export function isCompatible(def: GremlinDefinition, fixture: Fixture): boolean 
   return def.targets.some((t) => fixture.pins.some((p) => matches(t, p)));
 }
 
+/** Upload_Path only: every target must be a digital input present in the fixture. Analog never counts. */
+export function isCompatibleForUpload(def: GremlinDefinition, fixture: Fixture): boolean {
+  return def.targets.every((t) => t.kind !== "analog" && fixture.pins.some((p) => !isAnalog(p) && matches(t, p)));
+}
+
 export function incompatibleReason(def: GremlinDefinition): string {
   const t = def.targets[0];
   if (t.kind === "analog") return "Needs a dial-type input, like a temperature sensor";

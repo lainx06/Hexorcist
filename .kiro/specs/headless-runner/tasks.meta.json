@@ -1,0 +1,297 @@
+{
+  "pbtResults": {
+    "6.1 Verdict record": {
+      "status": "passed",
+      "lastRunTimestamp": 1795560149851
+    }
+  },
+  "executionHistory": {
+    "1.1 Entry-point check, path resolution and Input_Loader": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559315668
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559419331
+      }
+    ],
+    "1.2 runCheck, main and bin": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559426075
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559514018
+      }
+    ],
+    "1.3 npm scripts with --no-deprecation": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559514506
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559548946
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560776723
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560809385
+      }
+    ],
+    "1. CLI foundation: paths, entry point, loader, runCheck, main, scripts": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559549062
+      }
+    ],
+    "2.1 toJson, toSummary, exitCodeOf and --json": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559549576
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559654484
+      }
+    ],
+    "2.2 reasonTruncated": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559655139
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559721706
+      }
+    ],
+    "2. JSON output, exit codes and reasonTruncated": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559721747
+      }
+    ],
+    "3.1 Extend scripts/guard.mjs": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559722646
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559770206
+      }
+    ],
+    "3.2 Determinism test": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559770697
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559943434
+      }
+    ],
+    "3. Guard script coverage and determinism test": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559943499
+      }
+    ],
+    "4.1 action.yml and action-report": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559943998
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559998123
+      }
+    ],
+    "4.2 gate-demo workflow": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795559998741
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560030917
+      }
+    ],
+    "4. GitHub Action and gate demo": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560030976
+      }
+    ],
+    "5.1 JSON-RPC handler and stdio loop": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560031184
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560115349
+      }
+    ],
+    "5. MCP server": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560115412
+      }
+    ],
+    "6.1 Verdict record": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560115920
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560157569
+      }
+    ],
+    "6.2 Demo files and .gitignore": [
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560158170
+      },
+      {
+        "executionId": "647dce05-9928-49b6-bd46-7f7f526c55ec",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560252750
+      }
+    ],
+    "6.3 hook-stop command": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560809987
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560989015
+      }
+    ],
+    "6.4 hook-guard command": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795560989230
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561064522
+      }
+    ],
+    "6. Hook commands, verdict record and demo files": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561064568
+      }
+    ],
+    "7.1 Power at power/hexorcist": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561065136
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561143611
+      }
+    ],
+    "7.2 README section and final scans": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561144240
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561206653
+      }
+    ],
+    "7. Power and README": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561206704
+      }
+    ],
+    "8. Final acceptance task (Requirement 9)": [
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561206918
+      },
+      {
+        "executionId": "fbdb1334-5117-435d-9ca3-928630f2541d",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795561621069
+      }
+    ],
+    "9. Power manifests (Agent Plugins 1.0.0)": [
+      {
+        "executionId": "f8d54a10-5529-4470-896b-684a76e40b05",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795572919222
+      },
+      {
+        "executionId": "e1964dea-e6c7-44a5-a7aa-5fd83446afd6",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573064143
+      }
+    ],
+    "10. Launcher resolves relative paths against the repo folder": [
+      {
+        "executionId": "fd51600f-2a4a-4ba1-bcbc-ed0c48487c82",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573956297
+      },
+      {
+        "executionId": "fd51600f-2a4a-4ba1-bcbc-ed0c48487c82",
+        "chatSessionId": "sess_ae5ef56c-41e6-41d3-9faa-bfdfbe9f32da",
+        "timestamp": 1795573998492
+      }
+    ]
+  }
+}

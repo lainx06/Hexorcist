@@ -1,39 +1,52 @@
-# Runs the hexorcist-gate action (action.yml in this repo) on the Crosswalk example:
-# the fixed build must pass (HELD), the buggy build must make the gate fail (BROKE, exit code 1).
 name: gate-demo
+
 on:
   push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  fixed-build-holds:
+  fixed:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: ./
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check the Crosswalk fixed build
+        uses: ./
         with:
           hex: examples/crosswalk/fixed/fixed.hex
           pins: examples/crosswalk/fixture.json
           rules: examples/crosswalk/rules.txt
-          seed: "20261101"
-  buggy-build-is-caught:
+
+  buggy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - id: gate
-        uses: ./
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check the Crosswalk buggy build
+        id: gate
         continue-on-error: true
+        uses: ./
         with:
           hex: examples/crosswalk/buggy/buggy.hex
           pins: examples/crosswalk/fixture.json
           rules: examples/crosswalk/rules.txt
-          seed: "20261101"
-      - name: The gate must report BROKE with exit code 1
-        shell: bash
+      - name: Fail unless the gate caught the bug
+        env:
+          VERDICT: ${{ steps.gate.outputs.verdict }}
+          EXIT_CODE: ${{ steps.gate.outputs.exit-code }}
         run: |
-          echo "verdict=${{ steps.gate.outputs.verdict }} exit-code=${{ steps.gate.outputs.exit-code }}"
-          test "${{ steps.gate.outputs.verdict }}" = "BROKE"
-          test "${{ steps.gate.outputs.exit-code }}" = "1"
+          if [ "$VERDICT" != "BROKE" ] || [ "$EXIT_CODE" != "1" ]; then
+            echo "Expected BROKE with exit code 1, got '$VERDICT' with '$EXIT_CODE'."
+            exit 1
+          fi

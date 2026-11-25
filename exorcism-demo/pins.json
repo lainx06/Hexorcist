@@ -1,7 +1,0 @@
-{
-  "pins": [
-    { "signal": "STOP", "port": "D", "bit": 2, "direction": "input", "activeLevel": "low" },
-    { "signal": "MOTOR", "port": "B", "bit": 0, "direction": "output" },
-    { "signal": "LED", "port": "B", "bit": 5, "direction": "output" }
-  ]
-}

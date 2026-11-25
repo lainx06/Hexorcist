@@ -1,9 +1,6 @@
 {
   "source": "exorcism-demo/sketch/sketch.ino",
-  "build": [
-    "node",
-    "exorcism-demo/build.mjs"
-  ],
+  "build": ["node", "exorcism-demo/build.mjs"],
   "hex": "exorcism-demo/build/sketch.hex",
   "pins": "examples/crosswalk/fixture.json",
   "rules": "exorcism-demo/crosswalk-full-rules.txt",

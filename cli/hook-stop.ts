@@ -1,166 +1,208 @@
-// headless-runner: the Agent Stop hook command (Requirement 7.3, 7.4).
-//   npx tsx cli/hook-stop.ts [config.json] [--block] [--max-blocks N]
-// When the program changed since the last check: optional build, then the same check as `npm run check`,
-// then one verdict line and the state file. Without --block it always exits 0 (report only).
-// With --block it exits 2 on BROKE, COULDN'T TELL or a failed build, with the message on stderr too, so a
-// hook runner that treats exit 2 as "keep working" sends the agent back (UNVERIFIED for Kiro). After
-// --max-blocks blocks in a row (default 3) it stops blocking and says so; a HELD resets the count.
+// Stop hook command: build, check, write the Verdict_Record, print one verdict line, count blocks.
+// No clock, no random source, no network. The build runs with spawnSync and no shell.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import type { CheckInput, LoadResult, TextReader } from "./input-loader";
-import { loadInput } from "./input-loader";
-import { isMain, nodeReader, REPO_ROOT, toolVersion } from "./node-io";
-import type { CheckOutcome, ResultObject } from "./run-check";
-import { runCheck } from "./run-check";
-import type { HookConfig } from "./hook-common";
-import { DEFAULT_CONFIG, argsOf, programHash, readConfig, readState, writeState } from "./hook-common";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { isEntryPoint } from "./entry";
+import { configToArgs, invocationDirOf, loadInput, parseLoopConfig, resolveUserPath } from "./input-loader";
+import type { LoaderEnv } from "./input-loader";
+import { exitCodeOf, runCheck } from "./run-check";
+import type { CheckRun } from "./run-check";
+import { hexSha256, serializeRecord } from "./verdict-record";
+import type { RecordVerdict } from "./verdict-record";
 
-export const BLOCKS_PATH = ".hexorcist/stop-blocks.json";
+export const DEFAULT_MAX_BLOCKS = 3;
+
+export interface StopDecision {
+  exitCode: 0 | 2;
+  nextCount: number;
+  limitReached: boolean;
+}
+
+/** Pure. HELD resets the counter; without --block nothing changes; at the limit the hook lets go. */
+export function decideStop(p: {
+  verdict: RecordVerdict;
+  block: boolean;
+  count: number;
+  max: number;
+}): StopDecision {
+  if (p.verdict === "HELD") return { exitCode: 0, nextCount: 0, limitReached: false };
+  if (!p.block) return { exitCode: 0, nextCount: p.count, limitReached: false };
+  if (p.count < p.max) return { exitCode: 2, nextCount: p.count + 1, limitReached: false };
+  return { exitCode: 0, nextCount: p.count, limitReached: true };
+}
+
+export interface BuildResult {
+  status: number | null;
+  stderr: string;
+  error?: string;
+}
 
 export interface StopIo {
-  out(t: string): void;
-  err(t: string): void;
+  stdout(text: string): void;
+  stderr(text: string): void;
+  env: LoaderEnv;
+  /** Tests pass a stub. The default is spawnSync with no shell. */
+  build?: (command: string, args: string[], cwd: string) => BuildResult;
 }
 
-export interface StopDeps {
-  root: string;
-  reader: TextReader;
-  toolVersion: string;
-  build: (cmd: string[], root: string) => { ok: boolean; output: string };
-  load: (args: Parameters<typeof loadInput>[0], reader: TextReader) => LoadResult;
-  check: (input: CheckInput, toolVersion: string) => CheckOutcome;
+const oneLine = (s: string): string => s.replace(/\s*[\r\n]+\s*/g, " ").trim();
+
+const defaultBuild = (command: string, args: string[], cwd: string): BuildResult => {
+  const r = spawnSync(command, args, { cwd, shell: false, encoding: "utf8" });
+  return { status: r.status, stderr: r.stderr ?? "", ...(r.error !== undefined ? { error: r.error.message } : {}) };
+};
+
+const lastLine = (s: string): string => {
+  const lines = s.split(/\r?\n/).filter((l) => l.trim() !== "");
+  return lines.length > 0 ? (lines[lines.length - 1] as string) : "";
+};
+
+function parseFlags(rest: readonly string[]): { ok: true; block: boolean; max: number } | { ok: false; reason: string } {
+  let block = false;
+  let max = DEFAULT_MAX_BLOCKS;
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i] as string;
+    if (a === "--block") block = true;
+    else if (a === "--max-blocks") {
+      const v = rest[i + 1];
+      if (v === undefined || !/^\d+$/.test(v)) return { ok: false, reason: "--max-blocks needs a whole number." };
+      max = Number(v);
+      i++;
+    } else return { ok: false, reason: `Unknown argument "${a}".` };
+  }
+  return { ok: true, block, max };
 }
 
-export function defaultDeps(root: string = REPO_ROOT): StopDeps {
-  return {
-    root,
-    reader: nodeReader(root),
-    toolVersion: toolVersion(),
-    build: (cmd, cwd) => {
-      const [exe, ...rest] = cmd as [string, ...string[]];
-      const r = spawnSync(exe, rest, { cwd, encoding: "utf8", shell: process.platform === "win32" });
-      return { ok: r.error === undefined && r.status === 0, output: `${r.stdout ?? ""}${r.stderr ?? ""}${r.error ? r.error.message : ""}` };
-    },
-    load: loadInput,
-    check: (input, v) => runCheck(input, v),
-  };
-}
-
-const PREFIX = "Hexorcist:";
-
-function lastLines(text: string, n: number): string {
-  const lines = text.replace(/\r/g, "").trimEnd().split("\n");
-  return lines.slice(-n).join("\n");
-}
-
-function ms(cycle: number): string {
-  const tenths = Math.round(cycle / 1600);
-  return `${Math.floor(tenths / 10)}.${tenths % 10} ms`;
-}
-
-/** One verdict line, then the details. */
-export function stopReport(r: ResultObject): string {
-  if (r.verdict === "HELD") return `${PREFIX} HELD. ${r.text}\n`;
-  if (r.verdict === "COULDN'T TELL") return `${PREFIX} COULDN'T TELL. ${r.reason}\n`;
-  const moves = r.reducedList.map((e) => {
-    const rec = e as unknown as Record<string, unknown>;
-    return `  at ${ms(e.cycle)}: ${e.signal} = ${String(rec.value ?? "")}${typeof rec.gremlinId === "string" ? ` (${rec.gremlinId})` : ""}`;
-  });
-  return [
-    `${PREFIX} BROKE. ${r.violation.rule}`,
-    `Try ${r.try} of ${r.runs} broke it. The smallest replay this reducer found has ${r.movesAfter} of ${r.movesBefore} moves:`,
-    ...moves,
-    `Rule broken at ${ms(r.violation.cycle)}. Fingerprint ${r.fingerprint}.`,
-    "Fix the program so this rule holds, then finish again to re-check.",
-    "",
-  ].join("\n");
-}
-
-function readBlocks(root: string): number {
+function readCount(file: string): number {
   try {
-    const n = (JSON.parse(readFileSync(resolve(root, BLOCKS_PATH), "utf8")) as { blocks?: unknown }).blocks;
-    return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : 0;
+    const v: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
+    const c = typeof v === "object" && v !== null ? (v as { count?: unknown }).count : undefined;
+    return typeof c === "number" && Number.isInteger(c) && c >= 0 ? c : 0;
   } catch {
     return 0;
   }
 }
 
-function writeBlocks(root: string, blocks: number): void {
-  const p = resolve(root, BLOCKS_PATH);
-  mkdirSync(dirname(p), { recursive: true });
-  writeFileSync(p, `${JSON.stringify({ blocks }, null, 2)}\n`);
-}
+export function run(argv: readonly string[], io: StopIo): number {
+  const stateDir = path.join(io.env.repoDir, ".hexorcist");
+  const recordFile = path.join(stateDir, "last-verdict.json");
+  const countFile = path.join(stateDir, "stop-blocks.json");
 
-export function stopMain(argv: readonly string[], io: StopIo, deps: StopDeps): 0 | 2 {
-  let configPath = DEFAULT_CONFIG;
-  let block = false;
-  let maxBlocks = 3;
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i] as string;
-    if (a === "--block") block = true;
-    else if (a === "--max-blocks") {
-      const n = Number(argv[++i]);
-      if (Number.isInteger(n) && n >= 0) maxBlocks = n;
-    } else configPath = a;
-  }
-
-  const root = deps.root;
-  const say = (t: string): 0 => {
-    io.out(t);
+  const noCheck = (cause: string): number => {
+    try {
+      fs.rmSync(recordFile, { force: true });
+    } catch {
+      /* nothing more to do; the line below still tells the truth */
+    }
+    io.stdout(`No check ran: ${oneLine(cause)}\n`);
     return 0;
   };
-  /** A failing result: block (exit 2) unless the cap is reached. */
-  const fail = (t: string): 0 | 2 => {
-    io.out(t);
-    if (!block) return 0;
-    const used = readBlocks(root);
-    if (used >= maxBlocks) {
-      io.out(`${PREFIX} stopped blocking after ${maxBlocks} tries in a row; the result above stands.\n`);
-      return 0;
+
+  try {
+    const configArg = argv[0];
+    if (configArg === undefined || configArg.startsWith("--")) return noCheck("no loop config path was given.");
+    const flags = parseFlags(argv.slice(1));
+    if (!flags.ok) return noCheck(flags.reason);
+
+    let configText: string;
+    try {
+      configText = io.env.readText(resolveUserPath(io.env, configArg));
+    } catch {
+      return noCheck(`the loop config "${configArg}" could not be read.`);
     }
-    writeBlocks(root, used + 1);
-    io.err(t);
-    return 2;
-  };
+    const parsed = parseLoopConfig(configText);
+    if (!parsed.ok) return noCheck(parsed.reason);
+    const config = parsed.config;
 
-  const cfg = readConfig(root, configPath);
-  if (!cfg.ok) return say(`${PREFIX} no check ran: ${cfg.reason}\n`);
-  const c: HookConfig = cfg.config;
+    const build = (io.build ?? defaultBuild)(config.build[0] as string, config.build.slice(1), io.env.repoDir);
+    if (build.error !== undefined) return noCheck(`the build could not start: ${build.error}`);
+    if (build.status !== 0) {
+      const why = lastLine(build.stderr);
+      return noCheck(`the build exited with code ${String(build.status)}${why !== "" ? `: ${why}` : "."}`);
+    }
 
-  const before = programHash(root, c);
-  if (before === null) return say(`${PREFIX} no check ran: ${c.source ?? c.hex} is missing.\n`);
-  const last = readState(root);
-  if (last !== null && last.programSha256 === before) {
-    const msg = `${PREFIX} no check ran: the program has not changed since the last check (${last.verdict}).\n`;
-    return last.verdict === "HELD" ? say(msg) : fail(msg);
+    const hexPath = path.resolve(io.env.repoDir, config.hex);
+    let hexBytes: Uint8Array;
+    try {
+      hexBytes = fs.readFileSync(hexPath);
+    } catch {
+      return noCheck(`the HEX file "${config.hex}" is missing.`);
+    }
+
+    const loaded = loadInput(configToArgs(config, io.env.repoDir), io.env);
+    if (!loaded.ok) return noCheck(loaded.reason);
+    const outcome = runCheck(loaded.input);
+    if (!outcome.ok) return noCheck(`the ${outcome.job} job failed: ${outcome.error.message}`);
+
+    const run: CheckRun = outcome.result;
+    const verdict = run.verdict;
+    let line: string;
+    if (verdict.verdict === "HELD") {
+      line = `HELD: ${verdict.text}`;
+    } else if (verdict.verdict === "COULDN'T TELL") {
+      line = `COULDN'T TELL: ${verdict.reason}`;
+    } else {
+      const tryNo = (run.campaign.violatingRunIndex ?? verdict.trace.runIndex) + 1;
+      const parts = [
+        `BROKE: ${verdict.trace.violation.rule} at cycle ${verdict.trace.violation.cycle}.`,
+        `Try ${tryNo} of ${run.campaign.requestedRuns}, seed ${loaded.input.campaignSeed}.`,
+      ];
+      if (run.reduction !== undefined && run.replay !== undefined) {
+        parts.push(
+          `Moves ${run.reduction.originalEventCount} to ${run.reduction.reducedEventCount} (the smallest replay this reducer found).`,
+          `Fingerprint ${run.replay.fingerprint}.`,
+          `Reduced moves: ${JSON.stringify(run.reduction.reducedList)}`,
+        );
+      }
+      line = parts.join(" ");
+    }
+    line = oneLine(line);
+
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(
+      recordFile,
+      serializeRecord({
+        verdict: verdict.verdict,
+        exitCode: exitCodeOf(outcome),
+        hexSha256: hexSha256(hexBytes),
+        fingerprint: run.replay?.fingerprint ?? null,
+      }),
+    );
+
+    const decision = decideStop({
+      verdict: verdict.verdict,
+      block: flags.block,
+      count: readCount(countFile),
+      max: flags.max,
+    });
+    if (flags.block && (verdict.verdict === "HELD" || decision.exitCode === 2)) {
+      fs.writeFileSync(countFile, `${JSON.stringify({ count: decision.nextCount }, null, 2)}\n`);
+    }
+    if (decision.exitCode === 2) {
+      io.stderr(`${line}\n`);
+      return 2;
+    }
+    io.stdout(`${line}\n`);
+    if (decision.limitReached) {
+      io.stdout(`Block limit reached after ${flags.max} blocks in a row, so this stop is allowed.\n`);
+    }
+    return 0;
+  } catch (e) {
+    return noCheck(e instanceof Error ? e.message : String(e));
   }
-
-  if (c.build !== undefined && (c.source !== undefined || !existsSync(resolve(root, c.hex)))) {
-    const b = deps.build(c.build, root);
-    if (!b.ok) return fail(`${PREFIX} no check ran: the build failed.\n${lastLines(b.output, 20)}\n`);
-  }
-
-  const loaded = deps.load(argsOf(c, root), deps.reader);
-  if (!loaded.ok) return fail(`${PREFIX} no check ran: ${loaded.reason}\n`);
-  const outcome = deps.check(loaded.input, deps.toolVersion);
-  if (!outcome.ok) return fail(`${PREFIX} no check ran: the ${outcome.job} job failed: ${outcome.error.message}\n`);
-
-  const r = outcome.result;
-  writeState(root, {
-    verdict: r.verdict,
-    exitCode: r.verdict === "HELD" ? 0 : r.verdict === "BROKE" ? 1 : 2,
-    programSha256: before,
-    fingerprint: r.verdict === "BROKE" ? r.fingerprint : null,
-  });
-  if (r.verdict === "HELD") {
-    writeBlocks(root, 0);
-    return say(stopReport(r));
-  }
-  return fail(stopReport(r));
 }
 
-const isEntry = isMain(import.meta.url);
-if (isEntry) {
-  process.exitCode = stopMain(process.argv.slice(2), { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) }, defaultDeps());
+if (isEntryPoint(import.meta.url, process.argv[1])) {
+  const repoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  process.exitCode = run(process.argv.slice(2), {
+    stdout: (t) => void process.stdout.write(t),
+    stderr: (t) => void process.stderr.write(t),
+    env: {
+      readText: (p) => fs.readFileSync(p, "utf8"),
+      invocationDir: invocationDirOf(process.env, process.cwd()),
+      repoDir,
+    },
+  });
 }

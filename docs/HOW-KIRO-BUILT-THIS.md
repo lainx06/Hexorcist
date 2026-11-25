@@ -1,140 +1,78 @@
 # How Kiro built Hexorcist
-
-Hexorcist is being built in Kiro during the Kiroween 2026 submission period, starting Nov 12, 2026. This page lists every Kiro feature
-the project uses, where it lives in the repository, and what it did. Numbers come from the repository, the
-CI runs and Kiro's own credit counter. Anything not yet tried is marked as such.
-
+This page lists the Kiro features the repository uses, where each one lives, and what the files show. It says only what the files and the git history show. Nothing here is a claim about how much time or how many credits anything took, because the repository does not record that.
+## Disclosure: code originally written with another AI coding assistant
+Some code was originally written with another AI coding assistant, not with Kiro. That code was the command-line runner (`cli/`), the MCP server (`mcp/`), the Kiro power (`power/hexorcist/`), the hook scripts (`cli/hook-stop.ts`, `cli/hook-guard.ts`), the GitHub Action (`action.yml`, `.github/workflows/gate-demo.yml`), the benchmark scripts (`exorcism-demo/`), and a few text changes in the web app.
+On Nov 24, 2026, one commit removed all of it: `5d54110`, "Remove code written outside Kiro; Kiro rebuilds it next (see README)". It changed 77 files. Kiro then rebuilt the code from its own specs:
+| Spec | What it rebuilt | Commit |
+|---|---|---|
+| `headless-runner` | CLI, JSON output, GitHub Action, MCP server, hook scripts, power | `6a081de` |
+| `upload-samples` | The two extra sample programs, the microsecond wording, the fixed-program headline, the COULDN'T TELL screen text | `175f7f0`, then `3c8a85c` (task 15) |
+| `benchmark-tools` | `exorcism-demo/try.mjs`, `measure-overlap.ts`, the config files, the motor files, the benchmark README | `5c69c37` |
+The header of `headless-runner/tasks.md` says the plan was written "fresh by Kiro" and that nothing was restored from git history, an earlier branch or a stash. The git history still holds the earlier versions, and commits from the other assistant end in "(claude)".
+The same assistant also planned or drafted other work on this repo: spec prompts, the steering files, drafts of the hook, agent and workflow files, review triage and acceptance checks. Those files are in this repository now.
 ## At a glance
-
-| Kiro feature | How Hexorcist uses it | Where |
+| Kiro feature | What the repository has | Where |
 |---|---|---|
-| Specs | 15 specs, each with requirements, design and tasks. Kiro wrote all 15 and carried out 14 of them: the emulator bridge, gremlins, rule compiler, reducer, examples, verdicts, the whole web page, and `exorcism-fix` (below). | [`.kiro/specs/`](../.kiro/specs/) |
-| Steering | 5 always-on files: determinism, the exact verdict texts, scope, test rules, product. | [`.kiro/steering/`](../.kiro/steering/) |
-| Hooks | 5 hooks on 4 different triggers (below). | [`.kiro/hooks/`](../.kiro/hooks/) |
-| Custom agent | `rule-skeptic`, read-only, argues with a rule before you run it. Every answer opens with "Advice, not a verdict." ([a run](#the-rule-skeptic-agent-on-a-bad-rule-set-nov-24-2026)) | [`.kiro/agents/rule-skeptic.md`](../.kiro/agents/rule-skeptic.md) |
-| Power | `hexorcist`: the `check-firmware` skill plus a local MCP server, installed from a folder. | [`power/hexorcist/`](../power/hexorcist/) |
-| MCP | The power's server exposes `check` and `capabilities`; in Kiro the calls show as `@hexorcist/hexorcist/<tool>`. | [`mcp/`](../mcp/) |
-
-## Specs: from sentence to code
-
-Each spec went requirements → design → tasks → code, with property tests written inside the task that
-built the code they test. Two of the 14 are bugfix specs. `input-pullup` came from a real emulator issue
-found on day one: an unconnected button with a pull-up resistor read as pressed.
-
-Spec #14, `headless-runner`, is the exception: Kiro wrote its requirements, design and tasks (12.4 credits),
-and after Kiro's credit limit Claude implemented the tasks in pull requests the owner reviewed. Each task
-in [its `tasks.md`](../.kiro/specs/headless-runner/tasks.md) names the pull request that built it.
-
-## Steering: rules Kiro could not forget
-
-- `determinism.md`: the checker counts CPU cycles and uses a seeded random generator; no clock, no
-  network, no AI in the verdict path.
-- `verdicts.md`: exactly three answers, BROKE, HELD and COULDN'T TELL, with the exact HELD text
-  ("No violation found in N emulated runs of this gremlin set. Not a proof.").
-- `scope-and-ip.md`, `testing.md`, `product.md`: what is in scope, how tests are written (and that a failing
-  acceptance test is reported, never weakened), and the words the product may not use about itself.
-
+| Specs | 17 spec folders | [`.kiro/specs/`](../.kiro/specs/) |
+| Steering | 5 files, all `inclusion: always` | [`.kiro/steering/`](../.kiro/steering/) |
+| Hooks | 5 hook files on 4 triggers | [`.kiro/hooks/`](../.kiro/hooks/) |
+| Custom agent | `rule-skeptic`, read-only | [`.kiro/agents/rule-skeptic.md`](../.kiro/agents/rule-skeptic.md) |
+| Power and MCP | `hexorcist` power with a stdio MCP server and one skill | [`power/hexorcist/`](../power/hexorcist/), [`mcp/`](../mcp/) |
+| Benchmark | Sketches from AI chat tools, checked with the runner | [`exorcism-demo/benchmark/`](../exorcism-demo/benchmark/README.md) |
+## Specs
+Every spec folder has `design.md` and `tasks.md`. Fifteen have `requirements.md` and two, the bugfix specs, have `bugfix.md` instead. Sixteen have a `.config.kiro` file that names the spec type (feature or bugfix) and the workflow. Twelve have a `tasks.meta.json` that records, for each task, an execution id, a chat session id and a timestamp.
+| Spec | What it is |
+|---|---|
+| `emulator-bridge` | The only module that imports avr8js. Loads a HEX, runs it at 16 MHz, turns pin changes into cycle-stamped events, applies input events at exact cycles. |
+| `bridge-output-scan` | A speed change that must not change behaviour. It holds `BASELINE-HASH.txt` (a SHA-256 taken Nov 15, 2026). |
+| `input-pullup` | Bugfix. With a pull-up resistor and nothing connected, a button read as pressed. |
+| `gremlin-engine` | Seeded input disturbances and the Campaign of runs. |
+| `rule-compiler` | Turns the plain-English rule sentences into a JSON form, then into one deterministic checker. |
+| `trace-reducer` | Shrinks a BROKE trace; also the plain failure story and the fingerprint. |
+| `example-firmware` | The buggy and fixed example sketches, their pin maps, rules and campaign settings. |
+| `honest-verdicts` | Unmodelled-peripheral detection, so a program that uses one gets COULDN'T TELL. Its `report-notes.md` records a calibration run. |
+| `held-text` | Bugfix. The HELD text did not say "emulated" and read "1 runs" for one run. |
+| `bench-ui-core`, `bench-ui-examples`, `bench-ui-stage`, `bench-ui-upload` | The web app, in four stages: the Crosswalk flow, the three-example gallery and plain view, the stage layout, and the "Your own program" path. |
+| `headless-runner` | The terminal check, Action, MCP server, hook scripts and power. All 24 task lines are ticked. |
+| `upload-samples` | Small web-app additions. 38 task lines are ticked; 7 optional test tasks (marked `*`) are not. |
+| `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. That done-guard run used the earlier hook scripts, which were removed in `5d54110` and rebuilt by Kiro in `6a081de`. |
+| `benchmark-tools` | The benchmark scripts and README. 29 task lines are ticked; 8 optional test tasks are not, each noted "skipped by the owner, not done". |
+`upload-samples/requirements.md` names one allowed test change (the expected text in Property 21 of `tests/ui/plain-story.property.test.ts`, for spans under 8000 cycles only), and says acceptance tests written by the user must not be changed, weakened or deleted to make them pass.
+The `headless-runner` plan says its property tests use fast-check, with at least 100 iterations each, tagged like `Feature: headless-runner, Property N: <title>`. Tests are evidence, not proof.
+## Steering
+Five files, each marked `inclusion: always`:
+- `determinism.md`: time is integer CPU cycles; all randomness comes from one seeded generator passed in explicitly; replay is a fresh emulator with the same HEX, fixture and event list; the checker has no AI and makes no network call.
+- `verdicts.md`: the exact verdict strings. HELD reads "No violation found in N emulated runs of this gremlin set. Not a proof." The reducer's output is called "the smallest replay this reducer found".
+- `scope-and-ip.md`: ATmega328P at 16 MHz through avr8js only, no compile server, avr8js behind an `EmulatorBridge` interface, TypeScript, Vite, GitHub Pages, original art only.
+- `testing.md`: an acceptance test written into a prompt or spec is never changed, weakened or deleted to make it pass; disagreements are reported and wait for a decision. Debug scripts are deleted before a task is reported done. Tests are evidence, not proof.
+- `product.md`: what the product is, the voice, and the words it may not use about itself.
 ## Hooks
-
-| Hook | Trigger | What it does |
-|---|---|---|
-| `guard-before-task` | Pre Task Execution | Runs `scripts/guard.mjs` before every spec task; blocks the task if copy uses a banned claim word or engine code reads the clock. It blocked a real task once, when a design doc listed the banned words. |
-| `engine-tests-on-save` | File Save | Runs the engine tests whenever Kiro edits engine code. |
-| `examples-on-save` | File Save | Recompiles the example sketches and runs their tests whenever Kiro edits one. |
-| `hexorcist-check-on-stop` | Agent Stop | When the agent finishes, builds the demo sketch and runs the same check as `npm run check`; prints one verdict line, which Kiro adds to the agent's context. |
-| `hexorcist-done-guard` | Pre Tool Use (`spec` tools) | Blocks marking a spec task done unless the last check of the current program was HELD. Seen blocking Kiro on Nov 24 ([below](#the-done-guard-blocks-a-spec-task-nov-24-2026)). |
-
-## The done-guard blocks a spec task (Nov 24, 2026)
-
-Starting from the same chat-written crossing sketch, recorded as BROKE, Kiro in Spec mode wrote a one-task
-spec, `exorcism-fix`, and ran the task (2.47 credits, 1 minute 22 seconds):
-
-1. It checked the sketch with the power: BROKE, WALK and DON'T WALK both on, because `setState()` wrote its
-   pins one at a time.
-2. It changed `setState()` to switch off the lights that should be off, then switch the others on, and checked
-   again: HELD.
-3. It tried to mark the task done. The `hexorcist-done-guard` hook blocked the call: the sketch had changed
-   since the last recorded check. Kiro read the hook's message, left the task in progress and ended its turn
-   so the Agent Stop hook could run the check.
-
-The hook saw the exact call Kiro makes to finish a task: tool `task_update`, with the tasks file, the task
-and `status: "completed"`. The guard now matches that call exactly. The `guard-before-task` hook also ran
-when the task started.
-
-## The rule-skeptic agent, on a bad rule set (Nov 24, 2026)
-
-Given three rules for the motor demo's pin map and a 1000 ms run, two of them flawed on purpose, the
-read-only `rule-skeptic` agent answered in 7 seconds for 0.15 credits, reading files only:
-
-- It opened with "Advice, not a verdict."
-- Rule 1 (`all of (FORWARD is 1, REVERSE is 1) must never happen.`): both signals are mapped outputs; useful.
-- Rule 2 (`MOTOR is 1 must never happen.`): MOTOR is not in the pin map, and it would not guess a pin.
-- Rule 3 (`Within 2000 ms after FWD_BUTTON is 0 becomes true, FORWARD is 1 must be true.`): the trigger can
-  happen, but a 2000 ms window never closes inside a 1000 ms run, so a run cannot judge it.
-- Gap: nothing covers STOP. It suggested `Within 200 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0
-  must be true.` and the same for REVERSE, both in accepted sentence forms.
-
-The same three rules sent to the default agent, which ran the check through the power, came back COULDN'T
-TELL with a reason cut at the engine's 200-character limit; the agent then guessed wrongly that the valid
-`all of` rule was unsupported. That is why the CLI and MCP output now carry `reasonTruncated`.
-
-## The Exorcism Loop (Nov 23, 2026)
-
-We asked four chat AIs, on fast and on high-thinking settings, to write a pedestrian-crossing sketch from
-one fixed brief, and checked all eight against seven rules that restate the brief
-([benchmark](../exorcism-demo/benchmark/README.md)). All eight broke the same rule: each one switches WALK
-on about 5 microseconds before it switches DON'T WALK off.
-
-Then Kiro got one of them (GPT-6, high thinking, unedited) with the hexorcist power:
-
-1. Kiro built it and called the power's `check` tool: **BROKE**, WALK and DON'T WALK both on.
-2. It swapped the two writes and checked again: **BROKE**, car green and car red both on at the end of the
-   crossing.
-3. It changed the light helper to switch each light off before the next one on: **HELD**, and it quoted the
-   HELD text word for word.
-4. When it finished, the Agent Stop hook ran.
-
-45 seconds, 0.58 credits. The fixed sketch then held 200 tries with two gremlins, and a replay shows WALK
-and DON'T WALK never on together.
-
-## What surprised us
-
-Kiro's file hooks fire on the agent's own edits, not on the person's. So the agent checks its own work,
-and the person can edit right next to it without setting anything off.
-
-## AI development strategy
-
-- **Roles.** Kiro was the builder. Claude was the planning lead: spec prompts, review triage, acceptance
-  values, and after the credit limit the follow-up code, disclosed commit by commit. ChatGPT, Gemini and
-  DeepSeek gave outside reviews. The owner approved every change and every push.
-- **AI builds the tool; no AI judges the firmware.** The checker is deterministic: the same program, rules
-  and seed always give the same verdict, the same replay and the same fingerprint, in the browser, the
-  terminal, CI and MCP.
-- **Pinned acceptance values.** Each example has a pinned fingerprint, try number and replay length. A
-  spec could not finish by editing them; a mismatch had to be reported with evidence.
-- **Honest verdicts.** HELD always says "Not a proof", and a program that uses a chip part the emulator
-  does not model gets COULDN'T TELL instead of a pass.
-
-## Who wrote what
-
-Kiro wrote the web app, the engine and their tests in 13 specs, and wrote the requirements, design and tasks
-of spec #14. The author
-directed the project, approved every change and ran the browser checks. Claude acted as the planning lead
-(spec prompts, review triage, acceptance values, the README, and the starting drafts of the hook, agent and
-workflow files, which the author installed and ran in Kiro) and, after Kiro's credit limit, wrote
-follow-up code in pull requests the author reviewed and merged. Each of those commit messages ends in
-`(claude)`.
-
-Code written by Claude after the Kiro credit limit:
-
-- Upload page: hide analog gremlins on uploads, show the "pick a gremlin" message only after a click, page description and no-script text, and the "Try one it can't check" sample.
-- Terminal runner (`cli/`), built from Kiro spec #14 `headless-runner` (`.kiro/specs/headless-runner/`): `npm run check`, JSON output, exit codes, and its tests in `tests/cli/`; the GitHub Action (`action.yml`, `cli/step-summary.ts`, `gate-demo.yml`) and the MCP server (`mcp/`), with tests in `tests/mcp/`.
-- Hook commands for the Exorcism Loop (`cli/hook-stop.ts`, `cli/hook-guard.ts`), the `exorcism-demo/` device files, and two plain C test programs for it (`tests/cli/conveyor/`).
-- The Kiro power files (`power/hexorcist/`: `plugin.json`, `mcp.json`, the `check-firmware` skill).
-- "Try a chat-written sketch" and the microsecond wording in stories; the fix view's HELD headline; the
-  COULDN'T TELL screen copy.
-
-## Credits
-
-About 3,940 of the 4,000 Kiro credits were used on the specs and on follow-up fix passes. The upload-path
-spec used about 200, spec #14 used 12.4, the power's capabilities test 0.12, and the Exorcism Loop 0.58.
+| File | Trigger | Matcher | Command |
+|---|---|---|---|
+| `guard-before-task` | `PreTaskExec` | none | `node scripts/guard.mjs` |
+| `engine-tests-on-save` | `PostFileSave` | `src/engine/**/*.ts` | `npx vitest --run` |
+| `examples-on-save` | `PostFileSave` | `examples/<name>/buggy` or `fixed` `.ino` files | `node scripts/build-examples.mjs`, then `npx vitest --run tests/examples` |
+| `hexorcist-check-on-stop` | `Stop` | none | `npx tsx --no-deprecation cli/hook-stop.ts exorcism-demo/loop-check.json --block` |
+| `hexorcist-done-guard` | `PreToolUse` | `spec` | `npx tsx --no-deprecation cli/hook-guard.ts exorcism-demo/loop-check.json` |
+- `scripts/guard.mjs` checks for claim words in the app, README, `docs/`, `cli/`, `mcp/` and `power/`; clock, random and network use in engine and runner code; that only `src/engine/emulator-bridge.ts` imports avr8js; and a board brand word in the app. It exits 0 when clean and 2 otherwise.
+- `hook-stop.ts` builds the demo sketch, runs the check, writes `.hexorcist/last-verdict.json` (verdict, exit code, SHA-256 of the HEX, fingerprint) and prints one line. With `--block`, a BROKE or COULDN'T TELL verdict exits 2 so the agent is sent back to work, up to 3 times in a row (`--max-blocks` changes that). A HELD resets the count.
+- `hook-guard.ts` acts only on a `task_update` tool call whose status is `completed` or `done`. It exits 2 unless the recorded verdict is HELD and the recorded HEX hash matches the HEX file now. It sees only Kiro's task tool (`task_update` with status `completed`). A change to `tasks.md` made by a shell command or a file edit is not blocked.
+- The two runner hook files currently read `"enabled": true`. `hexorcist-check-on-stop` has a 300-second timeout. The `.hexorcist/` folder is in `.gitignore`.
+## The custom agent
+`rule-skeptic` has only the `read` tool. Every answer opens with "Advice, not a verdict." It reads the rule and the pin map and says, in at most 12 lines, whether signals are mapped, whether a gremlin can cause the trigger, whether a time limit fits the run length, and what the rule leaves out. It never says BROKE, HELD or COULDN'T TELL as a result.
+## The power and the MCP server
+`power/hexorcist/` holds `plugin.json`, `mcp.json` (a small Node launcher that starts `mcp/bin.ts` from `HEXORCIST_ROOT`, and logs failures to `hexorcist-launcher.log` in the temp folder) and `skills/check-firmware/SKILL.md`. The server (`mcp/server.ts`) speaks JSON-RPC over stdio and has two tools: `check` and `capabilities`. The skill tells the agent to call `capabilities` before any other tool, write rules only in the five sentence forms, call `check`, and report the result as it came back: the HELD text word for word, the trace for BROKE, the reason for COULDN'T TELL.
+`reasonTruncated` is in the JSON and in the power's README: true when a reason reached the 200-character limit.
+## The benchmark
+`exorcism-demo/benchmark/README.md` holds two briefs, one for a pedestrian crossing (round 2) and one for a motor driven through two switches (round 3), and the unedited sketches that AI chat tools wrote for them, eight per round. It also keeps four sketches from an earlier brief that are not in the results.
+- Tools: `exorcism-demo/try.mjs` copies one sketch into the work folder, builds it and runs the headless checker with a config file. `exorcism-demo/measure-overlap.ts` counts CPU cycles during which two outputs are on together.
+- Configs: `crosswalk-check.json` (Masher, 24 runs), `crosswalk-full-check.json` (Masher and Bouncer, 200 runs) and `motor-check.json` (Masher and Bouncer, 200 runs), all with seed 20261101.
+- Results: crossing with one rule, 8 of 8 HELD. Crossing with the full rule set, 8 of 8 BROKE on try 1, with a WALK and DONT_WALK overlap of 73 to 78 cycles (4.56 to 4.88 microseconds). Motor, 1 BROKE (`chatgpt-fast`, try 159) and 7 HELD.
+- The README says why `chatgpt-fast` missed the short STOP press: from reading the code, a `delay(10)` in its loop. It marks this as read from the code, not measured.
+- `round2/chatgpt-high-kiro-fixed.ino` is a hand-fixed copy and is not in the tables.
+- The web app's "Try a chat-written sketch" sample is `round2/chatgpt-high.hex`.
+These are results from one seed and one gremlin set. They are not a proof.
+## Other checks in the repository
+- `.github/workflows/ci.yml` runs the type check, the guard, all tests and the build on pushes to `main` and on pull requests.
+- `.github/workflows/gate-demo.yml` runs the GitHub Action on the crosswalk fixed build (passes) and on the buggy build (passes only if the verdict is BROKE with exit code 1).
+- `.github/workflows/pages.yml` runs the guard, builds with Vite and deploys to GitHub Pages.

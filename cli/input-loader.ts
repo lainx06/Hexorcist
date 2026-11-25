@@ -1,24 +1,30 @@
-// headless-runner: the one Input_Loader for the CLI and the MCP server (Requirement 1, 8.5).
-// Pure apart from the readText function it is given. No clock, no random source, no network.
-// It builds the same CampaignJobInput the page builds: example mode as tests/ui/examples-host does,
-// upload mode through the page's own pin-map import, pin-table check and gremlin rules.
-import { findGremlin, GREMLIN_CATALOGUE } from "../src/engine/gremlins/catalogue";
+// The one Input_Loader: CLI arguments, MCP arguments and the Loop_Config become a CheckInput.
+// No clock, no random source, no network. Files are read through LoaderEnv.
+import path from "node:path";
+import { GREMLIN_CATALOGUE, findGremlin } from "../src/engine/gremlins/catalogue";
 import type { GremlinSpec } from "../src/engine/gremlins/catalogue";
+import type { RuleSet } from "../src/engine/rules/ir";
 import { render } from "../src/engine/rules/render";
 import { readRulesFile } from "../src/engine/rules/rules-file";
 import type { Fixture } from "../src/engine/types";
 import { parseExample } from "../src/ui/app/data/example";
 import { checkRuns, checkSeed } from "../src/ui/app/model/fields";
-import { defaultSelection, isCompatible } from "../src/ui/app/model/gremlin-picker";
-import { importPinMap } from "../src/ui/app/model/pin-map-file";
-import { checkPinTable, previewFixture } from "../src/ui/app/model/pin-table";
+import { isCompatible } from "../src/ui/app/model/gremlin-picker";
 import { UPLOAD_DEFAULTS, checkRunLength, msToCycles } from "../src/ui/app/model/upload-fields";
 import type { CampaignJobInput } from "../src/ui/app/worker/host";
 
-export const EXAMPLES = ["crosswalk", "garage", "heartbeat"] as const;
-export type ExampleName = (typeof EXAMPLES)[number];
+export const EXAMPLE_IDS = ["crosswalk", "garage", "heartbeat"] as const;
+export type ExampleId = (typeof EXAMPLE_IDS)[number];
 
-/** Values as typed by the user (strings), so the page's own field checks apply unchanged. */
+export interface LoaderEnv {
+  readText(absPath: string): string;
+  readBytes?(absPath: string): Uint8Array;
+  /** Folder that user-typed relative paths resolve against. */
+  invocationDir: string;
+  /** Folder that holds package.json, computed from the module location. */
+  repoDir: string;
+}
+
 export interface CheckArgs {
   example?: string;
   fixed?: boolean;
@@ -26,200 +32,265 @@ export interface CheckArgs {
   pins?: string;
   rules?: string;
   gremlins?: string;
-  runs?: string;
-  seed?: string;
-  runMs?: string;
+  runs?: number;
+  seed?: number;
+  runMs?: number;
 }
 
 export interface CheckInput extends CampaignJobInput {
-  /** Canonical sentences of the rule set, in file order. */
   ruleSentences: string[];
 }
 
 export type LoadResult = { ok: true; input: CheckInput } | { ok: false; reason: string };
 
-/** Reads a text file. `example` paths are relative to the repo root; user paths are as given. */
-export interface TextReader {
-  user(path: string): string;
-  example(relPath: string): string;
+export interface LoopConfig {
+  source: string;
+  build: string[];
+  hex: string;
+  pins: string;
+  rules: string;
+  gremlins: string;
+  runs: number;
+  seed: number;
+  runMs: number;
 }
 
-const fail = (reason: string): LoadResult => ({ ok: false, reason });
+export type LoopConfigResult = { ok: true; config: LoopConfig } | { ok: false; reason: string };
 
-/** BOM and CR removed, so a Windows checkout and a Linux checkout give the same text. */
-export function normalizeText(text: string): string {
-  return (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text).replace(/\r/g, "");
+// Paths
+
+export const invocationDirOf = (env: Record<string, string | undefined>, cwd: string): string =>
+  env.INIT_CWD !== undefined && env.INIT_CWD !== "" ? env.INIT_CWD : cwd;
+
+export const resolveUserPath = (env: Pick<LoaderEnv, "invocationDir">, p: string): string =>
+  path.resolve(env.invocationDir, p);
+
+export const resolveRepoPath = (env: Pick<LoaderEnv, "repoDir">, p: string): string => path.resolve(env.repoDir, p);
+
+// Gremlin lists
+
+/** The one comma-separated splitter. Entries are trimmed; an empty entry is kept so it can be rejected. */
+export function splitGremlins(text: string): string[] {
+  return text.split(",").map((s) => s.trim());
 }
 
-function readWith(read: (p: string) => string, path: string, what: string): { ok: true; text: string } | { ok: false; reason: string } {
+// Loop_Config
+
+const LOOP_KEYS: ReadonlyArray<[keyof LoopConfig, "string" | "number" | "array"]> = [
+  ["source", "string"],
+  ["build", "array"],
+  ["hex", "string"],
+  ["pins", "string"],
+  ["rules", "string"],
+  ["gremlins", "string"],
+  ["runs", "number"],
+  ["seed", "number"],
+  ["runMs", "number"],
+];
+
+export function parseLoopConfig(text: string): LoopConfigResult {
+  let v: unknown;
   try {
-    return { ok: true, text: normalizeText(read(path)) };
+    v = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   } catch {
-    return { ok: false, reason: `Could not read the ${what} file "${path}".` };
+    return { ok: false, reason: "The loop config is not valid JSON." };
   }
-}
-
-/** Gremlin ids from "a,b", checked against the catalogue and the pins, in catalogue order. */
-function parseGremlins(list: string, fixture: Fixture): { ok: true; set: GremlinSpec[] } | { ok: false; reason: string } {
-  const ids = list
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s !== "");
-  if (ids.length === 0) return { ok: false, reason: "--gremlins needs at least one gremlin id." };
-  for (const id of ids) {
-    const def = findGremlin(id);
-    if (def === undefined) {
-      return { ok: false, reason: `Unknown gremlin "${id}". Known gremlins: ${GREMLIN_CATALOGUE.map((g) => g.id).join(", ")}.` };
+  if (typeof v !== "object" || v === null || Array.isArray(v)) {
+    return { ok: false, reason: "The loop config must be a JSON object." };
+  }
+  const o = v as Record<string, unknown>;
+  for (const [key, type] of LOOP_KEYS) {
+    const x = o[key];
+    if (x === undefined) return { ok: false, reason: `The loop config lacks the key "${key}".` };
+    const good =
+      type === "array"
+        ? Array.isArray(x) && x.length > 0 && x.every((s) => typeof s === "string")
+        : type === "number"
+          ? typeof x === "number" && Number.isInteger(x)
+          : typeof x === "string";
+    if (!good) {
+      const want = type === "array" ? "a non-empty array of strings" : type === "number" ? "a whole number" : "a string";
+      return { ok: false, reason: `The loop config key "${key}" must be ${want}.` };
     }
-    if (!isCompatible(def, fixture)) return { ok: false, reason: `Gremlin "${id}" has no matching input in these pins.` };
-  }
-  return { ok: true, set: GREMLIN_CATALOGUE.filter((g) => ids.includes(g.id)).map((g) => ({ id: g.id })) };
-}
-
-/** Same limits and messages as the page's fields. */
-function numberField(
-  given: string | undefined,
-  flag: string,
-  fallback: number,
-  check: (t: string) => { ok: true; value: number } | { ok: false; message: string },
-): { ok: true; value: number } | { ok: false; reason: string } {
-  if (given === undefined) return { ok: true, value: fallback };
-  const r = check(given);
-  return r.ok ? { ok: true, value: r.value } : { ok: false, reason: `${flag}: ${r.message}` };
-}
-
-function sentencesOf(ruleSet: CheckInput["ruleSet"]): string[] {
-  return ruleSet.map((r) => {
-    const s = render(r);
-    return s.ok ? s.sentence : s.reason;
-  });
-}
-
-/** Requirement 1.8: the combination is checked before any file is read. */
-export function checkCombination(args: CheckArgs): string | null {
-  const uploadFlags = [args.hex, args.pins, args.rules].filter((v) => v !== undefined).length;
-  if (args.example !== undefined && uploadFlags > 0) return "Use either --example or --hex/--pins/--rules, not both.";
-  if (args.fixed === true && args.example === undefined) return "--fixed needs --example.";
-  if (args.example !== undefined) {
-    if (!(EXAMPLES as readonly string[]).includes(args.example)) {
-      return `Unknown example "${args.example}". Examples: ${EXAMPLES.join(", ")}.`;
-    }
-    return null;
-  }
-  if (uploadFlags !== 3) return "Give --example <name>, or all three of --hex, --pins and --rules.";
-  return null;
-}
-
-export function loadInput(args: CheckArgs, reader: TextReader): LoadResult {
-  const combo = checkCombination(args);
-  if (combo !== null) return fail(combo);
-  // Number formats are checked before any file is read too (Requirement 1.7: no run, no file work).
-  for (const [v, flag, check] of [
-    [args.runs, "--runs", checkRuns],
-    [args.seed, "--seed", checkSeed],
-    [args.runMs, "--run-ms", checkRunLength],
-  ] as const) {
-    if (v === undefined) continue;
-    const r = check(v);
-    if (!r.ok) return fail(`${flag}: ${r.message}`);
-  }
-  return args.example !== undefined ? loadExampleInput(args, args.example as ExampleName, reader) : loadUploadInput(args, reader);
-}
-
-function loadExampleInput(args: CheckArgs, name: ExampleName, reader: TextReader): LoadResult {
-  const dir = `examples/${name}`;
-  const build = args.fixed === true ? "fixed" : "buggy";
-  const hex = readWith(reader.example, `${dir}/${build}/${build}.hex`, "HEX");
-  const fixtureText = readWith(reader.example, `${dir}/fixture.json`, "pins");
-  const rulesText = readWith(reader.example, `${dir}/rules.txt`, "rules");
-  const metaText = readWith(reader.example, `${dir}/meta.json`, "meta");
-  if (!hex.ok) return fail(hex.reason);
-  if (!fixtureText.ok) return fail(fixtureText.reason);
-  if (!rulesText.ok) return fail(rulesText.reason);
-  if (!metaText.ok) return fail(metaText.reason);
-  const p = parseExample(fixtureText.text, rulesText.text, metaText.text);
-  if (!p.ok) return fail(`Example "${name}" did not load: ${[...p.rulesReasons, ...p.jsonErrors.map((e) => e.message)].join("; ")}`);
-  let gremlinSet: GremlinSpec[] = p.meta.gremlinSet.map((g) => ({ ...g }));
-  if (args.gremlins !== undefined) {
-    const g = parseGremlins(args.gremlins, p.fixture);
-    if (!g.ok) return fail(g.reason);
-    gremlinSet = g.set;
-  }
-  const runs = numberField(args.runs, "--runs", p.meta.runs, checkRuns);
-  const seed = numberField(args.seed, "--seed", p.meta.campaignSeed, checkSeed);
-  if (!runs.ok) return fail(runs.reason);
-  if (!seed.ok) return fail(seed.reason);
-  let runCycles = p.meta.runCycles;
-  if (args.runMs !== undefined) {
-    const ms = numberField(args.runMs, "--run-ms", 0, checkRunLength);
-    if (!ms.ok) return fail(ms.reason);
-    runCycles = msToCycles(ms.value);
   }
   return {
     ok: true,
-    input: {
-      hex: hex.text,
-      fixture: p.fixture,
-      ruleSet: p.ruleSet,
-      gremlinSet,
-      campaignSeed: seed.value,
-      runs: runs.value,
-      runCycles,
-      ruleSentences: p.sentences,
+    config: {
+      source: o.source as string,
+      build: o.build as string[],
+      hex: o.hex as string,
+      pins: o.pins as string,
+      rules: o.rules as string,
+      gremlins: o.gremlins as string,
+      runs: o.runs as number,
+      seed: o.seed as number,
+      runMs: o.runMs as number,
     },
   };
 }
 
-function loadUploadInput(args: CheckArgs, reader: TextReader): LoadResult {
-  const hex = readWith(reader.user, args.hex as string, "HEX");
-  if (!hex.ok) return fail(hex.reason);
-  const pins = readWith(reader.user, args.pins as string, "pins");
-  if (!pins.ok) return fail(pins.reason);
-  const rules = readWith(reader.user, args.rules as string, "rules");
-  if (!rules.ok) return fail(rules.reason);
+/** Loop_Config paths are repo-relative; they become absolute so loadInput leaves them alone. */
+export function configToArgs(config: LoopConfig, repoDir: string): CheckArgs {
+  return {
+    hex: path.resolve(repoDir, config.hex),
+    pins: path.resolve(repoDir, config.pins),
+    rules: path.resolve(repoDir, config.rules),
+    gremlins: config.gremlins,
+    runs: config.runs,
+    seed: config.seed,
+    runMs: config.runMs,
+  };
+}
 
-  // The page's pin-map import and pin-table check (Plain_Names are display only and not needed here).
-  const imported = importPinMap(pins.text, new TextEncoder().encode(pins.text).length, 1);
-  if (!imported.ok) return fail(`Pins file: ${imported.error}`);
-  const table = checkPinTable(imported.rows);
-  if (!table.ok) {
-    const problems = [...table.tableErrors, ...table.rowErrors.flat()];
-    return fail(`Pins file: ${problems.join(" ") || "the pin table is not valid."}`);
+// Loader
+
+const fail = (reason: string): LoadResult => ({ ok: false, reason: reason.replace(/\s*[\r\n]+\s*/g, " ") });
+
+function readFile(env: LoaderEnv, abs: string, shown: string): { ok: true; text: string } | { ok: false; reason: string } {
+  try {
+    return { ok: true, text: env.readText(abs) };
+  } catch {
+    return { ok: false, reason: `Cannot read the file "${shown}".` };
   }
-  const fixture = previewFixture(imported.rows);
+}
 
-  const read = readRulesFile(rules.text);
-  if (!read.ok) return fail(`Rules file: ${read.reasons.join("; ")}`);
+const cleanHex = (text: string): string => (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text).replace(/\r/g, "");
 
-  let gremlinSet: GremlinSpec[];
+function isExampleId(s: string): s is ExampleId {
+  return (EXAMPLE_IDS as readonly string[]).includes(s);
+}
+
+type Num = { ok: true; value: number | undefined } | { ok: false; reason: string };
+
+function checkNumber(
+  name: string,
+  value: number | undefined,
+  check: (text: string) => { ok: true; value: number } | { ok: false; message: string },
+): Num {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+    return { ok: false, reason: `${name} must be a whole number.` };
+  }
+  const c = check(String(value));
+  return c.ok ? { ok: true, value: c.value } : { ok: false, reason: c.message };
+}
+
+function parseGremlinIds(text: string): { ok: true; ids: string[] } | { ok: false; reason: string } {
+  const parts = splitGremlins(text);
+  for (const id of parts) {
+    if (id === "") return { ok: false, reason: "The gremlin list has an empty entry." };
+    if (findGremlin(id) === undefined) return { ok: false, reason: `Unknown gremlin "${id}".` };
+  }
+  return { ok: true, ids: parts };
+}
+
+const orderGremlinIds = (ids: readonly string[]): GremlinSpec[] =>
+  GREMLIN_CATALOGUE.filter((g) => ids.includes(g.id)).map((g) => ({ id: g.id }));
+
+export function loadInput(args: CheckArgs, env: LoaderEnv): LoadResult {
+  // Step 1: bad combinations and bad values, before any file is read.
+  const hasUpload = args.hex !== undefined || args.pins !== undefined || args.rules !== undefined;
+  const fullUpload = args.hex !== undefined && args.pins !== undefined && args.rules !== undefined;
+  if (args.example !== undefined && hasUpload) {
+    return fail("Use --example or --hex, --pins and --rules, not both.");
+  }
+  if (args.fixed === true && args.example === undefined) return fail("--fixed needs --example.");
+  if (args.example !== undefined) {
+    if (!isExampleId(args.example)) {
+      return fail(`Unknown example "${args.example}". Use one of: ${EXAMPLE_IDS.join(", ")}.`);
+    }
+  } else if (!fullUpload) {
+    return fail("Give --example, or all of --hex, --pins and --rules.");
+  }
+
+  let gremlinIds: string[] | undefined;
   if (args.gremlins !== undefined) {
-    const g = parseGremlins(args.gremlins, fixture);
+    const g = parseGremlinIds(args.gremlins);
     if (!g.ok) return fail(g.reason);
-    gremlinSet = g.set;
-  } else {
-    // The page preselects the Masher when it fits the pins.
-    gremlinSet = defaultSelection([{ id: "masher" }], fixture);
-    if (gremlinSet.length === 0) return fail("The Masher has no button input in these pins; choose gremlins with --gremlins.");
+    gremlinIds = g.ids;
+  }
+  const runs = checkNumber("--runs", args.runs, checkRuns);
+  if (!runs.ok) return fail(runs.reason);
+  const seed = checkNumber("--seed", args.seed, checkSeed);
+  if (!seed.ok) return fail(seed.reason);
+  const runMs = checkNumber("--run-ms", args.runMs, checkRunLength);
+  if (!runMs.ok) return fail(runMs.reason);
+
+  // Step 2: files.
+  if (args.example !== undefined) {
+    const dir = `examples/${args.example}`;
+    const hexRel = `${dir}/${args.fixed === true ? "fixed/fixed.hex" : "buggy/buggy.hex"}`;
+    const files: string[] = [];
+    for (const rel of [hexRel, `${dir}/fixture.json`, `${dir}/rules.txt`, `${dir}/meta.json`]) {
+      const r = readFile(env, resolveRepoPath(env, rel), rel);
+      if (!r.ok) return fail(r.reason);
+      files.push(r.text);
+    }
+    const [hexText, fixtureText, rulesText, metaText] = files as [string, string, string, string];
+    const ex = parseExample(fixtureText, rulesText, metaText);
+    if (!ex.ok) {
+      const why = ex.rulesReasons[0] ?? ex.jsonErrors[0]?.message ?? "unreadable";
+      return fail(`The example files could not be read: ${why}`);
+    }
+    return {
+      ok: true,
+      input: {
+        hex: cleanHex(hexText),
+        fixture: ex.fixture,
+        ruleSet: ex.ruleSet,
+        ruleSentences: ex.sentences,
+        gremlinSet: gremlinIds !== undefined ? orderGremlinIds(gremlinIds) : ex.meta.gremlinSet,
+        campaignSeed: seed.value ?? ex.meta.campaignSeed,
+        runs: runs.value ?? ex.meta.runs,
+        runCycles: runMs.value !== undefined ? msToCycles(runMs.value) : ex.meta.runCycles,
+      },
+    };
   }
 
-  const runs = numberField(args.runs, "--runs", UPLOAD_DEFAULTS.runs, checkRuns);
-  const seed = numberField(args.seed, "--seed", UPLOAD_DEFAULTS.seed, checkSeed);
-  const ms = numberField(args.runMs, "--run-ms", UPLOAD_DEFAULTS.runLengthMs, checkRunLength);
-  if (!runs.ok) return fail(runs.reason);
-  if (!seed.ok) return fail(seed.reason);
-  if (!ms.ok) return fail(ms.reason);
-
+  const texts: Record<"hex" | "pins" | "rules", string> = { hex: "", pins: "", rules: "" };
+  for (const key of ["hex", "pins", "rules"] as const) {
+    const given = args[key] as string;
+    const r = readFile(env, resolveUserPath(env, given), given);
+    if (!r.ok) return fail(r.reason);
+    texts[key] = r.text;
+  }
+  let fixture: Fixture;
+  try {
+    fixture = JSON.parse(texts.pins) as Fixture;
+  } catch {
+    return fail(`The pin file "${args.pins as string}" is not valid JSON.`);
+  }
+  if (typeof fixture !== "object" || fixture === null || !Array.isArray(fixture.pins)) {
+    return fail(`The pin file "${args.pins as string}" needs a "pins" list.`);
+  }
+  const rules = readRulesFile(texts.rules);
+  if (!rules.ok) return fail(`The rules file could not be read: ${rules.reasons[0] ?? "unreadable"}`);
+  const ruleSet: RuleSet = rules.ruleSet;
+  const ruleSentences = ruleSet.map((r) => {
+    const s = render(r);
+    return s.ok ? s.sentence : s.reason;
+  });
+  let gremlinSet: GremlinSpec[];
+  if (gremlinIds !== undefined) {
+    gremlinSet = orderGremlinIds(gremlinIds);
+  } else {
+    const masher = GREMLIN_CATALOGUE.find((g) => g.id === "masher");
+    if (masher === undefined || !isCompatible(masher, fixture)) {
+      return fail("The default gremlin masher does not fit this pin file. Name gremlins with --gremlins.");
+    }
+    gremlinSet = [{ id: "masher" }];
+  }
   return {
     ok: true,
     input: {
-      hex: hex.text,
+      hex: cleanHex(texts.hex),
       fixture,
-      ruleSet: read.ruleSet,
+      ruleSet,
+      ruleSentences,
       gremlinSet,
-      campaignSeed: seed.value,
-      runs: runs.value,
-      runCycles: msToCycles(ms.value),
-      ruleSentences: sentencesOf(read.ruleSet),
+      campaignSeed: seed.value ?? UPLOAD_DEFAULTS.seed,
+      runs: runs.value ?? UPLOAD_DEFAULTS.runs,
+      runCycles: msToCycles(runMs.value ?? UPLOAD_DEFAULTS.runLengthMs),
     },
   };
 }

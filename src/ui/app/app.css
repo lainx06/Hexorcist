@@ -2854,6 +2854,18 @@ button:disabled {
   border-radius: var(--r-sm);
 }
 
+/* Fully opaque note panel (COULDN'T TELL). Same colour as .scene-frame, without the D9 alpha. */
+.stage-overlay .stage-note-block.stage-note-block--solid {
+  padding: var(--s-4) var(--s-5);
+  background: #0E1513;
+  border: 1px solid var(--line);
+}
+
+/* COULDN'T TELL: no pin labels or levels behind the note. */
+.scene-card.is-levels-hidden .pin-levels-columns {
+  visibility: hidden;
+}
+
 .shrink-count {
   color: var(--muted);
 }
@@ -3679,6 +3691,24 @@ button:disabled {
   border-color: var(--couldnt-tell-line);
 }
 
+.fixed-verdict-headline {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.fix-card--held .fixed-verdict-headline {
+  color: var(--mint);
+}
+
+.fix-card--broke .fixed-verdict-headline {
+  color: var(--coral);
+}
+
+.fix-card--tell .fixed-verdict-headline {
+  color: var(--text-2);
+}
+
 /* "What the fix changed": one panel with the explanation, the two buttons and the code change. */
 .fix-change {
   display: flex;
@@ -4173,33 +4203,4 @@ button[aria-disabled="true"] {
 }
 .upload-check {
   margin-right: var(--s-1);
-}
-
-/* (claude) On the pin-levels stage the note sits over the pin labels: give it a solid panel and fade the columns more. */
-.pin-levels-frame > .stage-overlay .stage-note-block {
-  background: var(--couldnt-tell-surface);
-  border: 1px solid var(--couldnt-tell-line);
-}
-.scene-card.is-dim .pin-levels-frame .pin-levels-columns {
-  opacity: 0.2;
-}
-
-/* (claude) The fixed program's verdict word, the same size as BROKE on the left card. */
-.fix-card--right .fix-right-word {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.fix-card--held .fix-right-word {
-  color: var(--mint);
-}
-.fix-card--broke .fix-right-word {
-  color: var(--coral);
-}
-.fix-card--tell .fix-right-word {
-  color: var(--text);
-}
-/* (claude) COULDN'T TELL on the pin-levels view: no faded pins behind the note. */
-.scene-card.is-dim .pin-levels-frame .pin-levels-columns {
-  opacity: 0;
 }

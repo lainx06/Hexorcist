@@ -1,165 +1,192 @@
-// headless-runner: the MCP server's message handling (Requirement 6). Hand-written JSON-RPC 2.0,
-// no npm package. Pure: handleMessage gets one parsed message and returns the response or null.
-// It uses the CLI's Input_Loader and runCheck, never cli/main.ts, so the check text equals `--json`.
+// Hand-written JSON-RPC 2.0 handling for the MCP server. Pure: no stdin, no stdout, no clock,
+// no random source, no network. It imports the Input_Loader and runCheck, never cli/main.ts.
+import path from "node:path";
 import { GREMLIN_CATALOGUE } from "../src/engine/gremlins/catalogue";
 import { UNMODELLED_PERIPHERALS } from "../src/engine/peripherals";
 import type { Fixture } from "../src/engine/types";
-import { PICKER_TEXT } from "../src/ui/app/model/gremlin-picker";
 import { sentencePatterns } from "../src/ui/app/model/rule-box";
-import type { CheckArgs, CheckInput, LoadResult, TextReader } from "../cli/input-loader";
-import { loadInput } from "../cli/input-loader";
-import type { CheckOutcome } from "../cli/run-check";
+import { EXAMPLE_IDS, loadInput } from "../cli/input-loader";
+import type { CheckArgs, LoaderEnv, LoadResult } from "../cli/input-loader";
 import { runCheck, toJson } from "../cli/run-check";
-
-export const SERVER_NAME = "hexorcist";
-export const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"] as const;
+import type { CheckOutcome } from "../cli/run-check";
 
 export interface ServerDeps {
-  reader: TextReader;
-  toolVersion: string;
-  load?: (args: CheckArgs, reader: TextReader) => LoadResult;
-  check?: (input: CheckInput, toolVersion: string) => CheckOutcome;
+  env: LoaderEnv;
+  /** Tests pass stubs; the default is the real loader and runner. */
+  load?: (args: CheckArgs, env: LoaderEnv) => LoadResult;
+  run?: (input: Extract<LoadResult, { ok: true }>["input"]) => CheckOutcome;
 }
 
-type Id = string | number | null;
-export type Response =
-  | { jsonrpc: "2.0"; id: Id; result: unknown }
-  | { jsonrpc: "2.0"; id: Id; error: { code: number; message: string } };
+export interface JsonRpcResponse {
+  jsonrpc: "2.0";
+  id: string | number | null;
+  result?: unknown;
+  error?: { code: number; message: string };
+}
 
-const ok = (id: Id, result: unknown): Response => ({ jsonrpc: "2.0", id, result });
-const err = (id: Id, code: number, message: string): Response => ({ jsonrpc: "2.0", id, error: { code, message } });
+const SERVER_PROTOCOL = "2024-11-05";
+const SUPPORTED_PROTOCOLS = ["2024-11-05", "2025-03-26", "2025-06-18"];
 
-export const PARSE_ERROR = -32700;
-export const INVALID_REQUEST = -32600;
-export const METHOD_NOT_FOUND = -32601;
-export const INVALID_PARAMS = -32602;
+const PARSE_ERROR = -32700;
+const INVALID_REQUEST = -32600;
+const METHOD_NOT_FOUND = -32601;
+const INVALID_PARAMS = -32602;
 
-const str = { type: "string" } as const;
+const err = (id: JsonRpcResponse["id"], code: number, message: string): JsonRpcResponse => ({
+  jsonrpc: "2.0",
+  id,
+  error: { code, message },
+});
+const ok = (id: JsonRpcResponse["id"], result: unknown): JsonRpcResponse => ({ jsonrpc: "2.0", id, result });
 
-export const TOOLS = [
+const oneLine = (s: string): string => s.replace(/\s*[\r\n]+\s*/g, " ");
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+const CHECK_SCHEMA = {
+  type: "object",
+  properties: {
+    example: { type: "string", enum: [...EXAMPLE_IDS], description: "A bundled example. Do not combine with hex, pins or rules." },
+    fixed: { type: "boolean", description: "With example: check the fixed build instead of the buggy one." },
+    hex: { type: "string", description: "Path to a precompiled .hex file." },
+    pins: { type: "string", description: "Path to a pin fixture .json file." },
+    rules: { type: "string", description: "Path to a rules .txt file, one rule sentence per line." },
+    gremlins: { type: "string", description: "Comma-separated gremlin ids. See capabilities." },
+    runs: { type: "integer", description: "Number of emulated runs." },
+    seed: { type: "integer", description: "Campaign seed." },
+    runMs: { type: "integer", description: "Length of each run in simulated milliseconds." },
+  },
+  additionalProperties: false,
+};
+
+const TOOLS = [
   {
     name: "check",
     description:
-      "Runs a compiled ATmega328P program on the emulator, attacks its inputs with seeded scripted gremlins, and checks the rules. " +
-      "Returns one JSON object with the verdict BROKE, HELD or COULDN'T TELL (the same object as `npm run check -- --json`). " +
-      "HELD means no violation was found in the runs made; it is not a proof.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        example: { type: "string", enum: ["crosswalk", "garage", "heartbeat"], description: "A bundled example (instead of hex, pins and rules)." },
-        fixed: { type: "boolean", description: "With example: use the fixed build." },
-        hex: { ...str, description: "Path to a plain .hex file." },
-        pins: { ...str, description: "Path to a pin map JSON file (the page's Export pin map format)." },
-        rules: { ...str, description: "Path to a text file with one rule sentence per line." },
-        gremlins: { ...str, description: "Comma-separated gremlin ids." },
-        runs: { type: ["integer", "string"], description: "Tries, 1 to 1000." },
-        seed: { type: ["integer", "string"], description: "Seed, 0 to 4294967295." },
-        runMs: { type: ["integer", "string"], description: "Device time per try in ms, 1 to 60000." },
-      },
-      additionalProperties: false,
-    },
+      "Run the gremlin check on a precompiled ATmega328P program. Give either example (with optional fixed) or all three of hex, pins and rules. Returns the Result_Object as JSON text.",
+    inputSchema: CHECK_SCHEMA,
   },
   {
     name: "capabilities",
-    description: "Lists the 5 rule sentence forms, the gremlins, and the chip parts the emulator does not model (they give COULDN'T TELL).",
+    description: "List the five rule sentence forms, the gremlin ids, and the peripherals the emulator does not model. Call this before check.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
-] as const;
+];
 
-const ARG_KEYS = ["example", "fixed", "hex", "pins", "rules", "gremlins", "runs", "seed", "runMs"] as const;
+const STRING_KEYS = ["example", "hex", "pins", "rules", "gremlins"] as const;
+const NUMBER_KEYS = ["runs", "seed", "runMs"] as const;
+const ALL_KEYS: readonly string[] = [...STRING_KEYS, ...NUMBER_KEYS, "fixed"];
 
-/** MCP arguments to CheckArgs; numbers become the strings the page's field checks expect. */
-export function toCheckArgs(raw: unknown): { ok: true; args: CheckArgs } | { ok: false; reason: string } {
+/** Check the shape of `check` arguments. Values are judged further by the loader. */
+export function parseCheckArgs(raw: unknown): { ok: true; args: CheckArgs } | { ok: false; reason: string } {
   if (raw === undefined) return { ok: true, args: {} };
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { ok: false, reason: "arguments must be an object." };
-  const rec = raw as Record<string, unknown>;
+  if (!isObject(raw)) return { ok: false, reason: "check arguments must be an object." };
+  for (const k of Object.keys(raw)) if (!ALL_KEYS.includes(k)) return { ok: false, reason: `check has no argument "${k}".` };
   const args: CheckArgs = {};
-  for (const k of Object.keys(rec)) {
-    if (!(ARG_KEYS as readonly string[]).includes(k)) return { ok: false, reason: `Unknown argument "${k}".` };
-    const v = rec[k];
-    if (k === "fixed") {
-      if (typeof v !== "boolean") return { ok: false, reason: '"fixed" must be true or false.' };
-      if (v) args.fixed = true;
-    } else if (typeof v === "string") {
-      (args as Record<string, string>)[k] = v;
-    } else if (typeof v === "number" && (k === "runs" || k === "seed" || k === "runMs") && Number.isInteger(v)) {
-      (args as Record<string, string>)[k] = String(v);
-    } else {
-      return { ok: false, reason: `"${k}" has the wrong type.` };
-    }
+  for (const k of STRING_KEYS) {
+    const v = raw[k];
+    if (v === undefined) continue;
+    if (typeof v !== "string") return { ok: false, reason: `check argument "${k}" must be a string.` };
+    args[k] = v;
+  }
+  for (const k of NUMBER_KEYS) {
+    const v = raw[k];
+    if (v === undefined) continue;
+    if (typeof v !== "number" || !Number.isInteger(v)) return { ok: false, reason: `check argument "${k}" must be an integer.` };
+    args[k] = v;
+  }
+  if (raw.fixed !== undefined) {
+    if (typeof raw.fixed !== "boolean") return { ok: false, reason: 'check argument "fixed" must be true or false.' };
+    args.fixed = raw.fixed;
   }
   return { ok: true, args };
 }
 
-export function capabilitiesText(): string {
-  const example: Fixture = {
-    pins: [
-      { signal: "LED", port: "B", bit: 5, direction: "output" },
-      { signal: "BUTTON", port: "D", bit: 2, direction: "input", activeLevel: "low" },
-    ],
-  };
+const SAMPLE_FIXTURE: Fixture = {
+  pins: [
+    { signal: "BUTTON", port: "D", bit: 2, direction: "input", activeLevel: "low" },
+    { signal: "LED", port: "B", bit: 5, direction: "output" },
+  ],
+};
+
+function capabilitiesText(): string {
   const body = {
-    ruleForms: sentencePatterns(example),
-    ruleFormsNote: "Examples use an output named LED and an input named BUTTON; use your own pin names.",
-    gremlins: GREMLIN_CATALOGUE.map((g) => ({ id: g.id, name: PICKER_TEXT[g.id]?.name ?? g.id, does: PICKER_TEXT[g.id]?.behaviour ?? "" })),
-    unmodelledPeripherals: UNMODELLED_PERIPHERALS.map((p) => ({ id: p.id, plainName: p.plainName })),
-    verdicts: ["BROKE", "HELD", "COULDN'T TELL"],
+    ruleForms: sentencePatterns(SAMPLE_FIXTURE).map((p) => ({ form: p.form, example: p.sentence })),
+    gremlins: GREMLIN_CATALOGUE.map((g) => g.id),
+    unmodelledPeripherals: UNMODELLED_PERIPHERALS.map((r) => ({ id: r.id, name: r.plainName })),
   };
   return `${JSON.stringify(body, null, 2)}\n`;
 }
 
-const textResult = (text: string, isError: boolean) => ({ content: [{ type: "text", text }], isError });
+const toolVersionOf = (env: LoaderEnv): string => {
+  const pkg: unknown = JSON.parse(env.readText(path.join(env.repoDir, "package.json")));
+  const v = (pkg as { version?: unknown }).version;
+  if (typeof v !== "string") throw new Error("package.json has no version string.");
+  return v;
+};
 
-export function handleMessage(msg: unknown, deps: ServerDeps): Response | null {
-  if (typeof msg !== "object" || msg === null || Array.isArray(msg)) return err(null, INVALID_REQUEST, "The message is not a JSON-RPC request object.");
-  const m = msg as Record<string, unknown>;
-  const hasId = "id" in m;
-  const id: Id = typeof m.id === "string" || typeof m.id === "number" ? m.id : null;
-  if (m.jsonrpc !== "2.0" || typeof m.method !== "string") return err(id, INVALID_REQUEST, 'A request needs "jsonrpc": "2.0" and a string "method".');
-  const method = m.method;
-  // Notifications (no id) get no response.
-  if (!hasId) return null;
-  const params = (typeof m.params === "object" && m.params !== null ? m.params : {}) as Record<string, unknown>;
+function callTool(id: JsonRpcResponse["id"], params: unknown, deps: ServerDeps): JsonRpcResponse {
+  if (!isObject(params) || typeof params.name !== "string") return err(id, INVALID_PARAMS, "tools/call needs a tool name.");
+  if (params.name === "capabilities") {
+    return ok(id, { content: [{ type: "text", text: capabilitiesText() }], isError: false });
+  }
+  if (params.name !== "check") return err(id, INVALID_PARAMS, `Unknown tool "${oneLine(params.name)}".`);
+  const parsed = parseCheckArgs(params.arguments);
+  if (!parsed.ok) return err(id, INVALID_PARAMS, parsed.reason);
+  const loaded = (deps.load ?? loadInput)(parsed.args, deps.env);
+  if (!loaded.ok) return err(id, INVALID_PARAMS, oneLine(loaded.reason));
+  const outcome = (deps.run ?? runCheck)(loaded.input);
+  if (!outcome.ok) {
+    const text = `The ${outcome.job} job failed: ${oneLine(outcome.error.message)}`;
+    return ok(id, { content: [{ type: "text", text }], isError: true });
+  }
+  return ok(id, { content: [{ type: "text", text: toJson(loaded.input, outcome, toolVersionOf(deps.env)) }], isError: false });
+}
 
-  switch (method) {
-    case "initialize": {
-      const asked = params.protocolVersion;
-      const protocolVersion = typeof asked === "string" && (SUPPORTED_PROTOCOLS as readonly string[]).includes(asked) ? asked : SUPPORTED_PROTOCOLS[0];
-      return ok(id, { protocolVersion, capabilities: { tools: {} }, serverInfo: { name: SERVER_NAME, version: deps.toolVersion } });
-    }
-    case "ping":
-      return ok(id, {});
-    case "tools/list":
-      return ok(id, { tools: TOOLS });
-    case "tools/call": {
-      const name = params.name;
-      if (name === "capabilities") return ok(id, textResult(capabilitiesText(), false));
-      if (name !== "check") return err(id, INVALID_PARAMS, `Unknown tool "${String(name)}". Tools: check, capabilities.`);
-      const a = toCheckArgs(params.arguments);
-      if (!a.ok) return err(id, INVALID_PARAMS, a.reason);
-      const loaded = (deps.load ?? loadInput)(a.args, deps.reader);
-      if (!loaded.ok) return err(id, INVALID_PARAMS, loaded.reason);
-      try {
-        const out = (deps.check ?? runCheck)(loaded.input, deps.toolVersion);
-        if (!out.ok) return ok(id, textResult(`The ${out.job} job failed (${out.error.kind}): ${out.error.message}`, true));
-        return ok(id, textResult(toJson(out.result), false));
-      } catch (e) {
-        return ok(id, textResult(`Internal error: ${e instanceof Error ? e.message : String(e)}`, true));
+/** One parsed JSON-RPC message in, one response out. Notifications give null. Never throws. */
+export function handleMessage(msg: unknown, deps: ServerDeps): JsonRpcResponse | null {
+  if (!isObject(msg) || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") {
+    return err(null, INVALID_REQUEST, "Not a JSON-RPC 2.0 request.");
+  }
+  const hasId = "id" in msg;
+  const rawId = msg.id;
+  if (hasId && typeof rawId !== "string" && typeof rawId !== "number") {
+    return err(null, INVALID_REQUEST, "The request id must be a string or a number.");
+  }
+  const id = hasId ? (rawId as string | number) : null;
+  try {
+    if (!hasId) return null; // notification such as notifications/initialized
+    switch (msg.method) {
+      case "initialize": {
+        const asked = isObject(msg.params) ? msg.params.protocolVersion : undefined;
+        const version = typeof asked === "string" && SUPPORTED_PROTOCOLS.includes(asked) ? asked : SERVER_PROTOCOL;
+        return ok(id, {
+          protocolVersion: version,
+          capabilities: { tools: {} },
+          serverInfo: { name: "hexorcist", version: toolVersionOf(deps.env) },
+        });
       }
+      case "ping":
+        return ok(id, {});
+      case "tools/list":
+        return ok(id, { tools: TOOLS });
+      case "tools/call":
+        return callTool(id, msg.params, deps);
+      default:
+        return err(id, METHOD_NOT_FOUND, `Unknown method "${oneLine(msg.method)}".`);
     }
-    default:
-      return err(id, METHOD_NOT_FOUND, `Unknown method "${method}".`);
+  } catch (e) {
+    return err(id, INVALID_PARAMS, oneLine(e instanceof Error ? e.message : String(e)));
   }
 }
 
-/** One line of the stdio transport: parse errors become -32700 with id null. */
-export function handleLine(line: string, deps: ServerDeps): Response | null {
+/** One input line in, one response out (null for a blank line or a notification). */
+export function handleLine(line: string, deps: ServerDeps): JsonRpcResponse | null {
   if (line.trim() === "") return null;
   let msg: unknown;
   try {
     msg = JSON.parse(line);
   } catch {
-    return err(null, PARSE_ERROR, "The line is not valid JSON.");
+    return err(null, PARSE_ERROR, "The request is not valid JSON.");
   }
   return handleMessage(msg, deps);
 }

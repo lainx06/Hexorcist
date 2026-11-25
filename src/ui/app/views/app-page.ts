@@ -39,7 +39,7 @@ import { canApplyFix, canReplayAgain, canTryRemoving, canUnleash, initialFlow } 
 import { fixedDisplayAgrees } from "../model/fix-view";
 import { fixedReplayText, tryRemovingText, withoutEvent } from "../model/fix-text";
 import { inputValueText, ms } from "../model/format";
-import { PICKER_TEXT, defaultSelection } from "../model/gremlin-picker";
+import { PICKER_TEXT, defaultSelection, isCompatibleForUpload } from "../model/gremlin-picker";
 import { buildPlan } from "../model/pacing";
 import type { PacingPlan } from "../model/pacing";
 import { plainStory } from "../model/plain-story";
@@ -53,7 +53,7 @@ import { spanFor } from "../model/span";
 import type { Span } from "../model/span";
 import { stageFlags } from "../model/stage";
 import type { StagePhase } from "../model/stage";
-import { STAGE_TEXT, TAB_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
+import { STAGE_TEXT, causeLine, cyclesRateText, heldTryLabel, reductionCard } from "../model/stage-copy";
 import type { FixOutcome, ReductionInput } from "../model/stage-copy";
 import { exampleStoryInput } from "../model/story-input";
 import { eventValue, windowEnd } from "../model/timeline";
@@ -290,16 +290,26 @@ export function mountApp(root: HTMLElement): void {
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
     },
-    onChatSample: () => {
+    onChatSketchSample: () => {
       if (lockedNow()) return;
-      upload = U.loadChatSample(upload);
+      const r = U.loadChatSketchSample(upload);
+      if (!r.ok) {
+        showError(UPLOAD_COPY.sampleLoadError);
+        return;
+      }
+      upload = r.state;
       setup.rules.setText(upload.ruleText);
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
     },
-    onSerialSample: () => {
+    onUnjudgeableSample: () => {
       if (lockedNow()) return;
-      upload = U.loadSerialSample(upload);
+      const r = U.loadUnjudgeableSample(upload);
+      if (!r.ok) {
+        showError(UPLOAD_COPY.sampleLoadError);
+        return;
+      }
+      upload = r.state;
       setup.rules.setText(upload.ruleText);
       ctl.setTexts(upload.fields.runs, upload.fields.seed);
       afterUploadEdit();
@@ -370,7 +380,7 @@ export function mountApp(root: HTMLElement): void {
     onBlockedUnleash: () => {
       if (!isUpload() || lockedNow()) return;
       upload = U.revealAll(upload);
-      setup.gremlins.reveal();
+      setup.gremlins.setTried();
       paintUpload();
     },
     onExpandChange: () => paintPrimary(),
@@ -728,7 +738,7 @@ export function mountApp(root: HTMLElement): void {
     removeButtons.length = 0;
     tabs.setReplay(null);
     tabs.setPending(false);
-    tabs.setNoReplayNote(null);
+    tabs.setCouldntTell(false);
     tabs.setFixChange(null);
     tabs.setTryRemoving(null);
     tabs.setCyclesRate(null);
@@ -1031,8 +1041,8 @@ export function mountApp(root: HTMLElement): void {
         const uses = done.result.peripheralUses;
         cardInput = { kind: "COULDN'T TELL", reason: v.reason, ...(uses === undefined ? {} : { peripheralUses: uses }) };
         setPhase("couldnt-tell");
-        stage.showNote(STAGE_TEXT.couldntTell, true);
-        tabs.setNoReplayNote(TAB_TEXT.couldntTell);
+        tabs.setCouldntTell(true);
+        stage.showNote(STAGE_TEXT.noReplay, true, { solid: true });
         renderAside();
       } else {
         await brokeFlow(c);
@@ -1233,7 +1243,7 @@ export function mountApp(root: HTMLElement): void {
     if (key !== lastFixtureKey) {
       lastFixtureKey = key;
       const labels = U.uploadLabels(upload.rows);
-      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels, true);
+      setup.gremlins.setFixture(d.previewFixture, upload.selected, labels, isCompatibleForUpload);
       timeline.setFixture(d.previewFixture, labels);
     } else setup.gremlins.setSelected(upload.selected);
     tabs.setGremlinOrder(U.gremlinOrderLine(upload.selected));

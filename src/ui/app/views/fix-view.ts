@@ -186,7 +186,9 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
   const leftCard = el("div", { class: "card fix-card fix-card--left is-waiting" }, [leftWord, leftHead, leftForgot, leftCause, leftStopped]);
   const replayLine = el("p", { class: "fix-replay" }, [""]);
   const campaignBox = el("div", { class: "fix-campaign" });
-  const rightCard = el("div", { class: "card fix-card fix-card--right", "aria-live": "polite" }, [replayLine, campaignBox]);
+  const fixedHeadline = el("p", { class: "fixed-verdict-headline" }, [""]);
+  fixedHeadline.hidden = true;
+  const rightCard = el("div", { class: "card fix-card fix-card--right", "aria-live": "polite" }, [fixedHeadline, replayLine, campaignBox]);
   replayLine.hidden = true;
 
   const leftSide = el("div", { class: "fix-side fix-side--original", role: "group", "aria-label": FIX_TEXT.leftTitle }, [leftHost]);
@@ -302,6 +304,8 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
       replayLine.hidden = true;
       replayLine.textContent = "";
       cardTone(null);
+      fixedHeadline.hidden = true;
+      fixedHeadline.textContent = "";
       setChildren(campaignBox, []);
       change = createFixChange(next.exampleId, next.hunks);
       setChildren(changeHost, [change.node]);
@@ -312,13 +316,11 @@ export function createFixView(playback: Playback, playerNode?: HTMLElement): Fix
     showCampaignDone(verdict, tries, violatingRunIndex, plainBroke) {
       const t = fixedCampaignText(verdict, tries, violatingRunIndex, plainBroke);
       cardTone(verdict.verdict === "HELD" ? "held" : verdict.verdict === "BROKE" ? "broke" : "tell");
-      // (claude) The verdict word as a headline, like BROKE on the left card; the prefix keeps the rest.
-      const sep = t.prefix.indexOf(" \u00b7 ");
-      const word = sep > 0 ? t.prefix.slice(0, sep) : null;
-      const rest = sep > 0 ? t.prefix.slice(sep + 3) : t.prefix;
+      fixedHeadline.textContent =
+        verdict.verdict === "HELD" ? VERDICT_WORD.held : verdict.verdict === "BROKE" ? VERDICT_WORD.broke : VERDICT_WORD.couldntTell;
+      fixedHeadline.hidden = false;
       setChildren(campaignBox, [
-        ...(word === null ? [] : [campaignParagraph(word, "fix-right-word")]),
-        campaignParagraph(rest.charAt(0).toUpperCase() + rest.slice(1), "fix-campaign-prefix"),
+        campaignParagraph(t.prefix, "fix-campaign-prefix"),
         ...t.lines.map((l) => campaignParagraph(l, "fix-campaign-line")),
       ]);
     },

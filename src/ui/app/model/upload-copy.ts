@@ -8,9 +8,10 @@ export const UPLOAD_COPY = {
   helpLine:
     "Compile for an ATmega328P at 16 MHz and use the plain .hex, not the one with a bootloader. Other clock speeds give wrong timings.",
   trySample: "Try the sample",
+  tryChatSketch: "Try a chat-written sketch",
+  tryUnjudgeable: "Try one it can't check",
+  sampleLoadError: "This sample could not be loaded.",
   downloadSample: "Download the sample",
-  trySerialSample: "Try one it can't check",
-  tryChatSample: "Try a chat-written sketch",
   loadedPrefix: "Loaded: ",
   addPin: "Add pin",
   importPins: "Import pin map",

@@ -1,204 +1,124 @@
-# Small AI-firmware benchmark
+# Benchmark: AI chat answers, checked by gremlins
 
-Each file here is a sketch written by an AI chat from a fixed brief, saved unedited, then checked with
-`node exorcism-demo/try.mjs <file> [config]` (Masher, 24 tries, seed 20261101, 1000 ms per try).
-A handful of samples from chat tools on one day: evidence about these samples, not a ranking of models.
+This folder holds sketches that AI chat tools wrote for two briefs. Hexorcist built each one for the ATmega328P, ran seeded gremlins against it on the emulated chip, and recorded what happened.
 
-**Read this first:** with one rule per brief, every sketch held. With seven rules that restate the crossing
-brief, all eight crossing sketches broke the same rule, each on one ordinary button press. The tables below
-show both, in that order.
-Model names are as the chat tool showed them.
+The `.ino` files here are the chat tools' unedited answers. Each file name says which tool and setting wrote it, for example `chatgpt-fast` or `gemini-medium`. Nothing in this README says more about a tool than the results below show.
 
-## Round 1: conveyor (Nov 23, 2026)
+Results are evidence from this seed and this gremlin set. They are not proof.
 
-Brief (sent unchanged):
+## The briefs
 
-> Write a sketch for an ATmega328P board (Uno-compatible) that runs a conveyor. A STOP button is wired from
-> pin 2 to GND (use the internal pull-up). The motor driver input is on pin 8 (HIGH = running). A status LED
-> on pin 13 blinks every 200 ms while the motor runs. When STOP is pressed, the motor must stop right away;
-> when STOP is released, the motor runs again. Keep it simple. Reply with the code only.
+**Round 2 (crossing)**
 
-Rule (`exorcism-demo/rules.txt`): `Within 50 ms after STOP is 0 becomes true, MOTOR is 0 must be true.`
-Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/<file>.ino`
+> Write a sketch for an ATmega328P board (Uno-compatible) for a pedestrian crossing. A REQUEST button is wired from pin 2 to GND (use the internal pull-up). Car lights: green on pin 8, yellow on pin 9, red on pin 10. Pedestrian lights: WALK on pin 11, DON'T WALK on pin 12. Cars have green until someone presses REQUEST. Then: yellow for 150 ms, all red for 50 ms, WALK for 200 ms, all red for 50 ms, then cars get green again. The button can be pressed at any time, including during a crossing. Don't use blocking delays. Keep it simple. Reply with the code only.
 
-| File | Chat tool, model and setting | Verdict |
-|---|---|---|
-| `chatgpt.ino` | ChatGPT (incognito), GPT-6, high thinking | HELD (24 tries) |
-| `claude.ino` | claude.ai (incognito), Opus 5.5, high effort | HELD (24 tries) |
-| `gemini.ino` | Gemini, "4 Hydrogen", medium thinking | HELD (24 tries) |
-| `deepseek.ino` | DeepSeek, DeepThink on (model name not shown) | HELD (24 tries) |
+**Round 3 (motor)**
 
-All four sketches held for this simple brief. HELD means no violation in these 24 tries, not a proof.
+> Write a sketch for an ATmega328P board (Uno-compatible) that drives a DC motor through two transistor switches. The FORWARD switch is on pin 8 and the REVERSE switch is on pin 9 (HIGH = on). Turning both on at the same time, even for a moment, shorts the supply. Three buttons are wired to GND (use the internal pull-ups): FORWARD on pin 2, REVERSE on pin 3, STOP on pin 4. Pressing FORWARD runs the motor forward, pressing REVERSE runs it in reverse (it can switch directly from one direction to the other), and STOP turns both switches off. Keep it simple. Reply with the code only.
 
-## Round 2: pedestrian crossing
+The sketches in `round2/` answer the crossing brief. The sketches in `round3/` answer the motor brief. `round2/chatgpt-high-kiro-fixed.ino` is a hand-fixed copy, not a chat answer, and is not in the tables.
 
-Brief (sent unchanged):
+The four top-level sketches (`chatgpt.ino`, `claude.ino`, `deepseek.ino`, `gemini.ino`) are kept from an earlier brief and are not part of the results tables.
 
-> Write a sketch for an ATmega328P board (Uno-compatible) for a pedestrian crossing. A REQUEST button is
-> wired from pin 2 to GND (use the internal pull-up). Car lights: green on pin 8, yellow on pin 9, red on
-> pin 10. Pedestrian lights: WALK on pin 11, DON'T WALK on pin 12. Cars have green until someone presses
-> REQUEST. Then: yellow for 150 ms, all red for 50 ms, WALK for 200 ms, all red for 50 ms, then cars get
-> green again. The button can be pressed at any time, including during a crossing. Don't use blocking
-> delays. Keep it simple. Reply with the code only.
+## How to reproduce
 
-Rule (`examples/crosswalk/rules.txt`): `all of (CAR_GREEN is 1, WALK is 1) must never happen.`
-Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/round2/<file>.ino exorcism-demo/crosswalk-check.json`
+Run these from the repo root. Each Try_Script command copies one sketch into the work folder, builds it, and runs the headless checker. It needs the command-line sketch compiler tool installed. Its exit code is the checker's exit code: 0 for HELD, 1 for BROKE, 2 for COULDN'T TELL, 3 for an input or build error.
 
-Results (Nov 23, 2026), Masher, 24 tries, seed 20261101:
-
-| File | Chat tool, model and setting | Verdict |
-|---|---|---|
-| `chatgpt-fast.ino` | ChatGPT, fast setting | HELD (24 tries) |
-| `chatgpt-high.ino` | ChatGPT, high thinking | HELD (24 tries) |
-| `gemini-fast.ino` | Gemini, fast setting | HELD (24 tries) |
-| `gemini-medium.ino` | Gemini, medium thinking | HELD (24 tries) |
-| `deepseek-fast.ino` | DeepSeek, DeepThink off | HELD (24 tries) |
-| `deepseek-high.ino` | DeepSeek, DeepThink on | HELD (24 tries) |
-| `claude-fast.ino` | claude.ai, Haiku 5.5, medium effort | HELD (24 tries) |
-| `claude-high.ino` | claude.ai, Opus 5.5, high effort | HELD (24 tries) |
-
-A first run of these files was checked against the conveyor rule by mistake (an old `try.mjs` that ignored
-the config argument); those results are discarded.
-
-## Round 2 stress check
-
-The same eight files with two gremlins (Masher and Bouncer, the contact-bounce gremlin) and 200 tries:
-`node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-stress-check.json`
-
-All eight: **HELD (200 tries)**.
-
-## Round 2, full rules from the brief
-
-One rule checks one thing. These seven rules restate the brief (`exorcism-demo/crosswalk-full-rules.txt`):
+| Table | Config file | Seed | Gremlin set | Runs |
+| --- | --- | --- | --- | --- |
+| crosswalk-check | `exorcism-demo/crosswalk-check.json` | 20261101 | masher | 24 |
+| crosswalk-full-check | `exorcism-demo/crosswalk-full-check.json` | 20261101 | masher,bouncer | 200 |
+| motor-check | `exorcism-demo/motor-check.json` | 20261101 | masher,bouncer | 200 |
 
 ```
-all of (CAR_GREEN is 1, WALK is 1) must never happen.
-all of (WALK is 1, DONT_WALK is 1) must never happen.
-all of (CAR_GREEN is 1, CAR_YELLOW is 1) must never happen.
-all of (CAR_GREEN is 1, CAR_RED is 1) must never happen.
-all of (CAR_YELLOW is 1, CAR_RED is 1) must never happen.
-CAR_YELLOW is 1 must never last 200 ms or longer.
-WALK is 1 must never last 250 ms or longer.
+node exorcism-demo/try.mjs exorcism-demo/benchmark/round2/<sketch>.ino exorcism-demo/crosswalk-check.json
+node exorcism-demo/try.mjs exorcism-demo/benchmark/round2/<sketch>.ino exorcism-demo/crosswalk-full-check.json
+node exorcism-demo/try.mjs exorcism-demo/benchmark/round3/<sketch>.ino exorcism-demo/motor-check.json
 ```
 
-The two timing rules give the brief's 150 ms yellow and 200 ms WALK 50 ms of slack. The WALK rule is a
-reading of the brief: a sketch that restarts WALK when the button is pressed during WALK would break it.
-Calibration: the Crosswalk example's fixed build holds all seven (Masher + Bouncer, 200 tries, seed
-20261101); its buggy build breaks the first rule on try 4.
+After a Try_Script run, `exorcism-demo/build/sketch.hex` holds the HEX of that sketch. The overlap numbers come from the overlap script, which reads that HEX and counts CPU cycles on the emulated chip (16 MHz, so microseconds are cycles divided by 16).
 
-Check: `node exorcism-demo/try.mjs <file> exorcism-demo/crosswalk-full-check.json`
-
-| File | Verdict | Both-on time (`measure-round2.mjs`) |
-|---|---|---|
-| `chatgpt-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
-| `chatgpt-high.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 990.3 ms |
-| `claude-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 990.3 ms |
-| `claude-high.ino` | BROKE, try 1 of 200 | 77 cycles, 4.81 µs at 990.3 ms |
-| `deepseek-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
-| `deepseek-high.ino` | BROKE, try 1 of 200 | 73 cycles, 4.56 µs at 970.8 ms |
-| `gemini-fast.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
-| `gemini-medium.ino` | BROKE, try 1 of 200 | 78 cycles, 4.88 µs at 970.8 ms |
-
-All eight broke the same rule, `all of (WALK is 1, DONT_WALK is 1) must never happen.`, and the reducer cut
-each replay to one ordinary press of REQUEST (at 770.5 ms). Reading the code explains it: every sketch sets
-the lights in a helper that writes WALK and then DON'T WALK, one `digitalWrite` after the other. When WALK
-comes on, both pedestrian lights are on for about 5 microseconds (one `digitalWrite`) before DON'T WALK goes
-off. The sketches that break at 990.3 ms add a 20 ms debounce before reacting to the press.
-
-What this means: this is a real, repeatable behaviour of the code, measured in CPU cycles, not a checker
-error. On lamps nobody would see it. The same write order on two outputs that must never be on together
-(for example the two sides of a motor driver) is the pattern behind a short circuit. The rule decides which
-you care about: `must never happen` catches it; `must never last 1 ms or longer` accepts it (checked on a
-replica of the same write order). The fix is to switch lights off before switching others on, as the
-Crosswalk example's fixed build does.
-
-## Round 3: motor direction (a brief where a short overlap matters)
-
-Brief (sent unchanged):
-
-> Write a sketch for an ATmega328P board (Uno-compatible) that drives a DC motor through two transistor
-> switches. The FORWARD switch is on pin 8 and the REVERSE switch is on pin 9 (HIGH = on). Turning both on at
-> the same time, even for a moment, shorts the supply. Three buttons are wired to GND (use the internal
-> pull-ups): FORWARD on pin 2, REVERSE on pin 3, STOP on pin 4. Pressing FORWARD runs the motor forward,
-> pressing REVERSE runs it in reverse (it can switch directly from one direction to the other), and STOP turns
-> both switches off. Keep it simple. Reply with the code only.
-
-Rules (`exorcism-demo/motor/rules.txt`), restating the brief:
+Crossing, WALK and DONT_WALK together, measured on the reduced replay of try 1:
 
 ```
-all of (FORWARD is 1, REVERSE is 1) must never happen.
-Within 50 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0 must be true.
-Within 50 ms after STOP_BUTTON is 0 becomes true, REVERSE is 0 must be true.
+npx tsx --no-deprecation exorcism-demo/measure-overlap.ts exorcism-demo/build/sketch.hex examples/crosswalk/fixture.json WALK DONT_WALK --run-ms 1000 --gremlins masher,bouncer --seed 20261101 --try 1 --reduced --rules exorcism-demo/crosswalk-full-rules.txt
 ```
 
-Calibration (plain C replicas built with avr-gcc, Masher + Bouncer, 200 tries, seed 20261101): a helper that
-writes FORWARD and then REVERSE breaks the first rule on try 2; one that switches both off before turning one
-on holds all 200 tries.
+Motor, FORWARD and REVERSE together, measured across all 200 tries:
 
-Check: `node exorcism-demo/try.mjs exorcism-demo/benchmark/round3/<file>.ino exorcism-demo/motor-check.json`
+```
+npx tsx --no-deprecation exorcism-demo/measure-overlap.ts exorcism-demo/build/sketch.hex exorcism-demo/motor/pins.json FORWARD REVERSE --run-ms 1000 --campaign masher,bouncer --seed 20261101 --runs 200
+```
 
-Results (Nov 24, 2026), Masher + Bouncer, 200 tries, seed 20261101; same chat tools and settings as round 2:
+## What the verdicts mean
 
-| File | Verdict |
-|---|---|
-| `chatgpt-fast.ino` | BROKE on try 159: the STOP rule, after a 0.7 ms blip on STOP (see below) |
-| `chatgpt-high.ino` | HELD (200 tries) |
-| `gemini-fast.ino` | HELD (200 tries) |
-| `gemini-medium.ino` | HELD (200 tries) |
-| `deepseek-fast.ino` | HELD (200 tries) |
-| `deepseek-high.ino` | HELD (200 tries) |
-| `claude-fast.ino` | HELD (200 tries) |
-| `claude-high.ino` | HELD (200 tries) |
+- **HELD**: "No violation found in N emulated runs of this gremlin set. Not a proof." The gremlins tried N times and the rule never failed. A different seed, a different gremlin set, or a longer run could still find a failure, so HELD is not a proof.
+- **BROKE**: a monitor saw the rule fail. The trace that caused it is shown, and the reducer cuts it down to the smallest replay this reducer found.
+- **COULDN'T TELL**: the rule cannot be checked with the signals, peripherals, or run length available. The verdict says why. This did not happen in any run below.
 
-**No sketch turned both switches on, not even for a microsecond.** Each one switches the old direction off
-before it switches the new one on, and 5 of the 8 also add a wait ("dead time") between the two.
+A 73 to 78 cycle overlap is 4.56 to 4.88 microseconds. That is brief, but the rule says WALK and DONT_WALK must never both be on. The rule has no minimum time, so any overlap is a violation.
 
-**The one BROKE is not counted as a bug.** The reducer cut it to three moves: the Masher holds FORWARD, then
-the Bouncer pulls STOP low for 0.7 ms and lets go. `chatgpt-fast.ino` waits 10 ms (its "dead time") on every
-loop while a direction button is held, so it reads STOP about once every 10 ms and misses a 0.7 ms blip. A
-person's press lasts far longer and would be seen within about 10 ms, so ignoring a sub-millisecond contact
-blip is acceptable behaviour for a stop button. The rule is too strict here: it starts its 50 ms clock on any
-low level of STOP, and the rule language cannot yet say "pressed for at least N ms".
+## Results
 
-## Rounds 2 and 3 side by side
+Every HELD cell below reads the same: "No violation found in N emulated runs of this gremlin set. Not a proof." with the N shown in the note column.
 
-| Brief | Did the brief warn about outputs being on together? | Sketches that turned both on at once |
-|---|---|---|
-| Crossing (round 2) | No | 8 of 8 (WALK and DON'T WALK, about 5 µs, on every crossing) |
-| Motor (round 3) | Yes: "even for a moment, shorts the supply" | 0 of 8 |
+### Round 2 (crossing), crosswalk-check
 
-Told about the hazard, every sketch avoided it; not told, every sketch had it. The check finds what the brief
-forgot to say, and a rule written from what you need catches it whether or not you told the AI.
+Rule: `all of (CAR_GREEN is 1, WALK is 1) must never happen.`
 
-## In the app
+| Sketch | Verdict | Exit code | Try number | Note |
+| --- | --- | --- | --- | --- |
+| chatgpt-fast | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| chatgpt-high | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| claude-fast | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| claude-high | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| deepseek-fast | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| deepseek-high | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| gemini-fast | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
+| gemini-medium | HELD | 0 | none | No violation found in 24 emulated runs of this gremlin set. Not a proof. |
 
-**Your own program → Try a chat-written sketch** loads `chatgpt-high.hex` unedited, with the Crosswalk pins
-and the rule it broke. BROKE on try 1 of 24, one press, and the story says the overlap lasted 4.9
-microseconds.
+### Round 2 (crossing), crosswalk-full-check
 
-![The chat-written sketch in the app: walk sign and don't-walk sign both on, one press, 4.9 microseconds](../../docs/img/chat-written.png)
+Rule: `all of (WALK is 1, DONT_WALK is 1) must never happen.`
 
-## The Exorcism Loop on `chatgpt-high.ino`
+The overlap is the longest stretch where WALK and DONT_WALK were both 1, measured on the smallest replay this reducer found for try 1. Every reduced list went from 15 moves to 1.
 
-Kiro (Vibe mode, model Auto, with the hexorcist power) got `chatgpt-high.ino` as
-`exorcism-demo/sketch/sketch.ino`, the seven rules, Masher + Bouncer, 24 tries, seed 20261101:
+| Sketch | Verdict | Exit code | Try number | Note |
+| --- | --- | --- | --- | --- |
+| chatgpt-fast | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint d6e86c6d8619b907. |
+| chatgpt-high | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint a535ab6ae6984890. |
+| claude-fast | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint b171d7dfc441e8b6. |
+| claude-high | BROKE | 1 | 1 | Overlap 77 cycles (4.81 us). Fingerprint 9fa624d83c9d5b33. |
+| deepseek-fast | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint 121116bae141fef2. |
+| deepseek-high | BROKE | 1 | 1 | Overlap 73 cycles (4.56 us). Fingerprint 3ebac69b26f4addb. |
+| gemini-fast | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint bcbc2d7d6aa3d9a2. |
+| gemini-medium | BROKE | 1 | 1 | Overlap 78 cycles (4.88 us). Fingerprint eb807b1b943786a0. |
 
-1. BROKE: `all of (WALK is 1, DONT_WALK is 1) must never happen.` Kiro swapped the two writes.
-2. BROKE: `all of (CAR_GREEN is 1, CAR_RED is 1) must never happen.` (car green on before red off at the end
-   of the crossing). Kiro changed the light helper to switch each light off before the next one on.
-3. HELD. 45 seconds, 0.58 credits.
+### Round 3 (motor), motor-check
 
-Independent check of Kiro's result (`round2/chatgpt-high-kiro-fixed.ino`): HELD in 200 tries with Masher +
-Bouncer and all seven rules; `overlap.ts` shows WALK and DON'T WALK never on together.
+Rules:
 
-## Summary
+- `all of (FORWARD is 1, REVERSE is 1) must never happen.`
+- `Within 50 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0 must be true.`
+- `Within 50 ms after STOP_BUTTON is 0 becomes true, REVERSE is 0 must be true.`
 
-| Round | Sketches | Rules and gremlins | Result |
-|---|---|---|---|
-| 1 conveyor | 4 | 1 rule; Masher, 24 tries | 4 HELD |
-| 2 crossing | 8 | 1 rule; Masher, 24 tries | 8 HELD |
-| 2 crossing, stress | 8 | 1 rule; Masher + Bouncer, 200 tries | 8 HELD |
-| 2 crossing, full rules | 8 | 7 rules from the brief; Masher + Bouncer, 200 tries | 8 BROKE, all on the same ~5 µs WALK + DON'T WALK overlap |
-| 3 motor, warned | 8 | 3 rules from the brief; Masher + Bouncer, 200 tries | 7 HELD; 1 BROKE on a 0.7 ms STOP blip, not counted as a bug; 0 overlaps |
+The FORWARD and REVERSE overlap was measured across all 200 tries for every sketch. It was 0 cycles (0.00 us) each time: no overlap found in those tries.
 
-HELD means no violation in the runs made, not a proof.
+| Sketch | Verdict | Exit code | Try number | Note |
+| --- | --- | --- | --- | --- |
+| chatgpt-fast | BROKE | 1 | 159 | Rule: `Within 50 ms after STOP_BUTTON is 0 becomes true, FORWARD is 0 must be true.` Failed at cycle 5446730. Reduced from 18 moves to 3 (the smallest replay this reducer found). Fingerprint 59f29aa1c74f2e8a. STOP_BUTTON was low for 11337 cycles (0.71 ms), worked out from the reduced list. |
+| chatgpt-high | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| claude-fast | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| claude-high | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| deepseek-fast | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| deepseek-high | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| gemini-fast | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+| gemini-medium | HELD | 0 | none | No violation found in 200 emulated runs of this gremlin set. Not a proof. |
+
+### Why `chatgpt-fast` missed the short STOP press
+
+From reading the code: in `round3/chatgpt-fast.ino` (lines 29 to 38), when a direction button is held the loop clears one output, calls `delay(10)`, then sets the other. So each pass through `loop()` can spend 10 ms before it reads STOP again. This is an explanation from reading the code. It was not measured.
+
+## What this does and does not show
+
+Tests are evidence, not proof. Every result above comes from seed 20261101 and the gremlin set named in its table. A HELD row means these gremlins did not break the sketch in these runs. It says nothing about other seeds, other gremlins, or a real board wired to real parts. A BROKE row shows a rule failing on the emulated ATmega328P, with a replay you can run again.

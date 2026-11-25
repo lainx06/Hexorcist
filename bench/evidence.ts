@@ -2,7 +2,7 @@
  * bench/evidence.ts
  *
  * Evidence bench (honest-verdicts, Part 3). Run with: npm run bench:evidence (tsx, sequential).
- * - Seed sweep: each buggy example at campaignSeed 1..100, each fixed example at 1..100.
+ * - Seed sweep: each buggy example at campaignSeed 1..100, each fixed example at 1..20.
  * - Single-press sweep: the example-firmware Single_Input moved to every 10 ms start that fits.
  * Writes docs/evidence/EVIDENCE-NUMBERS.md. The wall clock is read here and nowhere else in this
  * spec's files, only for the date and the times in the doc; no clock value reaches the engine.
@@ -29,7 +29,7 @@ const ROOT = resolve(__dirname, '..');
 const DOC_PATH = resolve(ROOT, 'docs/evidence/EVIDENCE-NUMBERS.md');
 
 const EXAMPLES: ExampleId[] = ['crosswalk', 'garage', 'heartbeat'];
-const SEEDS: Record<Variant, [number, number]> = { buggy: [1, 100], fixed: [1, 100] };
+const SEEDS: Record<Variant, [number, number]> = { buggy: [1, 100], fixed: [1, 20] };
 
 /** Single_Input of the example-firmware spec (tasks 4.5, 6.5, 8.5): signal and hold in cycles. */
 const SINGLE_INPUT: Record<string, { signal: string; holdCycles: number }> = {

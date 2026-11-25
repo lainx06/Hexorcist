@@ -1,167 +1,178 @@
-// headless-runner: runCheck (Requirement 2), the Result_Object, toJson, toSummary and exitCodeOf
-// (Requirements 3 and 4). Pure apart from the engine jobs it is given. No clock, no random source.
-import type { ReducerEvent } from "../src/engine/reducer/types";
-import { runCampaignJob, runReductionJob, runReplayJob } from "../src/ui/app/worker/host";
-import type { JobError } from "../src/ui/app/worker/messages";
+// runCheck: one campaign job, then reduction and replay only when the verdict is BROKE.
+// No clock, no random source, no network. The jobs are the same functions the page's worker calls.
 import { REASON_MAX_LENGTH } from "../src/engine/verdict";
+import type { ReducerResult } from "../src/engine/reducer/types";
+import type { Verdict } from "../src/engine/types";
+import * as host from "../src/ui/app/worker/host";
+import type { ReplayJobResult } from "../src/ui/app/worker/host";
+import type { CompactCampaignResult, JobError } from "../src/ui/app/worker/messages";
 import type { CheckInput } from "./input-loader";
-
-export interface Jobs {
-  campaign: typeof runCampaignJob;
-  reduction: typeof runReductionJob;
-  replay: typeof runReplayJob;
-}
-
-export const HOST_JOBS: Jobs = { campaign: runCampaignJob, reduction: runReductionJob, replay: runReplayJob };
-
-interface Common {
-  toolVersion: string;
-  seed: number;
-  runs: number;
-  gremlins: string[];
-  rules: string[];
-}
-
-export interface BrokeResult extends Common {
-  verdict: "BROKE";
-  try: number;
-  movesBefore: number;
-  movesAfter: number;
-  fingerprint: string;
-  violation: { rule: string; cycle: number };
-  reducedList: ReducerEvent[];
-}
-
-export interface HeldResult extends Common {
-  verdict: "HELD";
-  n: number;
-  text: string;
-}
-
-export interface CouldntTellResult extends Common {
-  verdict: "COULDN'T TELL";
-  reason: string;
-  /** True when the engine cut the reason at its 200-character limit; check the rules one at a time. */
-  reasonTruncated: boolean;
-  peripherals: string[];
-}
-
-export type ResultObject = BrokeResult | HeldResult | CouldntTellResult;
 
 export type JobName = "campaign" | "reduction" | "replay";
 
-export type CheckOutcome = { ok: true; result: ResultObject } | { ok: false; job: JobName; error: JobError };
-
-const jobFail = (job: JobName, error: JobError): CheckOutcome => ({ ok: false, job, error: { kind: error.kind, message: error.message } });
-
-/** One campaign; on BROKE one reduction and one replay of the reduced list; nothing else. */
-export function runCheck(input: CheckInput, toolVersion: string, jobs: Jobs = HOST_JOBS): CheckOutcome {
-  const { hex, fixture, ruleSet, gremlinSet, campaignSeed, runs, runCycles } = input;
-  const c = jobs.campaign({ hex, fixture, ruleSet, gremlinSet, campaignSeed, runs, runCycles });
-  if (!c.ok) return jobFail("campaign", c.error);
-  const common: Common = {
-    toolVersion,
-    seed: campaignSeed,
-    runs: c.result.requestedRuns,
-    gremlins: gremlinSet.map((g) => g.id),
-    rules: [...input.ruleSentences],
-  };
-  const v = c.result.verdict;
-  if (v.verdict === "HELD") {
-    return { ok: true, result: { toolVersion, verdict: "HELD", seed: common.seed, runs: common.runs, gremlins: common.gremlins, rules: common.rules, n: v.runs, text: v.text } };
-  }
-  if (v.verdict === "COULDN'T TELL") {
-    const ids: string[] = [];
-    for (const u of c.result.peripheralUses?.uses ?? []) if (!ids.includes(u.peripheral)) ids.push(u.peripheral);
-    return {
-      ok: true,
-      result: { toolVersion, verdict: "COULDN'T TELL", seed: common.seed, runs: common.runs, gremlins: common.gremlins, rules: common.rules, reason: v.reason, reasonTruncated: v.reason.length >= REASON_MAX_LENGTH, peripherals: ids },
-    };
-  }
-  const red = jobs.reduction({ hex, fixture, ruleSet, originalList: v.trace.eventList, violation: v.trace.violation, runCycles });
-  if (!red.ok) return jobFail("reduction", red.error);
-  const rep = jobs.replay({ hex, fixture, ruleSet, events: red.result.reducedList, runCycles });
-  if (!rep.ok) return jobFail("replay", rep.error);
-  // The page shows the reduced replay's violation; fall back to the campaign's if the replay has none.
-  const vio = rep.violation ?? v.trace.violation;
-  const tryIndex = c.result.violatingRunIndex ?? v.trace.runIndex;
-  return {
-    ok: true,
-    result: {
-      toolVersion,
-      verdict: "BROKE",
-      seed: common.seed,
-      runs: common.runs,
-      gremlins: common.gremlins,
-      rules: common.rules,
-      try: tryIndex + 1,
-      movesBefore: red.result.originalEventCount,
-      movesAfter: red.result.reducedEventCount,
-      fingerprint: rep.fingerprint,
-      violation: { rule: vio.rule, cycle: vio.cycle },
-      reducedList: red.result.reducedList.map(eventCopy),
-    },
-  };
+/** The three job functions. Tests pass stubs. */
+export interface Jobs {
+  runCampaignJob: typeof host.runCampaignJob;
+  runReductionJob: typeof host.runReductionJob;
+  runReplayJob: typeof host.runReplayJob;
 }
 
-/** A fixed key order for each event, so the JSON does not depend on how the engine built the object. */
-function eventCopy(e: ReducerEvent): ReducerEvent {
-  const out: Record<string, unknown> = {};
-  for (const k of ["cycle", "signal", "value", "gremlinId"]) if (k in e) out[k] = (e as unknown as Record<string, unknown>)[k];
-  for (const k of Object.keys(e).sort()) if (!(k in out)) out[k] = (e as unknown as Record<string, unknown>)[k];
-  return out as unknown as ReducerEvent;
-}
-
-/** Requirement 3.4: fixed key order (object literal order above), two-space indent, LF, one trailing LF. */
-export function toJson(r: ResultObject): string {
-  return `${JSON.stringify(r, null, 2)}\n`;
-}
-
-export function exitCodeOf(outcome: CheckOutcome | { ok: false; reason: string }): 0 | 1 | 2 | 3 {
-  if (!outcome.ok) return 3;
-  const v = outcome.result.verdict;
-  return v === "HELD" ? 0 : v === "BROKE" ? 1 : 2;
-}
-
-/** Cycles at 16 MHz as milliseconds with one decimal (integer arithmetic). */
-const ms = (cycle: number): string => {
-  const tenths = Math.round(cycle / 1600);
-  return `${Math.floor(tenths / 10)}.${tenths % 10} ms`;
+export const hostJobs: Jobs = {
+  runCampaignJob: host.runCampaignJob,
+  runReductionJob: host.runReductionJob,
+  runReplayJob: host.runReplayJob,
 };
 
-function moveLine(e: ReducerEvent): string {
-  const rec = e as unknown as Record<string, unknown>;
-  const parts = Object.keys(rec)
-    .filter((k) => k !== "cycle" && k !== "signal" && k !== "gremlinId")
-    .map((k) => (k === "value" ? String(rec[k]) : `${k} ${JSON.stringify(rec[k])}`));
-  const who = typeof rec.gremlinId === "string" ? ` (${rec.gremlinId})` : "";
-  return `  at ${ms(e.cycle)}: ${e.signal} = ${parts.join(", ")}${who}`;
+/** What the three jobs produced. `reduction` and `replay` are present only for BROKE. */
+export interface CheckRun {
+  verdict: Verdict;
+  campaign: CompactCampaignResult;
+  reduction?: ReducerResult;
+  replay?: Extract<ReplayJobResult, { ok: true }>;
 }
 
-/** The plain-text summary (Requirements 3.1, 3.6 to 3.8). Same strings as the JSON, LF line ends. */
-export function toSummary(r: ResultObject): string {
-  const head = [r.verdict];
-  const setup = `Seed ${r.seed}, ${r.runs} tries, gremlins: ${r.gremlins.join(", ") || "none"}.`;
-  const rules = r.rules.map((s) => `Rule: ${s}`);
-  let body: string[];
-  if (r.verdict === "HELD") {
-    body = [r.text, setup, ...rules];
-  } else if (r.verdict === "COULDN'T TELL") {
-    body = [
-      r.reasonTruncated ? `${r.reason}... (cut at ${REASON_MAX_LENGTH} characters; check the rules one at a time to see each reason)` : r.reason,
-      ...(r.peripherals.length > 0 ? [`Peripherals used: ${r.peripherals.join(", ")}`] : []),
-      setup,
-      ...rules,
-    ];
-  } else {
-    body = [
-      `Broken rule: ${r.violation.rule}`,
-      `Try ${r.try} of ${r.runs} broke it, at ${ms(r.violation.cycle)} into the replay.`,
-      `${setup}`,
-      `The smallest replay this reducer found: ${r.movesAfter} of ${r.movesBefore} moves.`,
-      ...r.reducedList.map(moveLine),
-      `Fingerprint: ${r.fingerprint}`,
-    ];
+export type CheckOutcome = { ok: true; result: CheckRun } | { ok: false; job: JobName; error: JobError };
+
+const thrown = (e: unknown): JobError => ({
+  kind: "internal-error",
+  message: e instanceof Error ? e.message : String(e),
+});
+
+export function runCheck(input: CheckInput, jobs: Jobs = hostJobs): CheckOutcome {
+  let campaign: ReturnType<Jobs["runCampaignJob"]>;
+  try {
+    campaign = jobs.runCampaignJob({
+      hex: input.hex,
+      fixture: input.fixture,
+      ruleSet: input.ruleSet,
+      gremlinSet: input.gremlinSet,
+      campaignSeed: input.campaignSeed,
+      runs: input.runs,
+      runCycles: input.runCycles,
+    });
+  } catch (e) {
+    return { ok: false, job: "campaign", error: thrown(e) };
   }
-  return `${[...head, ...body].join("\n")}\n`;
+  if (!campaign.ok) return { ok: false, job: "campaign", error: campaign.error };
+  const verdict = campaign.result.verdict;
+  if (verdict.verdict !== "BROKE") return { ok: true, result: { verdict, campaign: campaign.result } };
+
+  let reduction: ReturnType<Jobs["runReductionJob"]>;
+  try {
+    reduction = jobs.runReductionJob({
+      hex: input.hex,
+      fixture: input.fixture,
+      ruleSet: input.ruleSet,
+      originalList: verdict.trace.eventList,
+      violation: verdict.trace.violation,
+      runCycles: input.runCycles,
+    });
+  } catch (e) {
+    return { ok: false, job: "reduction", error: thrown(e) };
+  }
+  if (!reduction.ok) return { ok: false, job: "reduction", error: reduction.error };
+
+  let replay: ReplayJobResult;
+  try {
+    replay = jobs.runReplayJob({
+      hex: input.hex,
+      fixture: input.fixture,
+      ruleSet: input.ruleSet,
+      events: reduction.result.reducedList,
+      runCycles: input.runCycles,
+    });
+  } catch (e) {
+    return { ok: false, job: "replay", error: thrown(e) };
+  }
+  if (!replay.ok) return { ok: false, job: "replay", error: replay.error };
+
+  return { ok: true, result: { verdict, campaign: campaign.result, reduction: reduction.result, replay } };
 }
+
+/** A loader failure: the reason goes to stderr, no run starts. */
+export type LoadFailure = { ok: false; reason: string };
+
+/** 0 HELD, 1 BROKE, 2 COULDN'T TELL, 3 loader failure or job error. */
+export function exitCodeOf(outcome: CheckOutcome | LoadFailure): 0 | 1 | 2 | 3 {
+  if (!outcome.ok || !("result" in outcome)) return 3;
+  switch (outcome.result.verdict.verdict) {
+    case "HELD":
+      return 0;
+    case "BROKE":
+      return 1;
+    default:
+      return 2;
+  }
+}
+
+type Ok = Extract<CheckOutcome, { ok: true }>;
+
+/** Unmodelled peripheral ids named by the campaign, in order of appearance, no repeats. */
+function peripheralIds(run: CheckRun): string[] {
+  const ids: string[] = [];
+  for (const u of run.campaign.peripheralUses?.uses ?? []) if (!ids.includes(u.peripheral)) ids.push(u.peripheral);
+  return ids;
+}
+
+/**
+ * The Result_Object as text. Keys are written in the design's fixed order by object literals,
+ * so no sorting step is needed. UTF-8 text, LF only, one trailing LF, no time, path, host or duration.
+ */
+export function toJson(input: CheckInput, outcome: Ok, toolVersion: string): string {
+  const { verdict, campaign, reduction, replay } = outcome.result;
+  const head = {
+    toolVersion,
+    verdict: verdict.verdict,
+    seed: input.campaignSeed,
+    runs: campaign.requestedRuns,
+    gremlins: input.gremlinSet.map((g) => g.id),
+    rules: input.ruleSentences,
+  };
+  let obj: object;
+  if (verdict.verdict === "BROKE") {
+    obj = {
+      ...head,
+      try: (campaign.violatingRunIndex ?? verdict.trace.runIndex) + 1,
+      movesBefore: reduction?.originalEventCount ?? null,
+      movesAfter: reduction?.reducedEventCount ?? null,
+      fingerprint: replay?.fingerprint ?? null,
+      violation: { rule: verdict.trace.violation.rule, cycle: verdict.trace.violation.cycle },
+      reducedList: reduction?.reducedList ?? [],
+      outputEdges: replay?.outputEdges ?? [],
+    };
+  } else if (verdict.verdict === "HELD") {
+    obj = { ...head, n: verdict.runs, text: verdict.text };
+  } else {
+    obj = {
+      ...head,
+      reason: verdict.reason,
+      reasonTruncated: isReasonTruncated(verdict.reason),
+      peripherals: peripheralIds(outcome.result),
+    };
+  }
+  return `${JSON.stringify(obj, null, 2)}\n`;
+}
+
+/** Plain-text summary. It holds the exact verdict string and the same values as the JSON. */
+export function toSummary(input: CheckInput, outcome: Ok): string {
+  const { verdict, campaign, reduction, replay } = outcome.result;
+  if (verdict.verdict === "HELD") return `HELD\n${verdict.text}\n`;
+  if (verdict.verdict === "COULDN'T TELL") return `COULDN'T TELL\nWhat stopped the check: ${verdict.reason}\n`;
+  const lines = [
+    "BROKE",
+    `Rule broken: ${verdict.trace.violation.rule} at cycle ${verdict.trace.violation.cycle}`,
+    `Try ${(campaign.violatingRunIndex ?? verdict.trace.runIndex) + 1} of ${campaign.requestedRuns}, seed ${input.campaignSeed}`,
+  ];
+  if (reduction !== undefined && replay !== undefined) {
+    lines.push(
+      `Moves: ${reduction.originalEventCount} to ${reduction.reducedEventCount} (the smallest replay this reducer found)`,
+      `Fingerprint: ${replay.fingerprint}`,
+      "Reduced moves:",
+      ...reduction.reducedList.map((e) => `  ${JSON.stringify(e)}`),
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/** True when the reason reached the engine's cap, so it may have been cut. Blind spots are documented in the design. */
+export const isReasonTruncated = (reason: string): boolean => reason.length >= REASON_MAX_LENGTH;

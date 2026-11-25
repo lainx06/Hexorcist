@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "hexorcist",
   "version": "0.1.0",
-  "description": "Checks compiled ATmega328P programs against plain-sentence rules with seeded scripted gremlins. Three answers: BROKE, HELD (not a proof) or COULDN'T TELL.",
+  "description": "Checks small ATmega328P programs with plain-English rules and seeded gremlins on an emulated chip, then reports a replayable trace.",
   "author": { "name": "lainx06", "url": "https://github.com/lainx06" },
-  "keywords": ["hexorcist", "gremlins", "firmware", "atmega328p", "avr", "sketch", "microcontroller"],
+  "keywords": ["ATmega328P", "firmware", "emulator", "avr8js", "testing"],
   "homepage": "https://lainx06.github.io/Hexorcist/",
   "repository": "https://github.com/lainx06/Hexorcist",
   "license": "MIT"

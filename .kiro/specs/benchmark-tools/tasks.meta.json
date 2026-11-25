@@ -1,0 +1,411 @@
+{
+  "pbtResults": {
+    "2.7 Write property test for the Check_Config JSON round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795570872615
+    },
+    "4.4 Write property test for overlap shape and formula": {
+      "status": "passed",
+      "lastRunTimestamp": 1795570883069
+    },
+    "4.6 Write property test for repeat determinism": {
+      "status": "passed",
+      "lastRunTimestamp": 1795570951943
+    }
+  },
+  "executionHistory": {
+    "1.1 Create the three Check_Configs": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568153998
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568158398
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568224792
+      }
+    ],
+    "1.2 Create the Motor_Pins fixture and Motor_Rules": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154034
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568158479
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568225339
+      }
+    ],
+    "2.1 Write `exorcism-demo/try.mjs`": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154065
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568158986
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568226138
+      }
+    ],
+    "3. Checkpoint - Try_Script and fixtures": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154118
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569620437
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569924598
+      }
+    ],
+    "4.1 Write `exorcism-demo/measure-overlap.ts` core and single-replay mode": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154148
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568159511
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568226943
+      }
+    ],
+    "4.2 Add try-replay, reduced-replay, and campaign modes": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154182
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568232702
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568413345
+      }
+    ],
+    "5. Checkpoint - Overlap_Script": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154216
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571074464
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571368419
+      }
+    ],
+    "7. Checkpoint - Everything built, before the benchmark run": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154245
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571373466
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571374997
+      }
+    ],
+    "8.1 Crosswalk_Check, one Round_2_Sketch at a time": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154279
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568418588
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568514141
+      }
+    ],
+    "8.2 Crosswalk_Full_Check, one Round_2_Sketch at a time": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154334
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568515861
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568622881
+      }
+    ],
+    "8.3 Motor_Check, one Round_3_Sketch at a time": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154361
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568624704
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569516293
+      }
+    ],
+    "8.4 Confirm the 10 ms wait by reading the code": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154396
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569518125
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569536259
+      }
+    ],
+    "9. Checkpoint - Gate result": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154428
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571376685
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571378669
+      }
+    ],
+    "10.1 Write `exorcism-demo/benchmark/README.md` from the recorded results": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154459
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569539753
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569594599
+      }
+    ],
+    "11.1 Remove temporary files": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154489
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569596268
+      },
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569616661
+      }
+    ],
+    "11.2 Final checkpoint": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568154526
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571379279
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571380808
+      }
+    ],
+    "1. Add the fixed config, fixture, and rule files": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568225378
+      }
+    ],
+    "2. Implement the Try_Script": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568226177
+      }
+    ],
+    "4. Implement the Overlap_Script": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795568413402
+      }
+    ],
+    "8. Run the benchmark and compare to the expected results (stop at the first difference)": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569536295
+      }
+    ],
+    "10. Write the Results_README": [
+      {
+        "executionId": "4aff4a8d-ce88-49ec-b915-19b7a9ced5c0",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795569594635
+      }
+    ],
+    "2.7 Write property test for the Check_Config JSON round trip": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570842549
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570888729
+      }
+    ],
+    "4.4 Write property test for overlap shape and formula": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570842615
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570889524
+      }
+    ],
+    "4.5 Write property test for campaign maximum selection": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570890335
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570916439
+      }
+    ],
+    "4.6 Write property test for repeat determinism": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570917284
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570960800
+      }
+    ],
+    "6.1 Write guard-scan and package tests": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795570961267
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571041677
+      }
+    ],
+    "6. Project-constraint tests": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571041728
+      }
+    ],
+    "10.2 Write the README scan test": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571041932
+      },
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571068168
+      }
+    ],
+    "11. Clean up and final checkpoint": [
+      {
+        "executionId": "c29d93d6-262e-42d0-8df2-23cf9b208968",
+        "chatSessionId": "sess_9c7404a8-a9f2-484a-8c1a-899ba9c227db",
+        "timestamp": 1795571380847
+      }
+    ]
+  }
+}

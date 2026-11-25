@@ -77,11 +77,7 @@ function reference(c: { list: ReducerEvent[]; fixture: Fixture; v: number; endin
       c.span.cut
         ? `It was still that way ${ms(c.span.lengthCycles)} later, when the replay stopped.`
         : c.span.lengthCycles < 8000
-          ? // Added after the Kiro credit limit (claude): a span under half a millisecond is told in microseconds.
-            `It lasted ${(() => {
-              const t = Math.round((c.span.lengthCycles * 10) / 16);
-              return `${Math.floor(t / 10)}.${t % 10} microseconds`;
-            })()}, too short to round to a whole millisecond.`
+          ? `It lasted ${(c.span.lengthCycles / 16).toFixed(1)} microseconds, too short to round to a whole millisecond.`
           : c.spanText.split("<Plain_Ms>").join(ms(c.span.lengthCycles)),
     );
   }

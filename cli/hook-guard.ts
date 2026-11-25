@@ -1,88 +1,118 @@
-// headless-runner: the Pre Tool Use hook command (Requirement 7.5 to 7.7).
-//   npx tsx cli/hook-guard.ts [config.json]   (reads the hook's JSON on stdin)
-// Blocks (exit 2, reason on stderr) a tool call that marks a task done unless the last check of the
-// current program was HELD. Every other tool call is allowed (exit 0). It runs no emulator and makes no
-// network call. Kiro's payload has tool_name and tool_input (kiro.dev/docs/hooks/types). The real "task
-// done" call, logged in Kiro on Nov 24, 2026, is tool_name "task_update" with tool_input.status
-// "completed" (plus tasksFilePath and taskId); isTaskDone() matches it exactly and keeps a status-field
-// fallback for other shapes. Each payload it sees is written to .hexorcist/last-pretooluse.json.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { isMain, REPO_ROOT } from "./node-io";
-import type { HookState } from "./hook-common";
-import { DEFAULT_CONFIG, programHash, readConfig, readState } from "./hook-common";
+// Pre Tool Use hook command: lets a spec task be marked done only when the recorded check is a
+// current HELD. Reads files and the hook payload only. No emulator, no clock, no network.
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { isEntryPoint } from "./entry";
+import { hexSha256, parseRecord } from "./verdict-record";
+import type { VerdictRecord } from "./verdict-record";
 
-export const PAYLOAD_LOG = ".hexorcist/last-pretooluse.json";
+export type PayloadKind = "task-done" | "other";
 
-const DONE = /^(completed?|done|finished)$/i;
-const STATUS_KEYS = /^(status|state|taskStatus|task_status|newStatus|new_status)$/i;
-
-/** True when some status-like field anywhere in the tool input says completed or done. */
-export function isTaskDone(payload: unknown): boolean {
-  const p0 = payload as { tool_name?: unknown; tool_input?: { status?: unknown } } | null;
-  if (p0 !== null && typeof p0 === "object" && p0.tool_name === "task_update") {
-    const st = p0.tool_input?.status;
-    return typeof st === "string" && DONE.test(st.trim());
+/** Pure. "task-done" only for task_update with an object tool_input whose status is completed or done. */
+export function classifyPayload(text: string): PayloadKind {
+  let v: unknown;
+  try {
+    v = JSON.parse(text);
+  } catch {
+    return "other";
   }
-  const seen = new Set<unknown>();
-  const walk = (v: unknown, depth: number): boolean => {
-    if (depth > 6 || v === null || typeof v !== "object" || seen.has(v)) return false;
-    seen.add(v);
-    for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
-      if (STATUS_KEYS.test(k) && typeof x === "string" && DONE.test(x.trim())) return true;
-      if (k === "checked" && x === true) return true;
-      if (walk(x, depth + 1)) return true;
-    }
-    return false;
-  };
-  const p = payload as Record<string, unknown> | null;
-  return p !== null && typeof p === "object" && walk(p.tool_input ?? p, 0);
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return "other";
+  const o = v as Record<string, unknown>;
+  if (o.tool_name !== "task_update") return "other";
+  const input = o.tool_input;
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return "other";
+  const status = (input as Record<string, unknown>).status;
+  return status === "completed" || status === "done" ? "task-done" : "other";
 }
 
-export type GuardDecision = { allow: true } | { allow: false; reason: string };
+export type GuardDecision = { exitCode: 0 } | { exitCode: 2; message: string };
 
-/** Pure decision: allow unless the call marks a task done and the current program is not a recorded HELD. */
-export function decide(payload: unknown, state: HookState | null, currentHash: string | null): GuardDecision {
-  if (!isTaskDone(payload)) return { allow: true };
-  if (state === null) return { allow: false, reason: "Hexorcist: no check has run on this program yet. Finish your turn so the check runs, then mark the task done." };
-  if (currentHash === null || state.programSha256 !== currentHash) {
-    return { allow: false, reason: "Hexorcist: the program changed since the last check. Finish your turn so the check runs again, then mark the task done." };
+/** Pure. currentHash is null when the HEX file cannot be read. */
+export function decideGuard(record: VerdictRecord | null, currentHash: string | null): GuardDecision {
+  if (record === null) {
+    return {
+      exitCode: 2,
+      message:
+        "Blocked: no verdict is recorded. Only the Stop hook records one: it builds and checks the sketch when you finish your turn. Fix the program, let the Stop hook run, then mark the task done.",
+    };
   }
-  if (state.verdict !== "HELD") {
-    return { allow: false, reason: `Hexorcist: the last check said ${state.verdict}. Fix the program until the check says HELD, then mark the task done.` };
+  if (record.verdict !== "HELD") {
+    return {
+      exitCode: 2,
+      message: `Blocked: the recorded verdict is ${record.verdict}. Fix the program, let the Stop hook run again, and mark the task done only after it records HELD.`,
+    };
   }
-  return { allow: true };
+  if (currentHash === null || currentHash !== record.hexSha256) {
+    return {
+      exitCode: 2,
+      message:
+        "Blocked: the recorded check is out of date (the HEX file changed or is missing). Let the Stop hook build and check again, then mark the task done.",
+    };
+  }
+  return { exitCode: 0 };
 }
 
-export function guardMain(stdinText: string, argv: readonly string[], root: string, io: { err(t: string): void }): 0 | 2 {
-  let payload: unknown = null;
-  try {
-    payload = stdinText.trim() === "" ? null : JSON.parse(stdinText);
-  } catch {
-    payload = null;
-  }
-  try {
-    const p = resolve(root, PAYLOAD_LOG);
-    mkdirSync(dirname(p), { recursive: true });
-    writeFileSync(p, `${JSON.stringify(payload, null, 2)}\n`);
-  } catch {
-    // Logging is best effort; the decision below does not depend on it.
-  }
-  const cfg = readConfig(root, argv[0] ?? DEFAULT_CONFIG);
-  const hash = cfg.ok ? programHash(root, cfg.config) : null;
-  const d = decide(payload, readState(root), hash);
-  if (d.allow) return 0;
-  io.err(`${d.reason}\n`);
-  return 2;
+export interface GuardIo {
+  readStdin(): string;
+  stderr(text: string): void;
+  /** Folder that holds package.json. State files and Loop_Config paths resolve against it. */
+  repoDir: string;
+  /** Folder the hook argument resolves against. */
+  invocationDir: string;
 }
 
-const isEntry = isMain(import.meta.url);
-if (isEntry) {
-  let input = "";
+function currentHexHash(configArg: string | undefined, io: GuardIo): string | null {
+  if (configArg === undefined) return null;
   try {
-    input = readFileSync(0, "utf8");
+    const cfg: unknown = JSON.parse(fs.readFileSync(path.resolve(io.invocationDir, configArg), "utf8"));
+    if (typeof cfg !== "object" || cfg === null) return null;
+    const hex = (cfg as { hex?: unknown }).hex;
+    if (typeof hex !== "string" || hex === "") return null;
+    return hexSha256(fs.readFileSync(path.resolve(io.repoDir, hex)));
   } catch {
-    input = "";
+    return null;
   }
-  process.exitCode = guardMain(input, process.argv.slice(2), REPO_ROOT, { err: (t) => process.stderr.write(t) });
+}
+
+export function run(argv: readonly string[], io: GuardIo): number {
+  let text: string;
+  try {
+    text = io.readStdin();
+  } catch {
+    text = "";
+  }
+  const stateDir = path.join(io.repoDir, ".hexorcist");
+  try {
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(path.join(stateDir, "last-pretooluse.json"), text);
+  } catch (e) {
+    io.stderr(`Could not write last-pretooluse.json: ${e instanceof Error ? e.message : String(e)}\n`);
+  }
+
+  if (classifyPayload(text) !== "task-done") return 0;
+
+  let record: VerdictRecord | null = null;
+  try {
+    record = parseRecord(fs.readFileSync(path.join(stateDir, "last-verdict.json"), "utf8"));
+  } catch {
+    record = null;
+  }
+  const decision = decideGuard(record, currentHexHash(argv[0], io));
+  if (decision.exitCode === 2) {
+    io.stderr(`${decision.message}\n`);
+    return 2;
+  }
+  return 0;
+}
+
+if (isEntryPoint(import.meta.url, process.argv[1])) {
+  const repoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const init = process.env.INIT_CWD;
+  process.exitCode = run(process.argv.slice(2), {
+    readStdin: () => fs.readFileSync(0, "utf8"),
+    stderr: (t) => void process.stderr.write(t),
+    repoDir,
+    invocationDir: init !== undefined && init !== "" ? init : process.cwd(),
+  });
 }

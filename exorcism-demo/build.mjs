@@ -1,27 +1,37 @@
-// Builds exorcism-demo/sketch/sketch.ino into exorcism-demo/build/sketch.hex for an ATmega328P at 16 MHz.
-// Plain Node, no dependencies. Uses the same compiler command as scripts/build-examples.mjs.
-// Prints one line on success; on failure prints the compiler's output and exits 1.
+// Compiles exorcism-demo/sketch/sketch.ino to exorcism-demo/build/sketch.hex. Plain Node, no dependencies.
+// Run with: node exorcism-demo/build.mjs
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
-const sketch = join(root, "exorcism-demo", "sketch");
-const outDir = join(root, "exorcism-demo", "build");
-const tmp = join(outDir, "tmp");
-if (!existsSync(join(sketch, "sketch.ino"))) {
-  console.log("build: exorcism-demo/sketch/sketch.ino is missing");
+const demo = fileURLToPath(new URL(".", import.meta.url));
+const sketchDir = join(demo, "sketch");
+const sketch = join(sketchDir, "sketch.ino");
+const outHex = join(demo, "build", "sketch.hex");
+
+let work;
+function fail(text) {
+  if (work) rmSync(work, { recursive: true, force: true });
+  console.log(String(text).trimEnd());
   process.exit(1);
 }
-mkdirSync(outDir, { recursive: true });
-const r = spawnSync("arduino-cli", ["compile", "-b", "arduino:avr:uno", "--output-dir", tmp, sketch], { encoding: "utf8" });
-const built = join(tmp, "sketch.ino.hex");
-if (r.error !== undefined || r.status !== 0 || !existsSync(built)) {
-  console.log(r.error ? `build: the compiler could not be started: ${r.error.message}` : `${r.stdout ?? ""}${r.stderr ?? ""}`.trimEnd());
-  rmSync(tmp, { recursive: true, force: true });
-  process.exit(1);
+
+if (!existsSync(sketch)) fail("exorcism-demo/sketch/sketch.ino is missing.");
+
+work = mkdtempSync(join(tmpdir(), "hexorcist-demo-"));
+try {
+  const r = spawnSync("arduino-cli", ["compile", "-b", "arduino:avr:uno", "--output-dir", work, sketchDir], {
+    encoding: "utf8",
+  });
+  if (r.error) fail(`arduino-cli could not be started: ${r.error.message}`);
+  if (r.status !== 0) fail(`${r.stdout ?? ""}${r.stderr ?? ""}` || `arduino-cli exited with code ${r.status}.`);
+  const built = join(work, "sketch.ino.hex");
+  if (!existsSync(built)) fail("The compile passed but sketch.ino.hex is missing.");
+  mkdirSync(join(demo, "build"), { recursive: true });
+  copyFileSync(built, outHex);
+} finally {
+  rmSync(work, { recursive: true, force: true });
 }
-copyFileSync(built, join(outDir, "sketch.hex"));
-rmSync(tmp, { recursive: true, force: true });
-console.log("build: exorcism-demo/build/sketch.hex");
+console.log("Built exorcism-demo/build/sketch.hex");
