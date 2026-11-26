@@ -7,7 +7,8 @@ Hexorcist checks small ATmega328P programs before they go on a board. Scripted, 
 Open https://lainx06.github.io/Hexorcist/. **Crosswalk** is selected.
 1. Press **Unleash gremlins**. The rule "cars and walkers must never get a green at the same time" breaks.
 2. Press **See the fix work**. The same moves play on the original and the fixed program.
-3. Open **Your own program**. Press **Try a chat-written sketch**, then **Try one it can't check**.
+3. Press **Change setup**, then **Your own program**, then **Try a chat-written sketch**, then **Unleash gremlins**.
+4. Press **Change setup**, then **Your own program**, then **Try one it can't check**, then **Unleash gremlins**.
 
 ## 2 minutes: a terminal
 
@@ -57,6 +58,7 @@ No violation found in 24 emulated runs of this gremlin set. Not a proof.
   - `examples-on-save` rebuilds the examples and runs `tests/examples` when an example `.ino` is saved.
   - `hexorcist-check-on-stop` builds and checks the demo sketch when the agent stops.
   - `hexorcist-done-guard` blocks marking a spec task done until the recorded verdict is HELD.
+- Note: If you open this repo in Kiro, the hexorcist-done-guard hook blocks marking a spec task done until the Stop hook has recorded HELD for the current .hex, which needs the sketch compiler installed. To look around without it, turn the hook off in the Agent Hooks panel.
 - **Custom agent** [`rule-skeptic`](../.kiro/agents/rule-skeptic.md): read-only, opens with "Advice, not a verdict."
 - **Power and MCP server**: [`power/hexorcist/`](../power/hexorcist/) and [`mcp/`](../mcp/), with the tools `check` and `capabilities`.
 

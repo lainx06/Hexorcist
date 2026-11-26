@@ -25,7 +25,7 @@ The benchmark tools check sketches written by AI chat tools with the headless ru
 - **Benchmark_Folder**: `exorcism-demo/benchmark/`.
 - **Results_README**: The file `exorcism-demo/benchmark/README.md`.
 - **Brief**: The text of a task given to a chat tool. The user supplied both briefs, which are quoted in Requirement 8.
-- **Round_2_Sketches**: The 8 sketches `chatgpt-fast`, `chatgpt-high`, `claude-fast`, `claude-high`, `deepseek-fast`, `deepseek-high`, `gemini-fast`, and `gemini-medium`, each a `.ino` file in `exorcism-demo/benchmark/round2/`, that answer the crossing brief. The file `chatgpt-high-kiro-fixed.ino` in the same folder is the user's own fixed version from the Kiro loop demo, is not a chat answer, and is not a Round_2_Sketch.
+- **Round_2_Sketches**: The 8 sketches `chatgpt-fast`, `chatgpt-high`, `claude-fast`, `claude-high`, `deepseek-fast`, `deepseek-high`, `gemini-fast`, and `gemini-medium`, each a `.ino` file in `exorcism-demo/benchmark/round2/`, that answer the crossing brief. The file `chatgpt-high-kiro-fixed.ino` in the same folder is the version Kiro produced in the earlier check-and-fix loop run (commit b9586bf), is not a chat answer, and is not a Round_2_Sketch.
 - **Round_3_Sketches**: The 8 `.ino` files in `exorcism-demo/benchmark/round3/` with the same 8 names as the Round_2_Sketches, which answer the motor brief.
 - **Earlier_Sketches**: The four `.ino` files `chatgpt.ino`, `claude.ino`, `deepseek.ino`, and `gemini.ino` at the top level of the Benchmark_Folder, written for an earlier brief.
 - **Verdict_Strings**: Exactly `BROKE`, `HELD` with the text "No violation found in N emulated runs of this gremlin set. Not a proof." ("1 emulated run" when N is 1), and `COULDN'T TELL`.

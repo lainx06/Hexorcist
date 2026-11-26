@@ -4,8 +4,11 @@
 ![Masher presses the walk button three times; the crossing light gives cars and walkers a green at the same time; Hexorcist reports BROKE.](docs/media/hexorcist-demo.gif)
 
 Hexorcist checks small ATmega328P programs before they go on a board. It runs a compiled program on a simulated chip inside your browser. You write a rule as a short sentence, in one of five set forms, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
+
+Eight AI-chatbot-written crossing programs, eight breaks of the same rule: walk turned on before don't-walk turned off. See [AI chat sketches](#ai-chat-sketches).
+
 - **Live app:** https://lainx06.github.io/Hexorcist/
-- **Demo video (under 3 minutes):** https://youtu.be/ZNVCY59Go0Y
+- **Demo video (under 3 minutes):** https://youtu.be/E7V-CQe4AIc
 - **Judges: a five-minute tour:** [docs/JUDGES.md](docs/JUDGES.md)
 - Kiroween 2026 entry, Frankenstein category.
 - Some of the code was originally written with another AI coding assistant, then removed and rebuilt by Kiro. See [How this was built](#how-this-was-built).
@@ -25,6 +28,7 @@ The checker is deterministic: time is counted in CPU cycles, the gremlins come f
 - **Time limits.** A rule's time limit that is still running when a try ends is not judged. Rules use the five sentence forms below and no others.
 - **Gremlins are scripted and seeded.** They explore awkward input timing, not every possible input.
 - **Illustrations.** The crosswalk, garage and I'm-alive scenes are drawings driven by the program's outputs, and each is labelled "Illustrative". Your own program gets a "Pin levels" view instead.
+- **Emulation, not a board.** Results come from the simulated chip. A real board, its wiring or its power supply can still behave differently.
 - **No compiling here.** Nothing is compiled in the browser or on a server; you bring a compiled `.hex`, or use a bundled example.
 - **Long reasons.** A COULDN'T TELL reason can reach a 200-character limit. The CLI and MCP JSON carry `reasonTruncated` to say when it did.
 - **The AI benchmark is a small sample.** Eight chat-written sketches per brief, one seed, one gremlin set. See [exorcism-demo/benchmark/README.md](exorcism-demo/benchmark/README.md).
@@ -74,7 +78,7 @@ npm run check -- --hex build/my.hex --pins pins.json --rules rules.txt --gremlin
 - `--example <crosswalk|garage|heartbeat>` loads a bundled example (add `--fixed` for its fixed build).
 - `--hex`, `--pins` and `--rules` load your own files. Relative paths resolve against the folder you ran the command in. Do not mix them with `--example`.
 - `--gremlins` (comma-separated ids), `--runs`, `--seed` and `--run-ms` are optional. Left out, they come from the example's `meta.json`, or from the defaults the page uses for an uploaded program.
-- `--json` prints exactly one JSON object and nothing else on stdout. The same inputs give the same bytes on Windows, macOS and Linux. It holds no timestamp, path or duration.
+- `--json` prints exactly one JSON object and nothing else on stdout. Two runs of the same inputs give the same bytes (a test compares two `--json` runs on one machine). CI runs on Linux only, and no test compares bytes across operating systems. It holds no timestamp, path or duration.
 | Exit code | Meaning |
 |---|---|
 | 0 | HELD |

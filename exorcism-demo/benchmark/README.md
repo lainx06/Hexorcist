@@ -16,7 +16,7 @@ Results are evidence from this seed and this gremlin set. They are not proof.
 
 > Write a sketch for an ATmega328P board (Uno-compatible) that drives a DC motor through two transistor switches. The FORWARD switch is on pin 8 and the REVERSE switch is on pin 9 (HIGH = on). Turning both on at the same time, even for a moment, shorts the supply. Three buttons are wired to GND (use the internal pull-ups): FORWARD on pin 2, REVERSE on pin 3, STOP on pin 4. Pressing FORWARD runs the motor forward, pressing REVERSE runs it in reverse (it can switch directly from one direction to the other), and STOP turns both switches off. Keep it simple. Reply with the code only.
 
-The sketches in `round2/` answer the crossing brief. The sketches in `round3/` answer the motor brief. `round2/chatgpt-high-kiro-fixed.ino` is a hand-fixed copy, not a chat answer, and is not in the tables.
+The sketches in `round2/` answer the crossing brief. The sketches in `round3/` answer the motor brief. `round2/chatgpt-high-kiro-fixed.ino` is the version Kiro produced in the earlier check-and-fix loop run (added in commit `b9586bf`), not a chat answer, and is not in the tables.
 
 The four top-level sketches (`chatgpt.ino`, `claude.ino`, `deepseek.ino`, `gemini.ino`) are kept from an earlier brief and are not part of the results tables.
 

@@ -37,7 +37,7 @@ Every spec folder has `design.md` and `tasks.md`. Fifteen have `requirements.md`
 | `bench-ui-core`, `bench-ui-examples`, `bench-ui-stage`, `bench-ui-upload` | The web app, in four stages: the Crosswalk flow, the three-example gallery and plain view, the stage layout, and the "Your own program" path. |
 | `headless-runner` | The terminal check, Action, MCP server, hook scripts and power. All 24 task lines are ticked. |
 | `upload-samples` | Small web-app additions. All 45 task lines are ticked; none are unticked. |
-| `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. That done-guard run used the earlier hook scripts, which were removed in `5d54110` and rebuilt by Kiro in `6a081de`. |
+| `exorcism-fix` | One task: edit `exorcism-demo/sketch/sketch.ino` until the check says HELD. The commit message for `6d68c45` says the done-guard hook blocked task completion until the check was re-run. That done-guard run used the earlier hook scripts, which were removed in `5d54110` and rebuilt by Kiro in `6a081de`. The done-guard run shown in the demo video was recorded Nov 24, about 22:00 (UTC-5), after commit `a3c6c39`, so it used the rebuilt hooks. Its task record was committed Nov 25 in `01c780b`. |
 | `benchmark-tools` | The benchmark scripts and README. All 37 task lines are ticked; none are unticked. |
 `upload-samples/requirements.md` names one allowed test change (the expected text in Property 21 of `tests/ui/plain-story.property.test.ts`, for spans under 8000 cycles only), and says acceptance tests written by the user must not be changed, weakened or deleted to make them pass.
 The `headless-runner` plan says its property tests use fast-check, with at least 100 iterations each, tagged like `Feature: headless-runner, Property N: <title>`. Tests are evidence, not proof.
@@ -53,7 +53,7 @@ Five files, each marked `inclusion: always`:
 |---|---|---|---|
 | `guard-before-task` | `PreTaskExec` | none | `node scripts/guard.mjs` |
 | `engine-tests-on-save` | `PostFileSave` | `src/engine/**/*.ts` | `npx vitest --run` |
-| `examples-on-save` | `PostFileSave` | `examples/<name>/buggy` or `fixed` `.ino` files | `node scripts/build-examples.mjs`, then `npx vitest --run tests/examples` |
+| `examples-on-save` | `PostFileSave` | `examples/<name>/buggy` or `fixed` `.ino` files | `node scripts/examples-on-save.mjs` (runs `node scripts/build-examples.mjs`, then `npx vitest --run tests/examples`, on any OS) |
 | `hexorcist-check-on-stop` | `Stop` | none | `npx tsx --no-deprecation cli/hook-stop.ts exorcism-demo/loop-check.json --block` |
 | `hexorcist-done-guard` | `PreToolUse` | `spec` | `npx tsx --no-deprecation cli/hook-guard.ts exorcism-demo/loop-check.json` |
 - `scripts/guard.mjs` checks for claim words in the app, README, `docs/`, `cli/`, `mcp/` and `power/`; clock, random and network use in engine and runner code; that only `src/engine/emulator-bridge.ts` imports avr8js; and a board brand word in the app. It exits 0 when clean and 2 otherwise.
@@ -72,7 +72,7 @@ Five files, each marked `inclusion: always`:
 - Configs: `crosswalk-check.json` (Masher, 24 runs), `crosswalk-full-check.json` (Masher and Bouncer, 200 runs) and `motor-check.json` (Masher and Bouncer, 200 runs), all with seed 20261101.
 - Results: crossing with one rule, 8 of 8 HELD. Crossing with the full rule set, 8 of 8 BROKE on try 1, with a WALK and DONT_WALK overlap of 73 to 78 cycles (4.56 to 4.88 microseconds). Motor, 1 BROKE (`chatgpt-fast`, try 159) and 7 HELD.
 - The README says why `chatgpt-fast` missed the short STOP press: from reading the code, a `delay(10)` in its loop. It marks this as read from the code, not measured.
-- `round2/chatgpt-high-kiro-fixed.ino` is a hand-fixed copy and is not in the tables.
+- `round2/chatgpt-high-kiro-fixed.ino` is the version Kiro produced in the earlier check-and-fix loop run (added in commit `b9586bf`). It is not a chat answer and is not in the tables.
 - The web app's "Try a chat-written sketch" sample is `round2/chatgpt-high.hex`.
 These are results from one seed and one gremlin set. They are not a proof.
 ## Other checks in the repository
