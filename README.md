@@ -5,7 +5,7 @@
 
 Hexorcist checks small ATmega328P programs before they go on a board. It runs a compiled program on a simulated chip inside your browser. You write a rule as a short sentence, in one of five set forms, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
 - **Live app:** https://lainx06.github.io/Hexorcist/
-- **Demo video (under 3 minutes):** _link added at submission_
+- **Demo video (under 3 minutes):** https://youtu.be/ZNVCY59Go0Y
 - **Judges: a five-minute tour:** [docs/JUDGES.md](docs/JUDGES.md)
 - Kiroween 2026 entry, Frankenstein category.
 - Some of the code was originally written with another AI coding assistant, then removed and rebuilt by Kiro. See [How this was built](#how-this-was-built).
