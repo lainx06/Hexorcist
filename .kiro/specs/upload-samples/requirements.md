@@ -1,5 +1,7 @@
 # Requirements Document
 
+Note (Nov 26, 2026): user-facing error message texts were updated with the owner's approval; the quotes below match the app.
+
 ## Introduction
 
 This feature makes small additions to the existing Hexorcist web app in `src/ui/app`. It adds two bundled sample programs to the "Your own program" path (a chat-written sketch and a program the checker cannot judge), a new wording for sub-millisecond violations in the "What happened" story, a headline verdict on the fixed program's card, clearer COULDN'T TELL and idle text, hidden pin-level columns while the reducer runs, a narrower gremlin picker on the upload path, and a meta description plus noscript block in `index.html`. The 8000-cycle limit is 0.5 ms at 16 MHz, chosen because the existing story rounds to whole milliseconds and spans under 0.5 ms would read "0 ms".
@@ -69,7 +71,7 @@ Acceptance tests named in Requirements 2 and 3 are written by the user. A later 
 7. WHEN the visitor unleashes the gremlins on the loaded Chat_Sketch_Sample without changing the rule text or settings, THE Web_App SHALL show the verdict BROKE, together with the trace that caused it, and SHALL report the violation as found on try 1 of 24.
 8. THE Acceptance_Test for the Chat_Sketch_Sample SHALL assert the verdict BROKE on try 1 of 24 and SHALL record the Fingerprint that the run produces, without asserting a Fingerprint value that was written before the run.
 9. IF the Acceptance_Test for the Chat_Sketch_Sample and the system disagree, THEN the implementer SHALL stop, SHALL report the expected result, the actual result, and the evidence, and SHALL NOT change, weaken, or delete the test until the user decides.
-10. IF the bundled Chat_Sketch_Sample HEX cannot be loaded (missing, empty, or rejected by the HEX parser), THEN THE Web_App SHALL show an error message saying the sample could not be loaded, SHALL keep the previously loaded program, rule text, and settings unchanged, and SHALL NOT show a BROKE, HELD, or COULDN'T TELL verdict for it.
+10. IF the bundled Chat_Sketch_Sample HEX cannot be loaded (missing, empty, or rejected by the HEX parser), THEN THE Web_App SHALL show an error message saying the sample did not load, SHALL keep the previously loaded program, rule text, and settings unchanged, and SHALL NOT show a BROKE, HELD, or COULDN'T TELL verdict for it.
 
 ### Requirement 3: Program the checker cannot judge
 
@@ -86,7 +88,7 @@ Acceptance tests named in Requirements 2 and 3 are written by the user. A later 
 7. WHEN the Unjudgeable_Sample is loaded, THE Web_App SHALL select the Masher as the only gremlin, set the run count to 8, set the seed to 20261101, and set the run length to 1000 ms per run, replacing any previous selections.
 8. WHEN the visitor unleashes the gremlins on the loaded Unjudgeable_Sample, THE Web_App SHALL show the verdict COULDN'T TELL, using the exact verdict string, with a reason that contains the words "serial port".
 9. WHEN the visitor unleashes the gremlins on the loaded Unjudgeable_Sample, THE Web_App SHALL NOT show the verdict BROKE or HELD, and SHALL NOT show a violation trace.
-10. IF the Unjudgeable_Sample HEX or the Unjudgeable_Pin_Map fails to load or parse, THEN THE Web_App SHALL show an error message saying the sample could not be loaded, SHALL keep the previously loaded program, rule text, and settings unchanged, and SHALL NOT show any verdict.
+10. IF the Unjudgeable_Sample HEX or the Unjudgeable_Pin_Map fails to load or parse, THEN THE Web_App SHALL show an error message saying the sample did not load, SHALL keep the previously loaded program, rule text, and settings unchanged, and SHALL NOT show any verdict.
 11. THE Acceptance_Test for the Unjudgeable_Sample SHALL assert the verdict COULDN'T TELL and a reason that contains the words "serial port".
 12. IF the Acceptance_Test for the Unjudgeable_Sample and the system disagree, THEN the implementer SHALL report the expected result, the actual result, and the evidence, and SHALL leave the test unchanged until the user decides.
 

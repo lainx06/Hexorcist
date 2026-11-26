@@ -185,9 +185,9 @@ function outcomeError(o: JobOutcome): string | null {
     case "job-error":
       return `${o.error.kind}: ${o.error.message}`;
     case "codec-error":
-      return `Message from the engine worker could not be read: ${o.error.path}: ${o.error.message}`;
+      return `Message from the engine worker could not be read: ${o.error.path}: ${o.error.message}. Try running again.`;
     case "worker-stopped":
-      return `The engine worker stopped: ${o.message}`;
+      return `The engine worker stopped: ${o.message}. Try running again.`;
   }
 }
 

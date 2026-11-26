@@ -29,7 +29,7 @@ export function ruleErrorFrom(reason: string): RuleError {
 }
 
 export function checkRuleBox(text: string, fixture: Fixture): RuleBoxResult {
-  if (text === "") return { ok: false, errors: [{ line: null, position: null, text: "Add at least one rule." }] };
+  if (text === "") return { ok: false, errors: [{ line: null, position: null, text: "The gremlins have no rule to test against. Add at least one rule." }] };
   const read = readRulesFile(text);
   if (!read.ok) return { ok: false, errors: read.reasons.map(ruleErrorFrom) };
   const compiled = compileRuleSet(read.ruleSet, fixture);

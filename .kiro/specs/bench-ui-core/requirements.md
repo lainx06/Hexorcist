@@ -1,5 +1,7 @@
 # Requirements Document
 
+Note (Nov 26, 2026): user-facing error message texts were updated with the owner's approval; the quotes below match the app.
+
 ## Introduction
 
 bench-ui-core is the core of the Hexorcist web app. It runs the Crosswalk example end to end in the browser: the app opens on the Crosswalk buggy build, the user unleashes the gremlins, a verdict card shows the result, a BROKE result is reduced automatically with a visible shrink, and the reduced replay drives a crosswalk scene and a signal timeline that share one cursor. The user can then load the bundled fixed build, replay the counterexample on it, and rerun the same campaign. A separate speed page at `index.html#bench` measures engine throughput inside the browser Worker and compares results with the values pinned by the Node tests.
@@ -129,8 +131,8 @@ Facts checked in the workspace that constrain this feature:
 7. WHEN the user activates a gremlin tile with pointer or keyboard, THE App SHALL leave the tile's appearance and the gremlin set of the next Campaign unchanged.
 8. WHEN the App loads, THE App SHALL fill the Run_Count field with the meta.json `runs` value (24 for Crosswalk) and the Campaign_Seed field with the meta.json `campaignSeed` value (20261101 for Crosswalk).
 9. THE App SHALL show exactly one primary button with the label "Unleash gremlins", spanning the full width of the campaign controls.
-10. IF the Run_Count field text is empty, contains any character other than the digits 0 to 9, or denotes an integer below 1 or above 1000, THEN THE App SHALL disable the "Unleash gremlins" button and show the message "Runs must be a whole number from 1 to 1000.", independently of the Campaign_Seed field.
-11. IF the Campaign_Seed field text is empty, contains any character other than the digits 0 to 9, or denotes an integer below 0 or above 4294967295, THEN THE App SHALL disable the "Unleash gremlins" button and show the message "Seed must be a whole number from 0 to 4294967295.", independently of the Run_Count field.
+10. IF the Run_Count field text is empty, contains any character other than the digits 0 to 9, or denotes an integer below 1 or above 1000, THEN THE App SHALL disable the "Unleash gremlins" button and show the message "The gremlins can't do half a run. Enter a whole number of runs from 1 to 1000.", independently of the Campaign_Seed field.
+11. IF the Campaign_Seed field text is empty, contains any character other than the digits 0 to 9, or denotes an integer below 0 or above 4294967295, THEN THE App SHALL disable the "Unleash gremlins" button and show the message "The gremlins don't recognise that seed. Use a whole number from 0 to 4294967295.", independently of the Run_Count field.
 12. WHEN the text of the Run_Count field or the Campaign_Seed field changes to a value that criterion 10 or criterion 11 accepts, THE App SHALL remove that field's message.
 13. WHILE no Campaign has finished since the App loaded, THE App SHALL reserve the verdict area at its full verdict-card size and show "Run a campaign to inspect the result." in it.
 14. WHEN the user activates the enabled "Unleash gremlins" button, THE App SHALL start one Campaign in the Engine_Worker with the Buggy_Build text, the parsed fixture, the rule set from `readRulesFile`, the meta.json `gremlinSet` unchanged, the Run_Count field value as an integer, the Campaign_Seed field value as an integer and Run_Cycles (16,000,000 for Crosswalk).
@@ -163,7 +165,7 @@ Facts checked in the workspace that constrain this feature:
 18. FOR ALL inputs, THE Worker_Host SHALL return a verdict, BROKE trace, Reduced_List, counts, Trace_Fingerprint and Reached_End that are deep-equal to those the same Engine functions return when called directly in Node with the same inputs, slice size and step size.
 19. IF an Engine function returns a `CampaignError`, `BridgeError` or `ReducerError`, THEN THE Worker_Host SHALL return an error result that holds the error's `kind` and `message` and holds no verdict.
 20. WHEN the App receives an error result from the Engine_Worker, THE App SHALL show the error `kind` and `message` as error text outside every Verdict_Card and SHALL create no Verdict_Card from that error.
-21. IF the Engine_Worker raises an `error` event, THEN THE App SHALL show "The engine worker stopped: " followed by the error message of that event.
+21. IF the Engine_Worker raises an `error` event, THEN THE App SHALL show "The engine worker stopped: " followed by the error message of that event and then ". Try running again."
 22. IF the Engine_Worker raises an `error` event, THEN THE App SHALL enable the "Unleash gremlins" button.
 
 ### Requirement 5: Worker message codec
@@ -669,7 +671,7 @@ These are non-acceptance values and behaviours that the request did not fix. Eac
 26. Header explanation line: the product pitch "Flashing AI-written firmware? Let the gremlins break it before your board does."
 27. Gremlin tile behaviour label for Masher: "Presses the input again and again". The tile also shows the target signal (REQUEST, the only digital input of the fixture) and the catalogue default parameter ranges from `GREMLIN_CATALOGUE`.
 28. "X events -> Y events" uses the ASCII arrow "->" as written in the brief, with "1 event" for a count of 1.
-29. Worker crash text: "The engine worker stopped: " followed by the error message.
+29. Worker crash text: "The engine worker stopped: " followed by the error message and then ". Try running again."
 30. Contrast floor of 4.5:1 for all text (Requirement 21.21), the WCAG AA level; every palette text colour in the design guide meets it.
 31. The `.config.kiro` uses the specId given by the workflow, which equals the specId of `.kiro/specs/trace-reducer/.config.kiro`.
 32. Gremlin display name: "Masher", taken from the gremlin table in `docs/design-direction.md`, because `GREMLIN_CATALOGUE` holds only `id` and `iconName` (Requirement 3.6).

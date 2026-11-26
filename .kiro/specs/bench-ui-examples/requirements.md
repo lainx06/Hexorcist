@@ -1,5 +1,7 @@
 # Requirements Document
 
+Note (Nov 26, 2026): user-facing error message texts were updated with the owner's approval; the quotes below match the app.
+
 ## Introduction
 
 bench-ui-examples builds on bench-ui-core. The goal: a judge or viewer with no electronics background understands the page in 5 seconds, and an engineer can still see every exact detail. The App gets a plain view by default with a "Show technical details" switch, a gallery of three examples (Crosswalk, Garage door, Heartbeat) that each run the full flow, plain-English verdicts and stories, a violation span that is no longer cut at the violation, scenes for Garage and Heartbeat, rule editing and a gremlin picker.
@@ -368,7 +370,7 @@ Facts checked in the workspace that constrain this feature:
 7. THE App SHALL list the five Sentence_Patterns beside the Rule_Box, each filled with the Current_Example's first input signal and first output signal in fixture order, so that each filled sentence passes the Rule_Box_Check alone and when appended to the Current_Example's `rules.txt` text, each with an insert button.
 8. WHEN the user activates an insert button, THE App SHALL append its sentence as a new last line of the Rule_Box text, adding a line break before the sentence only when the text does not already end with one.
 9. WHEN the user activates "Reset to the example rule", THE App SHALL set the Rule_Box text to the Current_Example `rules.txt` text, set the Active_Rule_Set to the Example_Rule_Set and clear the Rule_Errors.
-10. IF the Rule_Box text is empty, THEN THE Rule_Box_Check SHALL return exactly one Rule_Error with the text "Add at least one rule."
+10. IF the Rule_Box text is empty, THEN THE Rule_Box_Check SHALL return exactly one Rule_Error with the text "The gremlins have no rule to test against. Add at least one rule."
 11. WHILE a Campaign, reduction or Replay is running, THE App SHALL make the Rule_Box read-only and disable its insert buttons and its "Reset to the example rule" button.
 12. THE App SHALL keep the bench-ui-core `FlowState` functions with their current behaviour and SHALL combine the Rule_Error and Selected_Gremlin_Set gates outside them.
 

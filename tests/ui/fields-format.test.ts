@@ -33,8 +33,8 @@ describe("Run_Count and Campaign_Seed fields", () => {
   });
 
   it("uses the exact messages", () => {
-    expect(RUNS_MESSAGE).toBe("Runs must be a whole number from 1 to 1000.");
-    expect(SEED_MESSAGE).toBe("Seed must be a whole number from 0 to 4294967295.");
+    expect(RUNS_MESSAGE).toBe("The gremlins can't do half a run. Enter a whole number of runs from 1 to 1000.");
+    expect(SEED_MESSAGE).toBe("The gremlins don't recognise that seed. Use a whole number from 0 to 4294967295.");
     expect(checkRuns("24")).toEqual({ ok: true, value: 24 });
     expect(checkSeed("20261101")).toEqual({ ok: true, value: 20261101 });
     expect(checkRuns("0").ok).toBe(false);

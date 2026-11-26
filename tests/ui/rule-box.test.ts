@@ -70,10 +70,10 @@ describe("checkRuleBox", () => {
     });
   });
 
-  it('gives exactly "Add at least one rule." for empty text', () => {
+  it('gives exactly "The gremlins have no rule to test against. Add at least one rule." for empty text', () => {
     expect(checkRuleBox("", fixture)).toEqual({
       ok: false,
-      errors: [{ line: null, position: null, text: "Add at least one rule." }],
+      errors: [{ line: null, position: null, text: "The gremlins have no rule to test against. Add at least one rule." }],
     });
   });
 

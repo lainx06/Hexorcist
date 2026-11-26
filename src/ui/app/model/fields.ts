@@ -1,7 +1,7 @@
 // Run_Count and Campaign_Seed field checks. Pure.
 
-export const RUNS_MESSAGE = "Runs must be a whole number from 1 to 1000.";
-export const SEED_MESSAGE = "Seed must be a whole number from 0 to 4294967295.";
+export const RUNS_MESSAGE = "The gremlins can't do half a run. Enter a whole number of runs from 1 to 1000.";
+export const SEED_MESSAGE = "The gremlins don't recognise that seed. Use a whole number from 0 to 4294967295.";
 
 export type FieldCheck = { ok: true; value: number } | { ok: false; message: string };
 

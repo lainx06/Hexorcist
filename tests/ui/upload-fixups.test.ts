@@ -86,8 +86,8 @@ describe("P5: no red errors before the visitor acts", () => {
     s = revealAll(s);
     v = visibleErrors(s, deriveUpload(s));
     expect(v.table.rowErrors[1]?.length).toBeGreaterThan(0);
-    expect(v.table.tableErrors).toContain("Add at least one output pin.");
-    expect(v.rule).toEqual(["Add at least one rule."].map((text) => ({ line: null, position: null, text })));
+    expect(v.table.tableErrors).toContain("No output to watch. Add at least one output pin.");
+    expect(v.rule).toEqual(["The gremlins have no rule to test against. Add at least one rule."].map((text) => ({ line: null, position: null, text })));
   });
 
   it("the checklist ticks each step as it is done", () => {

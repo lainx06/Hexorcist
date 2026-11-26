@@ -252,30 +252,30 @@ describe("A4", () => {
           file: "a.hex",
           size: bytes(cs.text),
           text: cs.text,
-          want: `Line ${String(cs.line)} has a wrong checksum. The file may be damaged or cut short.`,
+          want: `Line ${String(cs.line)} has a wrong checksum. The file may be damaged or cut short. Export the .hex again.`,
         },
         {
           name: "bad record type",
           file: "b.hex",
           size: 0,
           text: badRecordType(sample),
-          want: "This file is not a valid .hex file.",
+          want: "This doesn't read as a .hex file. Choose the compiled .hex for your program.",
         },
         {
           name: "data beyond 32 KB",
           file: "c.hex",
           size: 0,
           text: ":01800000007F\n:00000001FF\n",
-          want: "This program is bigger than the chip's 32 KB of program memory.",
+          want: "This program won't fit: it's bigger than the chip's 32 KB of program memory. Choose a build that fits.",
         },
         {
           name: "file over 256 KB",
           file: "big.hex",
           size: 262_145,
           text: sample,
-          want: "This file is larger than 256 KB, too big to be a program for this chip.",
+          want: "This file is over 256 KB, too big to haunt this chip. Choose the compiled .hex for your program.",
         },
-        { name: "empty file", file: "empty.hex", size: 0, text: "", want: "This file is empty." },
+        { name: "empty file", file: "empty.hex", size: 0, text: "", want: "Not even a ghost in here: this file is empty. Choose the compiled .hex for your program." },
       ];
       for (const c of cases) {
         const size = c.size === 0 && c.text !== "" ? bytes(c.text) : c.size;
@@ -309,7 +309,7 @@ describe("A5", () => {
       const a = crosswalkPins();
       (a.pins[0] as Record<string, unknown>).port = "E";
       const sa = imp(a);
-      expect(rowErrors(sa, "REQUEST"), "(a) port E").toContain("Port E is not on this chip's list. Use port B, C or D.");
+      expect(rowErrors(sa, "REQUEST"), "(a) port E").toContain("Port E isn't on this chip. Use port B, C or D.");
       expect(uploadReady(sa, false), "(a) Unleash disabled").toBe(false);
 
       // (b) bit 9
@@ -322,14 +322,14 @@ describe("A5", () => {
       // (c) duplicate signal
       const sc = editRow(start, idOf("CAR_YELLOW"), { signal: "CAR_GREEN" });
       const dc = deriveUpload(sc);
-      const dupText = "Another pin already uses the signal name CAR_GREEN.";
+      const dupText = "Two pins can't share the name CAR_GREEN. Give each pin its own signal name.";
       expect(dc.table.rowErrors[1], "(c) CAR_GREEN row").toContain(dupText);
       expect(dc.table.rowErrors[2], "(c) renamed row").toContain(dupText);
       expect(uploadReady(sc, false), "(c) Unleash disabled").toBe(false);
 
       // (d) duplicate port/bit
       const sd = editRow(start, idOf("CAR_YELLOW"), { port: "B", bit: 0 });
-      const pbText = "Another pin already uses Port B, bit 0 (PB0).";
+      const pbText = "Port B, bit 0 (PB0) is already taken. Pick another port or bit.";
       expect(rowErrors(sd, "CAR_GREEN"), "(d) CAR_GREEN row").toContain(pbText);
       expect(rowErrors(sd, "CAR_YELLOW"), "(d) CAR_YELLOW row").toContain(pbText);
       expect(uploadReady(sd, false), "(d) Unleash disabled").toBe(false);
@@ -339,7 +339,7 @@ describe("A5", () => {
       e.pins.push({ signal: "KNOB", kind: "analog", channel: 0 });
       const se = imp(e);
       expect(se.importError, "(e) import error").toBe(
-        "Entry 7 of the pins list is an analog pin. Analog pins are not supported in the pin table.",
+        "Entry 7 of the pins list is an analog pin. The pin table doesn't take analog pins, so remove it.",
       );
       expect(se.rows, "(e) rows unchanged").toEqual(start.rows);
       expect(se.program, "(e) program unchanged").toEqual(start.program);
@@ -348,7 +348,7 @@ describe("A5", () => {
 
       // (f) no output
       const sf = imp({ pins: [crosswalkPins().pins[0]] });
-      expect(deriveUpload(sf).table.tableErrors, "(f) table error").toContain("Add at least one output pin.");
+      expect(deriveUpload(sf).table.tableErrors, "(f) table error").toContain("No output to watch. Add at least one output pin.");
       expect(uploadReady(sf, false), "(f) Unleash disabled").toBe(false);
     },
   );
