@@ -1,8 +1,12 @@
 # Hexorcist
 **AI wrote your gadget's code. Let gremlins break it here, before it breaks for real.**
+
+![Masher presses the walk button three times; the crossing light gives cars and walkers a green at the same time; Hexorcist reports BROKE.](docs/media/hexorcist-demo.gif)
+
 Hexorcist checks small ATmega328P programs before they go on a board. It runs a compiled program on a simulated chip inside your browser. You write a rule as a short sentence, in one of five set forms, pick some gremlins (small scripted pests, not AI) and let them poke the program's inputs at awkward moments. If the rule breaks, Hexorcist cuts the attack down to the few moves that matter and replays them, step by step.
 - **Live app:** https://lainx06.github.io/Hexorcist/
 - **Demo video (under 3 minutes):** _link added at submission_
+- **Judges: a five-minute tour:** [docs/JUDGES.md](docs/JUDGES.md)
 - Kiroween 2026 entry, Frankenstein category.
 - Some of the code was originally written with another AI coding assistant, then removed and rebuilt by Kiro. See [How this was built](#how-this-was-built).
 ## Three answers, nothing else
@@ -102,6 +106,22 @@ Measured with `npm run bench:evidence` on Nov 23, 2026 (Windows, AMD Ryzen 7 780
 | I'm-alive light | BROKE 99, HELD 1 | HELD 100 |
 A single ordinary input (one press, beam break or pulse), moved every 10 ms across the whole run, broke none of the six builds. It takes the gremlins' awkward timing to find these bugs.
 The app shows the speed of the emulator on your own computer in the Details tab.
+
+### Seed sweep
+`node scripts/seed-sweep.mjs --seeds 1-100` runs the command-line check for every example and build, with seeds 1 to 100 (600 checks in all). My run, seeds 1-100, 600 checks, 15 jobs, 410.1 s:
+
+```
+example    build  HELD  BROKE  COULDN'T TELL  other  not as expected (seeds)
+---------  -----  ----  -----  -------------  -----  -----------------------
+crosswalk  buggy  1     99     0              0      62
+crosswalk  fixed  100   0      0              0      -
+garage     buggy  0     100    0              0      -
+garage     fixed  100   0      0              0      -
+heartbeat  buggy  1     99     0              0      18
+heartbeat  fixed  100   0      0              0      -
+```
+
+The fixed builds of all three examples held in every campaign, so there were no false alarms. The buggy builds broke in all but the listed seeds: seed 62 for Crosswalk and seed 18 for I'm-alive light (the `heartbeat` example). Those seeds give the same HELD every time (I reran both twice and got HELD each time), which is why HELD says "Not a proof."
 ### AI chat sketches
 `exorcism-demo/benchmark/` holds sketches that AI chat tools wrote for two briefs, unedited, and what Hexorcist found. With seed 20261101:
 - Crossing, 8 sketches, one rule (car green and WALK never on together; 24 runs, Masher): HELD for all 8.

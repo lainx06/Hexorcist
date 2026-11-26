@@ -10,6 +10,8 @@ On Nov 24, 2026, one commit removed all of it: `5d54110`, "Remove code written o
 | `benchmark-tools` | `exorcism-demo/try.mjs`, `measure-overlap.ts`, the config files, the motor files, the benchmark README | `5c69c37` |
 The header of `headless-runner/tasks.md` says the plan was written "fresh by Kiro" and that nothing was restored from git history, an earlier branch or a stash. The git history still holds the earlier versions, and commits from the other assistant end in "(claude)".
 The same assistant also planned or drafted other work on this repo: spec prompts, the steering files, drafts of the hook, agent and workflow files, review triage and acceptance checks. Those files are in this repository now.
+
+The GIF in the README and the demo video were made outside Kiro, from recordings of the app and of Kiro. They are media, not code.
 ## At a glance
 | Kiro feature | What the repository has | Where |
 |---|---|---|
@@ -55,6 +57,7 @@ Five files, each marked `inclusion: always`:
 | `hexorcist-check-on-stop` | `Stop` | none | `npx tsx --no-deprecation cli/hook-stop.ts exorcism-demo/loop-check.json --block` |
 | `hexorcist-done-guard` | `PreToolUse` | `spec` | `npx tsx --no-deprecation cli/hook-guard.ts exorcism-demo/loop-check.json` |
 - `scripts/guard.mjs` checks for claim words in the app, README, `docs/`, `cli/`, `mcp/` and `power/`; clock, random and network use in engine and runner code; that only `src/engine/emulator-bridge.ts` imports avr8js; and a board brand word in the app. It exits 0 when clean and 2 otherwise.
+- `scripts/seed-sweep.mjs` runs the command-line check for every example, build and seed in a range (default 1 to 100) and prints a table of verdict counts, with the seeds that did not give the expected verdict. It exits 0 whatever the verdicts, and 3 on a usage error. Its results are in the README under Seed sweep.
 - `hook-stop.ts` builds the demo sketch, runs the check, writes `.hexorcist/last-verdict.json` (verdict, exit code, SHA-256 of the HEX, fingerprint) and prints one line. With `--block`, a BROKE or COULDN'T TELL verdict exits 2 so the agent is sent back to work, up to 3 times in a row (`--max-blocks` changes that). A HELD resets the count.
 - `hook-guard.ts` acts only on a `task_update` tool call whose status is `completed` or `done`. It exits 2 unless the recorded verdict is HELD and the recorded HEX hash matches the HEX file now. It sees only Kiro's task tool (`task_update` with status `completed`). A change to `tasks.md` made by a shell command or a file edit is not blocked.
 - The two runner hook files currently read `"enabled": true`. `hexorcist-check-on-stop` has a 300-second timeout. The `.hexorcist/` folder is in `.gitignore`.
