@@ -8,7 +8,7 @@ On Nov 24, 2026, one commit removed all of it: `5d54110`, "Remove code written o
 | `headless-runner` | CLI, JSON output, GitHub Action, MCP server, hook scripts, power | `6a081de` |
 | `upload-samples` | The two extra sample programs, the microsecond wording, the fixed-program headline, the COULDN'T TELL screen text | `175f7f0`, then `3c8a85c` (task 15) |
 | `benchmark-tools` | `exorcism-demo/try.mjs`, `measure-overlap.ts`, the config files, the motor files, the benchmark README | `5c69c37` |
-The header of `headless-runner/tasks.md` says the plan was written "fresh by Kiro" and that nothing was restored from git history, an earlier branch or a stash. The git history still holds the earlier versions, and commits from the other assistant end in "(claude)".
+The header of `headless-runner/tasks.md` says the plan was written "fresh by Kiro" and that nothing was restored from git history, an earlier branch or a stash. The git history still holds the earlier versions and shows which commits the other assistant made.
 The same assistant also planned or drafted other work on this repo: spec prompts, the steering files, drafts of the hook, agent and workflow files, review triage and acceptance checks. Those files are in this repository now.
 
 The GIF in the README and the demo video were made outside Kiro, from recordings of the app and of Kiro. They are media, not code.
