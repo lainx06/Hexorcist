@@ -104,7 +104,7 @@ export function renderEvidenceDoc(r: EvidenceResults): string {
   L.push(`| Node | ${cell(r.machine.node)} |`);
   L.push(`| avr8js | ${cell(r.machine.avr8js)} |`);
   L.push(`| Date of run (UTC) | ${r.date} |`);
-  L.push('| Seed ranges | campaignSeed 1 to 100 for buggy builds, 1 to 20 for fixed builds |');
+  L.push('| Seed ranges | campaignSeed 1 to 100 for both buggy and fixed builds |');
   L.push(
     `| Wall-clock time | seed sweep ${r.seconds.seedSweep.toFixed(1)} s, single-press sweep ${r.seconds.pressSweep.toFixed(1)} s, whole bench ${r.seconds.total.toFixed(1)} s |`,
   );

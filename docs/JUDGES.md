@@ -49,7 +49,7 @@ No violation found in 24 emulated runs of this gremlin set. Not a proof.
 
 ## 2 minutes: `.kiro/`
 
-- **17 spec folders** in [`.kiro/specs/`](../.kiro/specs/). Three rebuilt the headless half after code written outside Kiro was removed: `headless-runner`, `upload-samples` and `benchmark-tools`.
+- **17 spec folders** in [`.kiro/specs/`](../.kiro/specs/). Three specs rebuilt the code written outside Kiro: `headless-runner` (command line, GitHub Action, MCP server, hook scripts, power), `upload-samples` (web-app additions) and `benchmark-tools` (benchmark scripts).
 - **5 steering files** in [`.kiro/steering/`](../.kiro/steering/): determinism, verdicts, scope-and-ip, testing, product.
 - **5 hooks** in [`.kiro/hooks/`](../.kiro/hooks/):
   - `guard-before-task` runs `node scripts/guard.mjs` before a spec task.

@@ -98,17 +98,18 @@ The demo loop lives in `exorcism-demo/`: `sketch/sketch.ino`, `build.mjs` (needs
 ### Kiro power
 `power/hexorcist` is a power with the MCP server and a skill (`check-firmware`) that tells an agent to call `capabilities` before any other tool, write rules in the five sentence forms, then call `check`. Set the `HEXORCIST_ROOT` environment variable once, to this repo's folder. Details and the launcher log location are in [power/hexorcist/README.md](power/hexorcist/README.md).
 ## Evidence
-Measured with `npm run bench:evidence` on Nov 23, 2026 (Windows, AMD Ryzen 7 7800X3D, Node 26.13.1). These are results of emulated runs, not a proof. Full table: [docs/evidence/EVIDENCE-NUMBERS.md](docs/evidence/EVIDENCE-NUMBERS.md).
+Measured with `npm run bench:evidence` on Nov 26, 2026 (Windows_NT 10.0.26200 (x64), AMD Ryzen 7 7800X3D 8-Core Processor, 16 cores, Node v26.13.1, avr8js 0.21.1). These are results of emulated runs, not a proof. Full table: [docs/evidence/EVIDENCE-NUMBERS.md](docs/evidence/EVIDENCE-NUMBERS.md).
 | Example | Buggy build, seeds 1 to 100 | Fixed build, seeds 1 to 100 |
 |---|---|---|
 | Crosswalk | BROKE 99, HELD 1 | HELD 100 |
 | Garage door | BROKE 100 | HELD 100 |
 | I'm-alive light | BROKE 99, HELD 1 | HELD 100 |
 A single ordinary input (one press, beam break or pulse), moved every 10 ms across the whole run, broke none of the six builds. It takes the gremlins' awkward timing to find these bugs.
+The bench (`bench/evidence.ts`, everything in one process) and the seed sweep below (`scripts/seed-sweep.mjs`, through the command line) are separate tools. They agree: both give BROKE 99 and HELD 1 for Crosswalk and I'm-alive light buggy builds, BROKE 100 for Garage door buggy, and HELD 100 for every fixed build.
 The app shows the speed of the emulator on your own computer in the Details tab.
 
 ### Seed sweep
-`node scripts/seed-sweep.mjs --seeds 1-100` runs the command-line check for every example and build, with seeds 1 to 100 (600 checks in all). My run, seeds 1-100, 600 checks, 15 jobs, 410.1 s:
+`node scripts/seed-sweep.mjs --seeds 1-100` runs the command-line check for every example and build, with seeds 1 to 100 (600 checks in all). A run on Nov 25, 2026 (seeds 1-100, 600 checks, 15 jobs, 410.1 s):
 
 ```
 example    build  HELD  BROKE  COULDN'T TELL  other  not as expected (seeds)
@@ -121,7 +122,7 @@ heartbeat  buggy  1     99     0              0      18
 heartbeat  fixed  100   0      0              0      -
 ```
 
-The fixed builds of all three examples held in every campaign, so there were no false alarms. The buggy builds broke in all but the listed seeds: seed 62 for Crosswalk and seed 18 for I'm-alive light (the `heartbeat` example). Those seeds give the same HELD every time (I reran both twice and got HELD each time), which is why HELD says "Not a proof."
+The fixed builds of all three examples held in every campaign, so there were no false alarms. The buggy builds broke in all but the listed seeds: seed 62 for Crosswalk and seed 18 for I'm-alive light (the `heartbeat` example). Those seeds give the same HELD every time (both were rerun twice and gave HELD each time), which is why HELD says "Not a proof."
 ### AI chat sketches
 `exorcism-demo/benchmark/` holds sketches that AI chat tools wrote for two briefs, unedited, and what Hexorcist found. With seed 20261101:
 - Crossing, 8 sketches, one rule (car green and WALK never on together; 24 runs, Masher): HELD for all 8.
